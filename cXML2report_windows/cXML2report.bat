@@ -38,8 +38,14 @@ START %OpenMSHome%\%TextExporter -separator , -in analysis.consensusXML -out ana
 Rscript snw2tex.R
 pdflatex cXML2report.tex
 MOVE cXML2report.pdf %input_directory%\%file_base%.pdf
-
-
+DEL cXML2report.tex
+DEL cXML2report.aux
+DEL cXML2report.ini
+DEL cXML2report.log
+DEL cXML2report.out
+DEL density*
+DEL Ratio*
+DEL analysis*
 
 CD /d %input_directory%
 
