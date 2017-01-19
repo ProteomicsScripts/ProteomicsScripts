@@ -30,14 +30,28 @@ EXIT /B
 
 rem ECHO "Generating report from OpenMS consensusXML file"
 
-rem Changing the directory to that of script
+rem Changing the directory to that of the script
 CD /d %SCRIPT_PATH%
 
 COPY %file_absolute% analysis.consensusXML
 START %OpenMSHome%\%TextExporter -separator , -in analysis.consensusXML -out analysis.csv
-Rscript snw2tex.R
+
+rem Small 5 sec pause.
+timeout /t 5 /NOBREAK
+
+rem Run the R code
+R -e "Sweave('cXML2report.Snw')"
+
+rem Small 5 sec pause.
+timeout /t 5 /NOBREAK
+
+rem Run LaTeX code
 pdflatex cXML2report.tex
+
+rem Copy final report to the input folder
 MOVE cXML2report.pdf %input_directory%\%file_base%.pdf
+
+rem Clean-up
 DEL cXML2report.tex
 DEL cXML2report.aux
 DEL cXML2report.ini
@@ -47,6 +61,7 @@ DEL density*
 DEL Ratio*
 DEL analysis*
 
+rem Jump back to input folder
 CD /d %input_directory%
 
 
