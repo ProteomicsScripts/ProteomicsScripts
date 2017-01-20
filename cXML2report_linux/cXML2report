@@ -17,13 +17,9 @@ fi
 # input file
 FILE=$1; shift
 FILE_ABSOLUTE=$(readlink -f -- $FILE)
-echo $FILE_ABSOLUTE
 FILE_PATH=$(dirname $FILE_ABSOLUTE)
-echo $FILE_PATH
 FILE_BASE=$(basename $FILE_ABSOLUTE)
-echo $FILE_BASE
 FILE_NAME=${FILE_BASE%.*}
-echo $FILE_NAME
 
 if ! [[ -f $FILE ]]
 then
@@ -38,14 +34,24 @@ cd $SCRIPT_PATH
 cp $FILE_ABSOLUTE analysis.consensusXML
 $OpenMSHome/TextExporter -separator , -in analysis.consensusXML -out analysis.csv
 
-Rscript snw2tex.R
+# Run the R code
+R -e "Sweave('cXML2report.Snw')"
 
+# Run LaTeX code
 pdflatex cXML2report.tex
 
+# Copy final report to the input folder
 mv cXML2report.pdf $FILE_PATH/$FILE_NAME.pdf
 
 # clean-up
-rm analysis*
-rm density*
-rm Ratio*
+rm *.consensusXML
+rm *.csv
+rm *.pdf
+rm *.aux
+rm *.ini
+rm *.log
+rm *.out
+rm *.tex
+
+# Jump back to input folder
 cd $CURRENT_PATH
