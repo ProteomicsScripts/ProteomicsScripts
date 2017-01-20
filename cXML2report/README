@@ -18,7 +18,7 @@ cXML2report example.consensusXML
 +++ FILES +++
 
 cXML2report    -> main script (Linux, macOS)
-cXML2report    -> main script (Windows)
+cXML2report.bat    -> main script (Windows)
 cXML2report.Snw    -> Sweave script containing both R and LaTeX code
 Sweave.sty    -> Sweave style sheet
 misc/example.consensus    -> example input file
