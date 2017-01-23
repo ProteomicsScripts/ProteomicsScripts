@@ -1,5 +1,3 @@
-#install.packages("gplots")
-library(gplots)
 
 # load analysis
 analysis <- read.delim("analysis.csv", header=TRUE, sep=",", fill=TRUE, skip=5, stringsAsFactors=FALSE)
