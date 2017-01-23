@@ -9,7 +9,7 @@ cXML2report example.consensusXML
 
 (1) Install OpenMS
 (2) Install R
-(3) Install LaTeX, tested with MiKTeX (Windows), MacTeX (macOS)
+(3) Install LaTeX, tested with MacTeX (macOS), TexLive (Ubuntu 16.04 LTS), MiKTeX (Windows)
 (4) Specify the folder with the OpenMS executables (OpenMSHome) in cXML2report
 (5) Add the script folder to your $PATH variable
 (6) Test the installation with misc/example.consensusXML
@@ -17,7 +17,8 @@ cXML2report example.consensusXML
 
 +++ FILES +++
 
-cXML2report    -> main script (Linux, macOS)
+cXML2report    -> main script (macOS)
+cXML2report.sh    -> main script (Linux)
 cXML2report.bat    -> main script (Windows)
 cXML2report.Snw    -> Sweave script containing both R and LaTeX code
 Sweave.sty    -> Sweave style sheet
