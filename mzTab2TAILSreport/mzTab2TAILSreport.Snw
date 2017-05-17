@@ -22,12 +22,12 @@
 \setlength{\hoffset}{-1cm}
 
 
-\SweaveOpts{prefix.string=plots/}
+
 \pagestyle{empty}
 
 \begin{document}
 
-<<echo=false,results=hide>>=
+<<echo = FALSE, results='hide', message=FALSE>>=
 ## R script for triple TAILS experiments, input mzTab
 
 # install packages
@@ -41,12 +41,16 @@ library(rasterVis)
 # options
 options(digits=10)
 
-input.file <- "data.mzTab"
+input.file <- "C:/Users/Sathiya/Desktop/ProteomicsScripts-master/mzTab2TAILSreport/misc/example.mzTab"
 output.file <- "data.tsv"
 
 plot.HL <- "FcLogIntensity_HL.pdf"
 plot.HM <- "FcLogIntensity_HM.pdf"
 plot.ML <- "FcLogIntensity_ML.pdf"
+
+peptide_abundance_study_variable[1] <-  "densityIntensities1.pdf"
+peptide_abundance_study_variable[2] <-  "densityIntensities2.pdf"
+peptide_abundance_study_variable[3] <-  "densityIntensities3.pdf"
 
 frequency.heatmap.HL.mInf <- "frequency_heatmap_HL_mInf.pdf"
 frequency.heatmap.HL.zero <- "frequency_heatmap_HL_zero.pdf"
@@ -272,15 +276,6 @@ generateFrequencyMatrix <- function(protein.sequence, position, scaling, pdf.fil
   dev.off()
 }
 
-
-
-
-
-
-
-
-
-
 peptide.data <- readMzTabPEP(input.file)
 
 # remove null accessions (TODO: check why there are nulls, FYVPGVAPINFHQND -> should be Q92544 in BM2321 and BM2322)
@@ -288,9 +283,10 @@ peptide.data <- peptide.data[which(peptide.data$accession!="null"),]
 
 # total number of quantified peptides
 n.total <- dim(peptide.data)[1]
+n.total
 
-peptide.data <- splitAccession(peptide.data)
-peptide.data <- annotateAccession(peptide.data)
+#peptide.data <- splitAccession(peptide.data)
+#peptide.data <- annotateAccession(peptide.data)
 
 # simplify table
 #peptide.data <- peptide.data[,c("sequence", "best_search_engine_score[1]", "opt_global_XTandem_score", "accession", "peptide_abundance_study_variable[1]", "peptide_abundance_study_variable[2]", "peptide_abundance_study_variable[3]")]
@@ -303,14 +299,38 @@ peptide.data <- makeSequencesUnique(peptide.data)
 
 # number of unique, quantified peptides
 n.unique <- dim(peptide.data)[1]
-
+n.unique
 # remove protein N-termini and add (non)prime regions
 peptide.data <- addSequenceVicinity(peptide.data)
+
+
 
 # plot fold change vs log intensity 
 plotFcLogIntensity(peptide.data$fc.H.L, peptide.data$intensity, "fc (H:L)", plot.HL)
 plotFcLogIntensity(peptide.data$fc.H.M, peptide.data$intensity, "fc (H:M)", plot.HM)
 plotFcLogIntensity(peptide.data$fc.M.L, peptide.data$intensity, "fc (M:L)", plot.ML)
+
+## Density intensity plots
+
+pdf(file="densityIntensities1.pdf", height=4)
+density <- density(log10(peptide.data$"peptide_abundance_study_variable[1]"), na.rm=TRUE, bw="nrd0")
+plot(density$x, density$y, xlab=expression('log'[10]*' intensity'), type="n", ylab="density", main="", yaxt='n')
+lines(density$x, density$y, col="#000099", lwd=2)
+dev.off()
+
+
+pdf(file="densityIntensities2.pdf", height=4)
+density <- density(log10(peptide.data$"peptide_abundance_study_variable[2]"), na.rm=TRUE, bw="nrd0")
+plot(density$x, density$y, xlab=expression('log'[10]*' intensity'), type="n", ylab="density", main="", yaxt='n')
+lines(density$x, density$y, col="#000099", lwd=2)
+dev.off()
+
+pdf(file="densityIntensities3.pdf", height=4)
+density <- density(log10(peptide.data$"peptide_abundance_study_variable[3]"), na.rm=TRUE, bw="nrd0")
+plot(density$x, density$y, xlab=expression('log'[10]*' intensity'), type="n", ylab="density", main="", yaxt='n')
+lines(density$x, density$y, col="#000099", lwd=2)
+dev.off()
+
 
 # global amino acid frequency
 frequency <- generateGlobalAminoAcidFrequency(peptide.data$SEQUENCE)
@@ -394,6 +414,19 @@ M:L & \Sexpr{format(length(idx.ML.mInf), big.mark=",")} & \Sexpr{format(length(i
   \subfloat[M:L]{\includegraphics[width=\FigureWidthA]{FcLogIntensity_ML.pdf}}
   \caption{Fold change vs log intensity for the set of \Sexpr{format(n.unique, big.mark=",")} unique peptides. Infinite fold changes (fc $\rightarrow \pm \infty$) are mapped to fc = $\pm 10$. The colour gradient reflects the density of the scatter plot.}
 \end{figure}
+
+\vspace{-0.5cm}
+
+\begin{figure}[hb]
+  \centering
+  \subfloat[Plot of density intensities for \texttt {peptide\_abundance\_study\_variable{[1]}}]{\includegraphics[width=10.0cm]{densityIntensities1.pdf}}
+  \hspace{0.02cm}
+  \subfloat[Plot of density intensities for  \texttt {peptide\_abundance\_study\_variable{[2]}}]{\includegraphics[width=10.0cm]{densityIntensities2.pdf}}
+  \hspace{0.02cm}
+  \subfloat[Plot of density intensity for  \texttt {peptide\_abundance\_study\_variable{[3]}}]{\includegraphics[width=10.0cm]{densityIntensities3.pdf}}
+  \caption{Peptide density plot with different intensities}
+\end{figure}
+
 
 \newcommand{\FigureWidthB}{6.5cm}
 \newcommand{\FigureSpacingH}{-1.1cm}
