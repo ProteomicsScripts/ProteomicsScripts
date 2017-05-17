@@ -285,8 +285,8 @@ peptide.data <- peptide.data[which(peptide.data$accession!="null"),]
 n.total <- dim(peptide.data)[1]
 n.total
 
-#peptide.data <- splitAccession(peptide.data)
-#peptide.data <- annotateAccession(peptide.data)
+peptide.data <- splitAccession(peptide.data)
+peptide.data <- annotateAccession(peptide.data)
 
 # simplify table
 #peptide.data <- peptide.data[,c("sequence", "best_search_engine_score[1]", "opt_global_XTandem_score", "accession", "peptide_abundance_study_variable[1]", "peptide_abundance_study_variable[2]", "peptide_abundance_study_variable[3]")]
