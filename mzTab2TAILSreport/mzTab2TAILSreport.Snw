@@ -48,9 +48,6 @@ plot.HL <- "FcLogIntensity_HL.pdf"
 plot.HM <- "FcLogIntensity_HM.pdf"
 plot.ML <- "FcLogIntensity_ML.pdf"
 
-peptide_abundance_study_variable[1] <-  "densityIntensities1.pdf"
-peptide_abundance_study_variable[2] <-  "densityIntensities2.pdf"
-peptide_abundance_study_variable[3] <-  "densityIntensities3.pdf"
 
 frequency.heatmap.HL.mInf <- "frequency_heatmap_HL_mInf.pdf"
 frequency.heatmap.HL.zero <- "frequency_heatmap_HL_zero.pdf"
