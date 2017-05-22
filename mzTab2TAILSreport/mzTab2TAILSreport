@@ -30,7 +30,8 @@ cd $SCRIPT_PATH
 # export to csv
 cp $FILE_ABSOLUTE data.mzTab
 
-Rscript snw2tex.R
+# Run the R code
+R -e "Sweave('mzTab2TAILSreport.Snw')"
 
 pdflatex mzTab2TAILSreport.tex
 
