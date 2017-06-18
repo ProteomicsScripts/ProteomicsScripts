@@ -1,0 +1,23 @@
++++ DESCRIPTION +++
+
+The script mzTabPSM2report takes mzTab files as input and generates summary pdf reports from its PSM section.
+
+mzTabPSM2report example.mzTab
+
+
++++ INSTALLATION +++
+
+(1) Install R
+(2) Install LaTeX, tested with MacTeX (macOS)
+(3) Add the script folder to your $PATH variable
+(4) Test the installation with misc/example.mzTab
+
+
++++ FILES +++
+
+mzTabPSM2report    -> main script (macOS)
+mzTabPSM2report.Snw    -> Sweave script containing both R and LaTeX code
+Sweave.sty    -> Sweave style sheet
+misc/example.mzTab    -> example input file
+misc/example.pdf    -> example result file
+misc/mzTabPSM2report.R    -> R code from mzTabPSM2report.Snw
