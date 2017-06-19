@@ -1,7 +1,7 @@
 @ECHO OFF
 
 rem OpenMS TOPP tool directory
-SET OpenMSHome=C:\Code\git\OpenMS-build\bin\Release
+SET OpenMSHome=C:\Code\git\OpenMS\bin\Release
 
 rem Script directory
 SET SCRIPT_PATH=%~dp0
