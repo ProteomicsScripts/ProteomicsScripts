@@ -6,7 +6,7 @@
       urlcolor=blue,       % \href{...}{...} external (URL)
       filecolor=green,     % \href{...} local file
       linkcolor=red,       % \ref{...} and \pageref{...}
-      pdftitle={Duplex report},
+      pdftitle={cXML report},
       pdfauthor={},
       pdfsubject={},
       pdfkeywords={},
