@@ -28,7 +28,7 @@ ECHO File does not exist.
 EXIT /B
 )
 
-rem ECHO "Generating report from OpenMS consensusXML file"
+ECHO "Generating report from OpenMS consensusXML file"
 
 rem Changing the directory to that of the script
 CD /d %SCRIPT_PATH%
