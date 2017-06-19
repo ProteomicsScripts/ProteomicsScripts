@@ -3,7 +3,7 @@
 #!/bin/sh
 
 # OpenMS TOPP tool directory
-OpenMSHome='/Users/lars/Code/git/OpenMS/bin'
+OpenMSHome='/Users/lars/Code/git/OpenMS-build/bin'
 
 # script directory
 SCRIPT_PATH=$(dirname $(greadlink -f $0))
