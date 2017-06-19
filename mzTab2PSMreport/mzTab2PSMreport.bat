@@ -3,6 +3,7 @@
 rem Script to create a report from mzTab file
 
 rem script directory
+rem The script path consists of drive (d) and path (p) of the zeroth argument (0) i.e. the script itselfs.
 SET SCRIPT_PATH=%~dp0
 
 IF "%1"=="" (
@@ -11,45 +12,52 @@ IF "%1"=="" (
   EXIT /B
 )
 
-SET file=%1
-SET file_absolute=%input_directory%\%1
-SET file_base=%~n1
-SET input_directory=%CD%
-
-rem FILE=$1; shift
-rem FILE_ABSOLUTE=$(readlink -f -- $FILE)
-rem FILE_PATH=$(dirname $FILE_ABSOLUTE)
-rem FILE_BASE=$(basename $FILE_ABSOLUTE)
-rem FILE_NAME=${FILE_BASE%.*}
-
 IF NOT EXIST %1 (
   ECHO File does not exist.
   EXIT /B
 )
+
+SET CURRENT_PATH=%CD%
+SET FILE=%1
+rem The absolute path consists of drive (d), path (p), name (n) and extension (x) of the first argument (1).
+SET FILE_ABSOLUTE=%~dpnx1
+rem The file path consists of drive (d) and path (p) of the first argument (1).
+SET FILE_PATH=%~dp1
+rem The base name consists only of the name (n) of the first argument (1).
+SET FILE_BASE=%~n1
 
 ECHO Generating report from mzTab file %FILE_BASE%.
 
 CD /d %SCRIPT_PATH%
 
 rem copy mzTab
-rem cp $FILE_ABSOLUTE analysis.mzTab
+cp %FILE_ABSOLUTE% analysis.mzTab
 
-rem  replace dummy by file name
-rem sed -e 's/FILE_NAME_DUMMY/'$FILE_NAME'/g' mzTab2PSMreport.Snw > mzTab2PSMreport_temp.Snw
+rem  replace dummy FILE_NAME_DUMMY by file name %FILE_BASE%
+(for /f "delims=" %%i in (mzTab2PSMreport.Snw) do (
+    set "line=%%i"
+    setlocal enabledelayedexpansion
+    set "line=!line:FILE_NAME_DUMMY=%FILE_BASE%!"
+    echo(!line!
+    endlocal
+))>"mzTab2PSMreport_temp.Snw"
 
 rem  Run the R code
-rem R -e "Sweave('mzTab2PSMreport_temp.Snw')"
+R -e "Sweave('mzTab2PSMreport_temp.Snw')"
+
+rem Small 5 sec pause.
+timeout /t 5 /NOBREAK
 
 rem  Run LaTeX code
-rem pdflatex mzTab2PSMreport_temp.tex
+pdflatex mzTab2PSMreport_temp.tex
 
 rem  Copy final report to the input folder
-rem mv mzTab2PSMreport_temp.pdf $FILE_PATH/$FILE_NAME.pdf
+MOVE mzTab2PSMreport_temp.pdf %FILE_PATH%\%FILE_BASE%.pdf
 
 rem  clean-up
-rem rm analysis*
-rem rm plot*
-rem rm mzTab2PSMreport_temp*
+DEL analysis*
+DEL plot*
+DEL mzTab2PSMreport_temp*
 
-rem  Jump back to input folder
-CD /d %input_directory%
+rem  Jump back to original folder
+CD /d %CURRENT_PATH%
