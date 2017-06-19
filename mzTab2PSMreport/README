@@ -8,7 +8,7 @@ mzTab2PSMreport example.mzTab
 +++ INSTALLATION +++
 
 (1) Install R
-(2) Install LaTeX, tested with MacTeX (macOS), TexLive (Ubuntu 16.04 LTS)
+(2) Install LaTeX, tested with MacTeX (macOS), TexLive (Ubuntu 16.04 LTS), MiKTeX (Windows)
 (3) Add the script folder to your $PATH variable
 (4) Test the installation with misc/example.mzTab
 
@@ -17,6 +17,7 @@ mzTab2PSMreport example.mzTab
 
 mzTab2PSMreport    -> main script (macOS)
 mzTab2PSMreport.sh    -> main script (Linux)
+mzTab2PSMreport.bat    -> main script (Windows)
 mzTab2PSMreport.Snw    -> Sweave script containing both R and LaTeX code
 Sweave.sty    -> Sweave style sheet
 misc/example.mzTab    -> example input file
