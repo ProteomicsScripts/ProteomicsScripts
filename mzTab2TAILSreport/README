@@ -9,10 +9,13 @@ cXML2report example.mzTab
 
 (1) Install OpenMS
 (2) Install R
-(3) Install LaTeX, tested with MiKTeX (Windows), MacTeX (macOS)
-(4) Specify the folder with the OpenMS executables (OpenMSHome) in cXML2report
-(5) Add the script folder to your $PATH variable
-(6) Test the installation with misc/example.mzTab
+(3) Install Bioconductor package UniProt.ws
+    source("https://bioconductor.org/biocLite.R")
+    biocLite("UniProt.ws")    
+(4) Install LaTeX, tested with MiKTeX (Windows), MacTeX (macOS)
+(5) Specify the folder with the OpenMS executables (OpenMSHome) in cXML2report
+(6) Add the script folder to your $PATH variable
+(7) Test the installation with misc/example.mzTab
 
 
 +++ FILES +++

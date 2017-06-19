@@ -3,7 +3,7 @@
 #!/bin/sh
 
 # script directory
-SCRIPT_PATH=$(dirname $(greadlink -f $0))
+SCRIPT_PATH=$(dirname -- "$(readlink -f -- "$0")")
 
 if [[ $1 == "" ]]
 then
@@ -13,7 +13,7 @@ fi
 
 # input file
 FILE=$1; shift
-FILE_ABSOLUTE=$(greadlink -f $FILE)
+FILE_ABSOLUTE=$(readlink -f -- $FILE)
 FILE_PATH=$(dirname $FILE_ABSOLUTE)
 FILE_BASE=$(basename $FILE_ABSOLUTE)
 FILE_NAME=${FILE_BASE%.*}
