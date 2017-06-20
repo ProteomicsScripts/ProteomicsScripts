@@ -1,18 +1,7 @@
 \documentclass[a4paper]{article}
 
 \usepackage{subfig, fullpage, graphicx, amsmath}
-\usepackage[pdftex,
-      colorlinks=true,
-      urlcolor=blue,       % \href{...}{...} external (URL)
-      filecolor=green,     % \href{...} local file
-      linkcolor=red,       % \ref{...} and \pageref{...}
-      pdftitle={mzTab report},
-      pdfauthor={},
-      pdfsubject={},
-      pdfkeywords={},
-      pagebackref,
-      pdfpagemode=none,
-      bookmarksopen=true]{hyperref}
+\usepackage{url}
 
 %\setlength{\voffset}{0pt}
 %\setlength{\topmargin}{0pt}
@@ -199,7 +188,7 @@ if (checkEValueExists(psm.data))
 
 
 \begin{center}
-\section*{Report for {\tt PSM} Secion in {\tt mzTab} File\\{\tt FILE_NAME_DUMMY}}
+\section*{Report for {\tt PSM} Secion in {\tt mzTab} File\\ \url{FILE_NAME_DUMMY}}
 \end{center}
 
 \vspace{1.0cm}
