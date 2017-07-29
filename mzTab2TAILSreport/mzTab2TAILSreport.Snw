@@ -224,6 +224,11 @@ generateGlobalAminoAcidFrequency <- function(proteins) {
   x <- paste(unique(proteins), collapse="")
   x <- substring(x, seq(1,nchar(x), 1), seq(1,nchar(x),1))
   t <- as.data.frame(table(x))
+
+  # remove non-standard aminoacids Selenocysteine (U) and Pyrrolysine (O)
+  t <- t[which(t[,1]!="U"),]
+  t <- t[which(t[,1]!="O"),]
+
   freq <- t$Freq/sum(t$Freq)
   return(freq)
 }
