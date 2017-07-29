@@ -386,9 +386,9 @@ M:L & \Sexpr{format(length(idx.ML.mInf), big.mark=",")} & \Sexpr{format(length(i
   \centering
   \subfloat[H:L (\Sexpr{format(length(idx.HL.mInf), big.mark=",")} peptides no Heavy, \Sexpr{format(length(idx.HL.zero), big.mark=",")} peptides Light and Heavy, \Sexpr{format(length(idx.HL.pInf), big.mark=",")} peptides no Light)]{\includegraphics[width=\FigureWidthA]{FcLogIntensity_HL.pdf}} \\
   \vspace{\FigureSpacingV}
-  \subfloat[H:M (\Sexpr{format(length(idx.HM.mInf), big.mark=",")} peptides no Heavy, \Sexpr{format(length(idx.HM.zero), big.mark=",")} peptides Light and Heavy, \Sexpr{format(length(idx.HM.pInf), big.mark=",")} peptides no Light)]{\includegraphics[width=\FigureWidthA]{FcLogIntensity_HM.pdf}} \\
+  \subfloat[H:M (\Sexpr{format(length(idx.HM.mInf), big.mark=",")} peptides no Heavy, \Sexpr{format(length(idx.HM.zero), big.mark=",")} peptides Medium and Heavy, \Sexpr{format(length(idx.HM.pInf), big.mark=",")} peptides no Medium)]{\includegraphics[width=\FigureWidthA]{FcLogIntensity_HM.pdf}} \\
   \vspace{\FigureSpacingV}
-  \subfloat[M:L (\Sexpr{format(length(idx.ML.mInf), big.mark=",")} peptides no Heavy, \Sexpr{format(length(idx.ML.zero), big.mark=",")} peptides Light and Heavy, \Sexpr{format(length(idx.ML.pInf), big.mark=",")} peptides no Light)]{\includegraphics[width=\FigureWidthA]{FcLogIntensity_ML.pdf}}
+  \subfloat[M:L (\Sexpr{format(length(idx.ML.mInf), big.mark=",")} peptides no Medium, \Sexpr{format(length(idx.ML.zero), big.mark=",")} peptides Light and Medium, \Sexpr{format(length(idx.ML.pInf), big.mark=",")} peptides no Light)]{\includegraphics[width=\FigureWidthA]{FcLogIntensity_ML.pdf}}
   \caption{Fold change vs log intensity for the set of \Sexpr{format(n.unique, big.mark=",")} unique peptides. Infinite fold changes (fc $\rightarrow \pm \infty$) are mapped to fc = $\pm 10$. The colour gradient reflects the density of the scatter plot.}
 \end{figure}
 
