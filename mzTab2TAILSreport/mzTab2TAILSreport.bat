@@ -51,12 +51,14 @@ timeout /t 5 /NOBREAK
 rem  Run LaTeX code
 pdflatex mzTab2TAILSreport_temp.tex
 
-rem  Copy final report to the input folder
+rem  Copy final report and table to the input folder
 MOVE mzTab2TAILSreport_temp.pdf %FILE_PATH%\%FILE_BASE%.pdf
+MOVE data.tsv %FILE_PATH%\%FILE_BASE%.tsv
 
 rem  clean-up
-DEL analysis*
-DEL plot*
+DEL data*
+DEL FcLogIntensity*
+DEL frequency*
 DEL mzTab2TAILSreport_temp*
 
 rem  Jump back to original folder
