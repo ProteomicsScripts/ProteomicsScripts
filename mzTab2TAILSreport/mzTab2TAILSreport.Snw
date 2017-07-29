@@ -30,6 +30,9 @@ library(rasterVis)
 # options
 options(digits=10)
 
+# fc cutoff, i.e. infinite fc values are mapped to +/-FcCutoff
+FcCutoff <- 8
+
 input.file <- "data.mzTab"
 output.file <- "data.tsv"
 
@@ -119,12 +122,12 @@ annotateAccession <- function(data) {
 }
 
 # determine intensities and fold changes and map to finite numbers
-# H=0 L=finite              =>  mapped to fc=-10
-# H=finite L=0              =>  mapped to fc=+10
+# H=0 L=finite              =>  mapped to fc=-FcCutoff
+# H=finite L=0              =>  mapped to fc=+FcCutoff
 # H=0 L=0 (i.e. M=finite)   =>  mapped to fc=0
 calculateIntensityFC <- function(peptide.data) {
   offset <- 1    # avoids devisions by zero
-  max.fc <- 10.0    # map knock-out fold changes to finite values 
+  max.fc <- FcCutoff    # map knock-out fold changes to finite values 
   
   # convert to numeric
   peptide.data$"peptide_abundance_study_variable[1]" <- as.numeric(peptide.data$"peptide_abundance_study_variable[1]")
@@ -143,13 +146,13 @@ calculateIntensityFC <- function(peptide.data) {
   peptide.data$fc.M.L <- log2(peptide.data$"peptide_abundance_study_variable[2]"/peptide.data$"peptide_abundance_study_variable[1]")
   
   # map fc to finite values
-  peptide.data[which(peptide.data$fc.H.L < -10),]$fc.H.L <- -10
-  peptide.data[which(peptide.data$fc.H.M < -10),]$fc.H.M <- -10
-  peptide.data[which(peptide.data$fc.M.L < -10),]$fc.M.L <- -10
+  peptide.data[which(peptide.data$fc.H.L < -FcCutoff),]$fc.H.L <- -FcCutoff
+  peptide.data[which(peptide.data$fc.H.M < -FcCutoff),]$fc.H.M <- -FcCutoff
+  peptide.data[which(peptide.data$fc.M.L < -FcCutoff),]$fc.M.L <- -FcCutoff
 
-  peptide.data[which(peptide.data$fc.H.L > 10),]$fc.H.L <- 10
-  peptide.data[which(peptide.data$fc.H.M > 10),]$fc.H.M <- 10
-  peptide.data[which(peptide.data$fc.M.L > 10),]$fc.M.L <- 10
+  peptide.data[which(peptide.data$fc.H.L > FcCutoff),]$fc.H.L <- FcCutoff
+  peptide.data[which(peptide.data$fc.H.M > FcCutoff),]$fc.H.M <- FcCutoff
+  peptide.data[which(peptide.data$fc.M.L > FcCutoff),]$fc.M.L <- FcCutoff
   
   return (peptide.data)
 }
@@ -315,17 +318,17 @@ frequency.scaling <- 1/frequency
 frequency.scaling <- frequency.scaling/sum(frequency.scaling)
 
 
-idx.HL.mInf <- which(peptide.data$fc.H.L < -8)
-idx.HL.zero <- which((peptide.data$fc.H.L > -8) & (peptide.data$fc.H.L < 8))
-idx.HL.pInf <- which(peptide.data$fc.H.L > 8)
+idx.HL.mInf <- which(peptide.data$fc.H.L == -FcCutoff)
+idx.HL.zero <- which((peptide.data$fc.H.L > -FcCutoff) & (peptide.data$fc.H.L < FcCutoff))
+idx.HL.pInf <- which(peptide.data$fc.H.L == FcCutoff)
 
-idx.HM.mInf <- which(peptide.data$fc.H.M < -8)
-idx.HM.zero <- which((peptide.data$fc.H.M > -8) & (peptide.data$fc.H.M < 8))
-idx.HM.pInf <- which(peptide.data$fc.H.M > 8)
+idx.HM.mInf <- which(peptide.data$fc.H.M == -FcCutoff)
+idx.HM.zero <- which((peptide.data$fc.H.M > -FcCutoff) & (peptide.data$fc.H.M < FcCutoff))
+idx.HM.pInf <- which(peptide.data$fc.H.M == FcCutoff)
 
-idx.ML.mInf <- which(peptide.data$fc.M.L < -8)
-idx.ML.zero <- which((peptide.data$fc.M.L > -8) & (peptide.data$fc.M.L < 8))
-idx.ML.pInf <- which(peptide.data$fc.M.L > 8)
+idx.ML.mInf <- which(peptide.data$fc.M.L == -FcCutoff)
+idx.ML.zero <- which((peptide.data$fc.M.L > -FcCutoff) & (peptide.data$fc.M.L < FcCutoff))
+idx.ML.pInf <- which(peptide.data$fc.M.L == FcCutoff)
 
 p <- peptide.data[idx.HL.mInf,]
 generateFrequencyMatrix(p$SEQUENCE, p$matching.position, frequency.scaling, frequency.heatmap.HL.mInf)
