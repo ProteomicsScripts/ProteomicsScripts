@@ -1,18 +1,7 @@
 \documentclass[a4paper]{article}
 
 \usepackage{subfig, fullpage, graphicx, amsmath}
-\usepackage[pdftex,
-      colorlinks=true,
-      urlcolor=blue,       % \href{...}{...} external (URL)
-      filecolor=green,     % \href{...} local file
-      linkcolor=red,       % \ref{...} and \pageref{...}
-      pdftitle={mzTab report},
-      pdfauthor={},
-      pdfsubject={},
-      pdfkeywords={},
-      pagebackref,
-      pdfpagemode=none,
-      bookmarksopen=true]{hyperref}
+\usepackage{url}
 
 %\setlength{\voffset}{0pt}
 %\setlength{\topmargin}{0pt}
@@ -364,7 +353,7 @@ write.table(peptide.data, output.file, sep="\t", row.names=FALSE, col.names=TRUE
 @
 
 \begin{center}
-\section*{Triple TAILS Report}
+\section*{Triple TAILS Report\\ \url{FILE_NAME_DUMMY}}
 \end{center}
 
 \vspace{1cm}
