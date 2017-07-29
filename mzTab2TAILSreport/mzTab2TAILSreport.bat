@@ -31,7 +31,7 @@ ECHO Generating TAILS report from mzTab file %FILE_BASE%.
 CD /d %SCRIPT_PATH%
 
 rem copy mzTab
-cp %FILE_ABSOLUTE% analysis.mzTab
+cp %FILE_ABSOLUTE% data.mzTab
 
 rem  replace dummy FILE_NAME_DUMMY by file name %FILE_BASE%
 (for /f "delims=" %%i in (mzTab2TAILSreport.Snw) do (
