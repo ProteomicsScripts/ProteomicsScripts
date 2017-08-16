@@ -2,7 +2,7 @@
 
 The script mzTab2TAILSreport takes an mzTab file as input and generates a summary pdf reports and tsv result file for TAILS experiments.
 
-cXML2TAILSreport example.mzTab
+mzTab2TAILSreport example.mzTab
 
 
 +++ INSTALLATION +++
