@@ -288,6 +288,9 @@ n.unique <- dim(peptide.data)[1]
 # remove protein N-termini and add (non)prime regions
 peptide.data <- addSequenceVicinity(peptide.data)
 
+# number of unique, quantified peptides
+n.after.vicinity.mapping <- dim(peptide.data)[1]
+
 # plot fold change vs log intensity 
 plotFcLogIntensity(peptide.data$fc.H.L, peptide.data$intensity, "fc (H:L)", plot.HL)
 plotFcLogIntensity(peptide.data$fc.H.M, peptide.data$intensity, "fc (H:M)", plot.HM)
