@@ -5,6 +5,8 @@
 #biocLite("UniProt.ws")
 #install.packages('rasterVis')
 
+rm(list = ls())
+
 library(UniProt.ws)
 library(rasterVis)
 
