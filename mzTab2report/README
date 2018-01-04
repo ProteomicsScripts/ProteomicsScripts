@@ -1,0 +1,25 @@
++++ DESCRIPTION +++
+
+The script mzTab2report takes mzTab files as input and generates summary pdf reports from its PEP section.
+
+mzTab2report example.mzTab
+
+
++++ INSTALLATION +++
+
+(1) Install R
+(2) Install LaTeX, tested with MacTeX (macOS), TexLive (Ubuntu 16.04 LTS), MiKTeX (Windows)
+(3) Add the script folder to your $PATH variable
+(4) Test the installation with misc/example_*.mzTab
+
+
++++ FILES +++
+
+mzTab2report    -> main script (macOS)
+mzTab2report.sh    -> main script (Linux)
+mzTab2report.bat    -> main script (Windows)
+mzTab2report.Snw    -> Sweave script containing both R and LaTeX code
+Sweave.sty    -> Sweave style sheet
+misc/example_*.mzTab    -> example input file
+misc/example_*.pdf    -> example result file
+misc/mzTab2report.R    -> R code from mzTab2report.Snw
