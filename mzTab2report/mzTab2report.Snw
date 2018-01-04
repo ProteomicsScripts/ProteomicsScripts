@@ -263,13 +263,13 @@ plotDistribution(fc, "fold change", "plot_DistributionFoldChange_23.pdf")
 \subfloat[peptide abundances 2, $\operatorname{median}(\operatorname{intensity}) = \Sexpr{format(median.abundance.2, big.mark=",")}$]{\includegraphics[width=\FigureWidthA]{plot_DistributionIntensity_2.pdf}}\\
 }
 {}
-%\IfFileExists{plot_DistributionIntensity_3.pdf}
-%{
-%\centering
-%\vspace{-1cm}
-%\subfloat[peptide abundances 3, $\operatorname{median}(\operatorname{intensity}) = \Sexpr{format(median.abundance.3, big.mark=",")}$]{\includegraphics[width=\FigureWidthA]{plot_DistributionIntensity_3.pdf}}\\
-%}
-%{}
+\IfFileExists{plot_DistributionIntensity_3.pdf}
+{
+\centering
+\vspace{-1cm}
+\subfloat[peptide abundances 3, $\operatorname{median}(\operatorname{intensity}) = \Sexpr{format(median.abundance.3, big.mark=",")}$]{\includegraphics[width=\FigureWidthA]{plot_DistributionIntensity_3.pdf}}\\
+}
+{}
 \caption{peptide abundance distributions.}
 \end{figure}
 
