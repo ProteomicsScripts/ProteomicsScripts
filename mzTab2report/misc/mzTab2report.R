@@ -7,7 +7,7 @@ rm(list = ls())
 options(digits=10)
 FcCutoff <- 8    # fold change cutoff, i.e. infinite fc values are mapped to +/-FcCutoff
 
-input.file <- 'example_2.mzTab'
+input.file <- 'example_1.mzTab'
 
 # find start of the section
 startSection <- function(file, section.identifier) {

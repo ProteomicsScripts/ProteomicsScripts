@@ -245,6 +245,8 @@ plotDistribution(fc, "fold change", "plot_DistributionFoldChange_23.pdf")
 \section*{Report for {\tt PEP} Section in {\tt mzTab} File\\ \url{FILE_NAME_DUMMY}}
 \end{center}
 
+The {\tt PEP} section of the {\tt mzTab} file contains $\Sexpr{format(n.peptides, big.mark=",")}$ quantified peptide features. 
+
 %
 % peptide abundance distributions
 %
