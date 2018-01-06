@@ -7,7 +7,7 @@ rm(list = ls())
 options(digits=10)
 FcCutoff <- 8    # fold change cutoff, i.e. infinite fc values are mapped to +/-FcCutoff
 
-input.file <- 'example_1.mzTab'
+input.file <- 'example_3.mzTab'
 
 # find start of the section
 startSection <- function(file, section.identifier) {
@@ -127,6 +127,7 @@ plotDistribution <- function(vector, label, pdf.file) {
   density <- density(vector, na.rm=TRUE, bw="nrd0")
   plot(density$x, density$y, xlab=label, type="n", ylab="density", main="", yaxt='n')
   lines(density$x, density$y, col="gray", lwd=2)
+  abline(v=0, col = "gray", lty=1)
   abline(v=median(vector, na.rm=TRUE), col = "gray", lty=2)
   dev.off()
 }

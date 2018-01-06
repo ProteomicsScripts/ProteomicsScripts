@@ -144,6 +144,7 @@ pdf(file=pdf.file, height=4)
 density <- density(vector, na.rm=TRUE, bw="nrd0")
 plot(density$x, density$y, xlab=label, type="n", ylab="density", main="", yaxt='n')
 lines(density$x, density$y, col="gray", lwd=2)
+abline(v=0, col = "gray", lty=1)
 abline(v=median(vector, na.rm=TRUE), col = "gray", lty=2)
 dev.off()
 }
@@ -164,6 +165,7 @@ df$col <- cols[df$dens]
 plot(y~x, data=df[order(df$dens),], pch=20, col=col, xlab='nominal mass [Da]', ylab='fractional mass [Da]')
 dev.off()
 }
+
 
 
 
