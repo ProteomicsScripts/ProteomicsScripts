@@ -266,8 +266,9 @@ peptide.data <- readMzTabPEP(input.file)
 # remove null accessions (TODO: check why there are nulls, FYVPGVAPINFHQND -> should be Q92544 in BM2321 and BM2322)
 peptide.data <- peptide.data[which(peptide.data$accession!="null"),]
 
-# remove decoy hits
+# remove decoy and contaminant hits
 peptide.data <- peptide.data[which(substr(peptide.data$accession,1,4)!="dec_"),]
+peptide.data <- peptide.data[which(substr(peptide.data$accession,1,4)!="CON_"),]
 
 # total number of quantified peptides
 n.total <- dim(peptide.data)[1]
