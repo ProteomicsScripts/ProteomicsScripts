@@ -303,6 +303,7 @@ peptide.data <- calculateIntensityFC(peptide.data)
 
 # pick the quants with highest intensity
 peptide.data <- makeSequencesUnique(peptide.data)
+peptide.data.forOutput <- peptide.data
 
 # number of unique, quantified peptides
 n.unique <- dim(peptide.data)[1]
@@ -357,7 +358,7 @@ generateFrequencyMatrix(p$SEQUENCE, p$matching.position, frequency.scaling, freq
 p <- peptide.data[idx.ML.pInf,]
 generateFrequencyMatrix(p$SEQUENCE, p$matching.position, frequency.scaling, frequency.heatmap.ML.pInf)
 
-write.table(peptide.data, output.file, sep="\t", row.names=FALSE, col.names=TRUE, quote=FALSE)
+write.table(peptide.data.forOutput, output.file, sep="\t", row.names=FALSE, col.names=TRUE, quote=FALSE)
 
 @
 
