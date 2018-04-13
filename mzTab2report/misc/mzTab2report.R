@@ -1,4 +1,5 @@
 ## This is an R script for the conversion of mzTab to a better readable tsv format
+library("corrplot")
 
 # clear entire workspace
 rm(list = ls())
@@ -7,7 +8,7 @@ rm(list = ls())
 options(digits=10)
 FcCutoff <- 8    # fold change cutoff, i.e. infinite fc values are mapped to +/-FcCutoff
 
-input.file <- 'example_3.mzTab'
+input.file <- 'E5023_HCV_HRW_H_1_0.mzTab'
 
 # find start of the section
 startSection <- function(file, section.identifier) {
@@ -149,8 +150,24 @@ plotKendrick <- function(mass, pdf.file) {
   dev.off()
 }
 
+plotCorrelations <- function(data, pdf.file) {
+    # extract study variables
+    study_variables.index <- grepl("peptide_abundance_study_variable", colnames(peptide.data))
+    study_variables.n <- sum(study_variables.index, na.rm=TRUE)
+    study_variables.data = peptide.data[, study_variables.index]
 
+    corr = cor(study_variables.data[complete.cases(study_variables.data),])
 
+    # rename columns and rows
+    colnames(corr) <- 1: study_variables.n
+    rownames(corr) <- 1: study_variables.n
+    cols <- colorRampPalette(c("#2166AC", "#3F8EC0", "#80B9D8", "#BCDAEA", "#E6EFF3", "#F9EAE1", "#FAC8AF", "#ED9576", "#D25749", "#B2182B"))(256)
+    pdf(file=pdf.file)
+    corrplot(corr, cl.lim=c(min(corr),max(corr)), col = cols, is.corr=FALSE)
+
+    dev.off()
+
+}
 
 # read mzTab data
 peptide.data <- readMzTabPEP(input.file)
@@ -174,6 +191,7 @@ sd.fc.23 <-0
 
 # Kendrick plot
 plotKendrick((peptide.data$mass_to_charge - 1.00784) * peptide.data$charge, "plot_Kendrick.pdf")
+
 
 # plot peptide abundance distributions
 if (abundance.exists(peptide.data,1)) {
@@ -219,4 +237,13 @@ if (abundance.exists(peptide.data,2) && abundance.exists(peptide.data,3)) {
   sd.fc.23 <- sd(fc, na.rm=TRUE)
   plotFcLogIntensity(fc, intensity, "fold change", "plot_FoldChangeLogIntensity_23.pdf")
   plotDistribution(fc, "fold change", "plot_DistributionFoldChange_23.pdf")
+}
+
+# Determine number of study variables.
+study_variables.index <- grepl("peptide_abundance_study_variable", colnames(peptide.data))
+study_variables.n <- sum(study_variables.index, na.rm=TRUE)
+
+# plot correlation matrix of peptide abundances
+if (study_variables.n >= 3) {
+    plotCorrelations(data = peptide.data, pdf.file = "correlations.pdf")
 }

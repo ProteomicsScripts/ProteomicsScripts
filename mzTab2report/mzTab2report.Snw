@@ -17,6 +17,7 @@
 
 <<echo=false,results=hide>>=
 
+library("corrplot")
 # clear entire workspace
 rm(list = ls())
 
@@ -166,6 +167,21 @@ plot(y~x, data=df[order(df$dens),], pch=20, col=col, xlab='nominal mass [Da]', y
 dev.off()
 }
 
+plotCorrelations <- function(data, pdf.file) {
+# extract study variables
+study_variables.index <- grepl("peptide_abundance_study_variable", colnames(peptide.data))
+study_variables.n <- sum(study_variables.index, na.rm=TRUE)
+study_variables.data = peptide.data[, study_variables.index]
+corr = cor(study_variables.data[complete.cases(study_variables.data),])
+# rename columns and rows
+colnames(corr) <- 1: study_variables.n
+rownames(corr) <- 1: study_variables.n
+cols <- colorRampPalette(c("#2166AC", "#3F8EC0", "#80B9D8", "#BCDAEA", "#E6EFF3", "#F9EAE1", "#FAC8AF", "#ED9576", "#D25749", "#B2182B"))(256)
+pdf(file=pdf.file)
+corrplot(corr, cl.lim=c(min(corr),max(corr)), col = cols, is.corr=FALSE)
+dev.off()
+}
+
 
 
 
@@ -236,6 +252,11 @@ median.fc.23 <- median(fc, na.rm=TRUE)
 sd.fc.23 <- sd(fc, na.rm=TRUE)
 plotFcLogIntensity(fc, intensity, "fold change", "plot_FoldChangeLogIntensity_23.pdf")
 plotDistribution(fc, "fold change", "plot_DistributionFoldChange_23.pdf")
+}
+study_variables.index <- grepl("peptide_abundance_study_variable", colnames(peptide.data))
+study_variables.n <- sum(study_variables.index, na.rm=TRUE)
+if (study_variables.n >= 3) {
+plotCorrelations(data = peptide.data, pdf.file = "plot_Correlations.pdf")
 }
 
 @
@@ -328,5 +349,14 @@ The {\tt PEP} section of the {\tt mzTab} file contains $\Sexpr{format(n.peptides
 \end{figure}
 }
 {}
+
+\IfFileExists{plot_Correlations.pdf}
+{
+\begin{figure}[hb]
+\centering
+\includegraphics[width=10.0cm]{plot_Correlations.pdf}
+\caption{Correlation of all peptide abundances.}
+\end{figure}
+}
 
 \end{document}
