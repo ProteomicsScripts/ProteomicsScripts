@@ -2,8 +2,14 @@
 
 #!/bin/sh
 
+# function for absolute path of a file (replacement for readlink in Linux)
+# see https://stackoverflow.com/questions/3572030/bash-script-absolute-path-with-osx
+realpath() {
+    [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
+}
+
 # script directory
-SCRIPT_PATH=$(dirname $(greadlink -f $0))
+SCRIPT_PATH=$(dirname $(realpath $0))
 
 if [[ $1 == "" ]]
 then
@@ -13,7 +19,7 @@ fi
 
 # input file
 FILE=$1; shift
-FILE_ABSOLUTE=$(greadlink -f $FILE)
+FILE_ABSOLUTE=$(realpath $FILE)
 FILE_PATH=$(dirname $FILE_ABSOLUTE)
 FILE_BASE=$(basename $FILE_ABSOLUTE)
 FILE_NAME=${FILE_BASE%.*}

@@ -54,7 +54,6 @@ MOVE cXML2report.pdf %input_directory%\%file_base%.pdf
 rem Clean-up
 DEL cXML2report.tex
 DEL cXML2report.aux
-DEL cXML2report.ini
 DEL cXML2report.log
 DEL cXML2report.out
 DEL density*

@@ -48,7 +48,6 @@ rm *.consensusXML
 rm *.csv
 rm *.pdf
 rm *.aux
-rm *.ini
 rm *.log
 rm *.out
 rm *.tex
