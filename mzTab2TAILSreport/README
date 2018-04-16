@@ -28,3 +28,8 @@ misc/example.mzTab    -> example input file
 misc/example.pdf    -> example result file
 misc/example.tsv    -> example result file
 misc/mzTab2TAILSreport.R    -> R code from cXML2report.Snw
+
+
++++ MISC +++
+
+Please specify the species in the [header](https://github.com/ProteomicsScripts/ProteomicsScripts/blob/master/mzTab2TAILSreport/mzTab2TAILSreport.Snw#L58) of the `Snw` script.
