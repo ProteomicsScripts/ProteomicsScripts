@@ -55,6 +55,7 @@ frequency.heatmap.ML.pInf <- "frequency_heatmap_ML_pInf.pdf"
 all.amino.acids <- c("A","C","D","E","F","G","H","I","K","L","M","N","P","Q","R","S","T","V","W","Y")
 
 species <- 9606    # homo sapiens
+#species <- 10090    # mus musculus
 columns <- c("SEQUENCE","GO", "SUBCELLULAR-LOCATIONS", "PROTEIN-NAMES", "GENES", "KEGG")
 
 # load UniProt database for this species
