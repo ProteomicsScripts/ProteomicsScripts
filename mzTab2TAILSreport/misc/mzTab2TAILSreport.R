@@ -35,12 +35,8 @@ frequency.heatmap.ML.pInf <- "frequency_heatmap_ML_pInf.pdf"
 
 all.amino.acids <- c("A","C","D","E","F","G","H","I","K","L","M","N","P","Q","R","S","T","V","W","Y")
 
-species <- 9606    # homo sapiens
-#species <- 10090    # mus musculus
+species <- 9606    # homo sapiens by default (We will check later on with checkSpecies().)
 columns <- c("SEQUENCE","GO", "SUBCELLULAR-LOCATIONS", "PROTEIN-NAMES", "GENES", "KEGG")
-
-# load UniProt database for this species
-up <- UniProt.ws(taxId=species)
 
 # count the occurences of character c in string s
 countOccurrences <- function(char,s) {
@@ -253,6 +249,13 @@ generateFrequencyMatrix <- function(protein.sequence, position, scaling, pdf.fil
   dev.off()
 }
 
+# check species
+checkSpecies <- function(species, proteins) {
+  # Do all protein assessions have the substring <species> in their name?
+  return(length(proteins) == length(proteins[grepl(species,proteins)]))
+}
+
+
 
 
 
@@ -273,6 +276,19 @@ peptide.data <- peptide.data[which(substr(peptide.data$accession,1,4)!="CON_"),]
 
 # total number of quantified peptides
 n.total <- dim(peptide.data)[1]
+
+# try to determine the species from the protein accessions
+if (checkSpecies("MOUSE",peptide.data$accession))
+{
+  species <- 10090
+}
+if (checkSpecies("HUMAN",peptide.data$accession))
+{
+  species <- 9606
+}
+
+# load UniProt database for this species
+up <- UniProt.ws(taxId=species)
 
 peptide.data <- splitAccession(peptide.data)
 peptide.data <- annotateAccession(peptide.data)
