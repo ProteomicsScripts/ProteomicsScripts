@@ -251,7 +251,7 @@ generateFrequencyMatrix <- function(protein.sequence, position, scaling, pdf.fil
 
 # check species
 checkSpecies <- function(species, proteins) {
-  # Do all protein assessions have the substring <species> in their name?
+  # Do all protein accessions have the substring <species> in their name?
   return(length(proteins) == length(proteins[grepl(species,proteins)]))
 }
 
