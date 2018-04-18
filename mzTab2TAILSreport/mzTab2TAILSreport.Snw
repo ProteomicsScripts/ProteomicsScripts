@@ -331,6 +331,10 @@ peptide.data$n.term.acetylation <- (grepl("0-UniMod:1,", peptide.data$modificati
 
 # add (non)prime regions
 peptide.data <- addSequenceVicinity(peptide.data)
+
+# add column with amino acid at position P1
+peptide.data$P1 <- substr(peptide.data$nonprime.sequence, nchar(peptide.data$nonprime.sequence), nchar(peptide.data$nonprime.sequence))
+
 peptide.data.complete <- peptide.data
 
 # remove entries for which sequences are shorter than the aa vicinity, i.e. which cannot be included in the frequency maps
