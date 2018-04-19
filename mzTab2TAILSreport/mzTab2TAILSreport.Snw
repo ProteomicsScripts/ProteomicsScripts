@@ -321,7 +321,6 @@ peptide.data <- calculateIntensityFC(peptide.data)
 
 # pick the quants with highest intensity
 peptide.data <- makeSequencesUnique(peptide.data)
-peptide.data.complete <- peptide.data
 
 # number of unique, quantified peptides
 n.unique <- dim(peptide.data)[1]
