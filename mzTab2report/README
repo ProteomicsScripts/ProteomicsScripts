@@ -7,10 +7,16 @@ mzTab2report example.mzTab
 
 +++ INSTALLATION +++
 
+
 (1) Install R
-(2) Install LaTeX, tested with MacTeX (macOS), TexLive (Ubuntu 16.04 LTS), MiKTeX (Windows)
-(3) Add the script folder to your $PATH variable
-(4) Test the installation with misc/example_*.mzTab
+(2) Run: sudo apt-get -y install libcurl4-gnutls-dev libxml2-dev libssl-dev
+(3) In R: 
+    install.packages(devtools)
+    library(devtools)
+    install_github("corrplot", username = "MFreidank")
+(4) Install LaTeX, tested with MacTeX (macOS), TexLive (Ubuntu 16.04 LTS), MiKTeX (Windows)
+(5) Add the script folder to your $PATH variable
+(6) Test the installation with misc/example.mzTab
 
 
 +++ FILES +++
