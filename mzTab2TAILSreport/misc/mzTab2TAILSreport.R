@@ -10,14 +10,17 @@ rm(list = ls())
 library(UniProt.ws)
 library(rasterVis)
 
+input.file <- "data.mzTab"
+output.file <- "data.tsv"
+
 # options
 options(digits=10)
 
 # fc cutoff, i.e. infinite fc values are mapped to +/-FcCutoff
 FcCutoff <- 8
 
-input.file <- "data.mzTab"
-output.file <- "data.tsv"
+# amino acid vicinity for the frequency plots
+aa.vicinity <- 6
 
 plot.HL <- "FcLogIntensity_HL.pdf"
 plot.HM <- "FcLogIntensity_HM.pdf"
@@ -35,11 +38,8 @@ frequency.heatmap.ML.pInf <- "frequency_heatmap_ML_pInf.pdf"
 
 all.amino.acids <- c("A","C","D","E","F","G","H","I","K","L","M","N","P","Q","R","S","T","V","W","Y")
 
-species <- 9606    # homo sapiens
+species <- 9606    # homo sapiens by default (We will check later on with checkSpecies().)
 columns <- c("SEQUENCE","GO", "SUBCELLULAR-LOCATIONS", "PROTEIN-NAMES", "GENES", "KEGG")
-
-# load UniProt database for this species
-up <- UniProt.ws(taxId=species)
 
 # count the occurences of character c in string s
 countOccurrences <- function(char,s) {
@@ -161,14 +161,11 @@ matchingPosition <- function(peptide.sequence,protein.sequence) {
   return(pos)
 }
 
-# remove protein N-termini (i.e. peptides matched to position 1 to 6 in the protein)
 # and add (non)prime regions
 addSequenceVicinity <- function(peptide.data) {
   peptide.data$matching.position <- mapply(matchingPosition, peptide.data$sequence, peptide.data$SEQUENCE)
-  idx <- which(peptide.data$matching.position > 6)
-  peptide.data <- peptide.data[idx,]
-  peptide.data$nonprime.sequence <- mapply(substr, peptide.data$SEQUENCE, peptide.data$matching.position-6, peptide.data$matching.position-1)
-  peptide.data$prime.sequence <- mapply(substr, peptide.data$SEQUENCE, peptide.data$matching.position, peptide.data$matching.position+5)
+  peptide.data$nonprime.sequence <- mapply(substr, peptide.data$SEQUENCE, peptide.data$matching.position-aa.vicinity, peptide.data$matching.position-1)
+  peptide.data$prime.sequence <- mapply(substr, peptide.data$SEQUENCE, peptide.data$matching.position, peptide.data$matching.position+aa.vicinity-1)
   return(peptide.data)
 }
 
@@ -203,7 +200,8 @@ generateGlobalAminoAcidFrequency <- function(proteins) {
   # remove non-standard aminoacids Selenocysteine (U) and Pyrrolysine (O)
   t <- t[which(t[,1]!="U"),]
   t <- t[which(t[,1]!="O"),]
-
+  t <- t[which(t[,1]!="X"),]
+  
   freq <- t$Freq/sum(t$Freq)
   return(freq)
 }
@@ -252,6 +250,13 @@ generateFrequencyMatrix <- function(protein.sequence, position, scaling, pdf.fil
   dev.off()
 }
 
+# check species
+checkSpecies <- function(species, proteins) {
+  # Do all protein accessions have the substring <species> in their name?
+  return(length(proteins) == length(proteins[grepl(species,proteins)]))
+}
+
+
 
 
 
@@ -273,6 +278,19 @@ peptide.data <- peptide.data[which(substr(peptide.data$accession,1,4)!="CON_"),]
 # total number of quantified peptides
 n.total <- dim(peptide.data)[1]
 
+# try to determine the species from the protein accessions
+if (checkSpecies("MOUSE",peptide.data$accession))
+{
+  species <- 10090
+}
+if (checkSpecies("HUMAN",peptide.data$accession))
+{
+  species <- 9606
+}
+
+# load UniProt database for this species
+up <- UniProt.ws(taxId=species)
+
 peptide.data <- splitAccession(peptide.data)
 peptide.data <- annotateAccession(peptide.data)
 
@@ -284,18 +302,30 @@ peptide.data <- calculateIntensityFC(peptide.data)
 
 # pick the quants with highest intensity
 peptide.data <- makeSequencesUnique(peptide.data)
-peptide.data.forOutput <- peptide.data
 
 # number of unique, quantified peptides
 n.unique <- dim(peptide.data)[1]
 
-# remove protein N-termini and add (non)prime regions
+# add N-term acetylation column
+peptide.data$n.term.acetylation <- (grepl("0-UniMod:1,", peptide.data$modifications) | (peptide.data$modifications=="0-UniMod:1"))
+
+# add (non)prime regions
 peptide.data <- addSequenceVicinity(peptide.data)
+
+# add column with amino acid at position P1 and P1'
+peptide.data$P1 <- substr(peptide.data$nonprime.sequence, nchar(peptide.data$nonprime.sequence), nchar(peptide.data$nonprime.sequence)) 
+peptide.data$P1prime <- substr(peptide.data$prime.sequence, 1, 1) 
+
+peptide.data.complete <- peptide.data
+
+# remove entries for which sequences are shorter than the aa vicinity, i.e. which cannot be included in the frequency maps
+peptide.data <- peptide.data[which(nchar(peptide.data$nonprime.sequence)>=aa.vicinity),]
+peptide.data <- peptide.data[which(nchar(peptide.data$prime.sequence)>=aa.vicinity),]
 
 # number of unique, quantified peptides
 n.after.vicinity.mapping <- dim(peptide.data)[1]
 
-# plot fold change vs log intensity 
+# plot fold change vs log intensity
 plotFcLogIntensity(peptide.data$fc.H.L, peptide.data$intensity, "fc (H:L)", plot.HL)
 plotFcLogIntensity(peptide.data$fc.H.M, peptide.data$intensity, "fc (H:M)", plot.HM)
 plotFcLogIntensity(peptide.data$fc.M.L, peptide.data$intensity, "fc (M:L)", plot.ML)
@@ -339,4 +369,4 @@ generateFrequencyMatrix(p$SEQUENCE, p$matching.position, frequency.scaling, freq
 p <- peptide.data[idx.ML.pInf,]
 generateFrequencyMatrix(p$SEQUENCE, p$matching.position, frequency.scaling, frequency.heatmap.ML.pInf)
 
-write.table(peptide.data.forOutput, output.file, sep="\t", row.names=FALSE, col.names=TRUE, quote=FALSE)
+write.table(peptide.data.complete, output.file, sep="\t", row.names=FALSE, col.names=TRUE, quote=FALSE)
