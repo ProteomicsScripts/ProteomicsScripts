@@ -10,14 +10,17 @@ rm(list = ls())
 library(UniProt.ws)
 library(rasterVis)
 
+input.file <- "data.mzTab"
+output.file <- "data.tsv"
+
 # options
 options(digits=10)
 
 # fc cutoff, i.e. infinite fc values are mapped to +/-FcCutoff
 FcCutoff <- 8
 
-input.file <- "BM3748.mzTab"
-output.file <- "BM3748.tsv"
+# amino acid vicinity for the frequency plots
+aa.vicinity <- 6
 
 plot.HL <- "FcLogIntensity_HL.pdf"
 
@@ -28,11 +31,7 @@ frequency.heatmap.HL.pInf <- "frequency_heatmap_HL_pInf.pdf"
 all.amino.acids <- c("A","C","D","E","F","G","H","I","K","L","M","N","P","Q","R","S","T","V","W","Y")
 
 species <- 9606    # homo sapiens
-#species <- 813    # chlamydia trachomatis
 columns <- c("SEQUENCE","GO", "SUBCELLULAR-LOCATIONS", "PROTEIN-NAMES", "GENES", "KEGG")
-
-# load UniProt database for this species
-up <- UniProt.ws(taxId=species)
 
 # count the occurences of character c in string s
 countOccurrences <- function(char,s) {
@@ -236,6 +235,11 @@ generateFrequencyMatrix <- function(protein.sequence, position, scaling, pdf.fil
   dev.off()
 }
 
+# check species
+checkSpecies <- function(species, proteins) {
+  # Do all protein accessions have the substring <species> in their name?
+  return(length(proteins) == length(proteins[grepl(species,proteins)]))
+}
 
 
 
@@ -250,11 +254,25 @@ peptide.data <- readMzTabPEP(input.file)
 # remove null accessions (TODO: check why there are nulls, FYVPGVAPINFHQND -> should be Q92544 in BM2321 and BM2322)
 peptide.data <- peptide.data[which(peptide.data$accession!="null"),]
 
-# remove decoy hits
+# remove decoy and contaminant hits
 peptide.data <- peptide.data[which(substr(peptide.data$accession,1,4)!="dec_"),]
+peptide.data <- peptide.data[which(substr(peptide.data$accession,1,4)!="CON_"),]
 
 # total number of quantified peptides
 n.total <- dim(peptide.data)[1]
+
+# try to determine the species from the protein accessions
+if (checkSpecies("MOUSE",peptide.data$accession))
+{
+  species <- 10090
+}
+if (checkSpecies("HUMAN",peptide.data$accession))
+{
+  species <- 9606
+}
+
+# load UniProt database for this species
+up <- UniProt.ws(taxId=species)
 
 peptide.data <- splitAccession(peptide.data)
 peptide.data <- annotateAccession(peptide.data)
@@ -274,8 +292,15 @@ peptide.data <- makeSequencesUnique(peptide.data)
 # number of unique, quantified peptides
 n.unique <- dim(peptide.data)[1]
 
-# remove protein N-termini and add (non)prime regions
+# add N-term acetylation column
+peptide.data$n.term.acetylation <- (grepl("0-UniMod:1,", peptide.data$modifications) | (peptide.data$modifications=="0-UniMod:1"))
+
+# add (non)prime regions
 peptide.data <- addSequenceVicinity(peptide.data)
+
+# add column with amino acid at position P1 and P1'
+peptide.data$P1 <- substr(peptide.data$nonprime.sequence, nchar(peptide.data$nonprime.sequence), nchar(peptide.data$nonprime.sequence))
+peptide.data$P1prime <- substr(peptide.data$prime.sequence, 1, 1)
 
 # number of unique, quantified peptides
 n.after.vicinity.mapping <- dim(peptide.data)[1]
