@@ -2,8 +2,14 @@
 
 #!/bin/sh
 
+# function for absolute path of a file (replacement for readlink in Linux)
+# see https://stackoverflow.com/questions/3572030/bash-script-absolute-path-with-osx
+realpath() {
+    [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
+}
+
 # script directory
-SCRIPT_PATH=$(dirname -- "$(readlink -f -- "$0")")
+SCRIPT_PATH=$(dirname $(realpath $0))
 
 if [[ $1 == "" ]]
 then
@@ -13,7 +19,7 @@ fi
 
 # input file
 FILE=$1; shift
-FILE_ABSOLUTE=$(readlink -f -- $FILE)
+FILE_ABSOLUTE=$(realpath $FILE)
 FILE_PATH=$(dirname $FILE_ABSOLUTE)
 FILE_BASE=$(basename $FILE_ABSOLUTE)
 FILE_NAME=${FILE_BASE%.*}
@@ -31,20 +37,20 @@ cd $SCRIPT_PATH
 cp $FILE_ABSOLUTE data.mzTab
 
 # replace dummy by file name
-sed -e 's/FILE_NAME_DUMMY/'$FILE_NAME'/g' mzTab2TAILSreport.Snw > mzTab2TAILSreport_temp.Snw
+sed -e 's/FILE_NAME_DUMMY/'$FILE_NAME'/g' mzTab2DoubletTAILSreport.Snw > mzTab2DoubletTAILSreport_temp.Snw
 
 # Run the R code
-R -e "Sweave('mzTab2TAILSreport_temp.Snw')"
+R -e "Sweave('mzTab2DoubletTAILSreport_temp.Snw')"
 
-pdflatex mzTab2TAILSreport_temp.tex
+pdflatex mzTab2DoubletTAILSreport_temp.tex
 
-mv mzTab2TAILSreport_temp.pdf $FILE_PATH/$FILE_NAME.pdf
+mv mzTab2DoubletTAILSreport_temp.pdf $FILE_PATH/$FILE_NAME.pdf
 mv data.tsv $FILE_PATH/$FILE_NAME.tsv
 
 # clean-up
 rm data*
 rm FcLogIntensity*
 rm frequency*
-rm mzTab2TAILSreport_temp.*
+rm mzTab2DoubletTAILSreport_temp*
 
 cd $CURRENT_PATH
