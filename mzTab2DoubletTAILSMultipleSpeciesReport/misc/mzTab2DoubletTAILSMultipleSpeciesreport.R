@@ -325,7 +325,14 @@ n.total <- dim(peptide.data)[1]
 peptide.data <- splitAccession(peptide.data)
 print(nrow(peptide.data))
 print(ncol(peptide.data))
-peptide.data <- annotateAccessionMultipleSpecies(peptide.data)
+
+# NOTE: Alternative species for chlamydia:
+# 471472 Chlamydia trachomatis serovar L2 (strain 434/Bu / ATCC VR-902B)
+# can be set like this:
+# species=list(list("HUMAN", 9606), list("CHLTR", 471472))
+species=list(list("HUMAN", 9606), list("CHLTR", 272561))
+
+peptide.data <- annotateAccessionMultipleSpecies(peptide.data, species)
 print(peptide.data)
 print(nrow(peptide.data))
 print(ncol(peptide.data))
