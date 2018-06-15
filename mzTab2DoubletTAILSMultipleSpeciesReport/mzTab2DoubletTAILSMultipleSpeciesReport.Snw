@@ -1,0 +1,451 @@
+\documentclass[a4paper]{article}
+
+\usepackage{subfig, fullpage, graphicx, amsmath}
+\usepackage{url}
+
+%\setlength{\voffset}{0pt}
+%\setlength{\topmargin}{0pt}
+%\setlength{\headheight}{0pt}
+%\setlength{\headsep}{0pt}
+\setlength{\textwidth}{18cm}
+\setlength{\hoffset}{-1cm}
+
+
+\SweaveOpts{prefix.string=plots/}
+\pagestyle{empty}
+
+\begin{document}
+
+<<echo=false,results=hide>>=
+## R script for triple TAILS experiments, input mzTab
+
+# install packages
+#source("https://bioconductor.org/biocLite.R")
+#biocLite("UniProt.ws")
+#install.packages('rasterVis')
+
+rm(list = ls())
+
+library(UniProt.ws)
+library(rasterVis)
+
+input.file <- "misc/BM3754_for_Moritz.mzTab"
+output.file <- "data.tsv"
+
+# options
+options(digits=10)
+
+# fc cutoff, i.e. infinite fc values are mapped to +/-FcCutoff
+FcCutoff <- 8
+
+# amino acid vicinity for the frequency plots
+aa.vicinity <- 6
+
+plot.HL <- "FcLogIntensity_HL.pdf"
+
+frequency.heatmap.HL.mInf <- "frequency_heatmap_HL_mInf.pdf"
+frequency.heatmap.HL.zero <- "frequency_heatmap_HL_zero.pdf"
+frequency.heatmap.HL.pInf <- "frequency_heatmap_HL_pInf.pdf"
+
+all.amino.acids <- c("A","C","D","E","F","G","H","I","K","L","M","N","P","Q","R","S","T","V","W","Y")
+
+species <- 9606    # homo sapiens
+columns <- c("SEQUENCE","GO", "SUBCELLULAR-LOCATIONS", "PROTEIN-NAMES", "GENES", "KEGG")
+
+# count the occurences of character c in string s
+countOccurrences <- function(char,s) {
+s2 <- gsub(char,"",s)
+return (nchar(s) - nchar(s2))
+}
+
+# check that all protein accessions are of the format *|*|*
+checkAccessionFormat <- function(accessions) {
+n <- length(accessions)
+count <- countOccurrences("[|]",accessions)
+m <- length(which(count==2))
+return (n==m)
+}
+
+# read the PEP section of an mzTab file
+readMzTabPEP <- function(file) {
+
+# read entire mzTab
+no.col <- max(count.fields(file, sep = "\t", quote=""))
+data <- read.table(file,sep="\t",fill=TRUE, quote="", col.names=1:no.col, stringsAsFactors=FALSE)
+
+# extract PEP data
+peptide.data <- data[which(data[,1]=="PEP"),]
+colnames(peptide.data) <- unlist(data[which(data[,1]=="PEH")[1],])
+peptide.data$PEH <- NULL
+
+return (peptide.data)
+}
+
+# splits fasta protein accession into UniProt accession and gene name
+splitAccession <- function(peptide.data) {
+# simplify accession (in case it is of the format *|*|* )
+peptide.data$accession <- as.character(peptide.data$accession)
+if (checkAccessionFormat(peptide.data$accession)) {
+list <- strsplit(peptide.data$accession,"[|]")
+peptide.data$accession <- unlist(lapply(list, '[[', 2))
+peptide.data$gene <- unlist(lapply(list, '[[', 3))
+}
+
+return (peptide.data)
+}
+
+# make the input unique and combine them in a space separated string
+UniqueSpaceSeparated <- function(x) {
+u <- unique(x)
+r <- paste(u, collapse=" ")
+return(r)
+}
+
+# annotate protein accessions with columns from UniProt
+annotateAccession <- function(data, up) {
+keytype <- "UNIPROTKB"
+keys <- data$accession
+a <- UniProt.ws::select(up, keys, columns, keytype)
+b <- aggregate(a, by=list(a[,keytype]), FUN=UniqueSpaceSeparated)
+b[,1] <- NULL
+idx <- match(keys,b[,keytype])
+annotations <- b[idx,]
+annotations$UNIPROTKB <- NULL
+data <- cbind(data, annotations)
+return (data)
+}
+
+# determine intensities and fold changes and map to finite numbers
+# H=0 L=finite              =>  mapped to fc=-FcCutoff
+# H=finite L=0              =>  mapped to fc=+FcCutoff
+# H=0 L=0 (i.e. M=finite)   =>  mapped to fc=0
+calculateIntensityFC <- function(peptide.data) {
+offset <- 1    # avoids devisions by zero
+max.fc <- FcCutoff    # map knock-out fold changes to finite values 
+
+# convert to numeric
+peptide.data$"peptide_abundance_study_variable[1]" <- as.numeric(peptide.data$"peptide_abundance_study_variable[1]")
+peptide.data$"peptide_abundance_study_variable[2]" <- as.numeric(peptide.data$"peptide_abundance_study_variable[2]")
+
+# calculate intensity of doublets (simple mean of the two abundances)
+peptide.data$intensity = (peptide.data$"peptide_abundance_study_variable[1]" + peptide.data$"peptide_abundance_study_variable[2]")/2
+
+# calculate fold changes
+peptide.data$"peptide_abundance_study_variable[1]" <- peptide.data$"peptide_abundance_study_variable[1]" + offset
+peptide.data$"peptide_abundance_study_variable[2]" <- peptide.data$"peptide_abundance_study_variable[2]" + offset
+peptide.data$fc.H.L <- log2(peptide.data$"peptide_abundance_study_variable[2]"/peptide.data$"peptide_abundance_study_variable[1]")
+
+# map fc to finite values
+peptide.data[which(peptide.data$fc.H.L < -FcCutoff),]$fc.H.L <- -FcCutoff
+peptide.data[which(peptide.data$fc.H.L > FcCutoff),]$fc.H.L <- FcCutoff
+
+return (peptide.data)
+}
+
+# returns index of the best quantification with this sequence
+indexMaxIntensity <- function(sequence) {
+idx <- which(peptide.data$sequence==sequence)
+max <- max(peptide.data$intensity[idx])
+idx.m <- which(peptide.data[idx,]$intensity==max)
+return(idx[idx.m])
+}
+
+# makes the sequences unique by picking the quants with maximum intensity
+makeSequencesUnique <- function(peptide.data) {
+unique.sequences <- unique(peptide.data$sequence)
+idx <- unlist(lapply(unique.sequences, FUN=indexMaxIntensity))
+return(peptide.data[idx,])
+}
+
+# return position where peptide sequence and protein sequence match
+matchingPosition <- function(peptide.sequence,protein.sequence) {
+pos <- regexpr(peptide.sequence,protein.sequence)
+return(pos)
+}
+
+# remove protein N-termini (i.e. peptides matched to position 1 to 6 in the protein)
+# and add (non)prime regions
+addSequenceVicinity <- function(peptide.data) {
+peptide.data$matching.position <- mapply(matchingPosition, peptide.data$sequence, peptide.data$SEQUENCE)
+idx <- which(peptide.data$matching.position > 6)
+peptide.data <- peptide.data[idx,]
+peptide.data$nonprime.sequence <- mapply(substr, peptide.data$SEQUENCE, peptide.data$matching.position-6, peptide.data$matching.position-1)
+peptide.data$prime.sequence <- mapply(substr, peptide.data$SEQUENCE, peptide.data$matching.position, peptide.data$matching.position+5)
+return(peptide.data)
+}
+
+# plot fold change vs log intensity
+plotFcLogIntensity <- function(fc.vector, intensity.vector, fc.label, pdf.file) {
+pdf(file=pdf.file)
+x <- fc.vector
+y <- log10(intensity.vector)
+df <- data.frame(x,y)
+x <- densCols(x,y, colramp=colorRampPalette(c("black", "white")))
+df$dens <- col2rgb(x)[1,] + 1L
+#cols <- colorRampPalette(c("#000099", "#00FEFF", "#45FE4F", "#FCFF00", "#FF9400", "#FF3100"))(256)
+cols <-  colorRampPalette(c("#2166AC", "#3F8EC0", "#80B9D8", "#BCDAEA", "#E6EFF3", "#F9EAE1", "#FAC8AF", "#ED9576", "#D25749", "#B2182B"))(256)
+df$col <- cols[df$dens]
+plot(y~x, data=df[order(df$dens),], pch=20, col=col, xlab=fc.label, ylab=expression('log'[10]*' intensity'))
+abline(v=0, col = "gray")
+dev.off()
+}
+
+# return number of positions where peptide sequence and protein sequence match
+numberOfPositions <- function(peptide.sequence,protein.sequence) {
+n <- length(gregexpr(peptide.sequence,protein.sequence))
+return(n)
+}
+
+# generate frequency scaling factors for each amino acid
+generateGlobalAminoAcidFrequency <- function(proteins) {
+x <- paste(unique(proteins), collapse="")
+x <- substring(x, seq(1,nchar(x), 1), seq(1,nchar(x),1))
+t <- as.data.frame(table(x))
+
+# remove non-standard aminoacids Selenocysteine (U) and Pyrrolysine (O)
+t <- t[which(t[,1]!="U"),]
+t <- t[which(t[,1]!="O"),]
+
+freq <- t$Freq/sum(t$Freq)
+return(freq)
+}
+
+# generate frequency matrix
+generateFrequencyMatrix <- function(protein.sequence, position, scaling, pdf.file) {
+
+table <- as.data.frame(all.amino.acids)
+for (i in -6:5)
+{
+aa <- mapply(substr, protein.sequence, position+i, position+i)
+df <- as.data.frame(table(aa))
+count <- rep(0,20)
+idx <- match(df[,1],all.amino.acids)
+count[idx] <- df[,2]
+count <- scaling * count
+table <- cbind(table,count)
+}
+
+rownames(table) <- table$all.amino.acids
+table <- table[,-c(1)]
+colnames(table) <- c("P6","P5","P4","P3","P2","P1","P1'","P2'","P3'","P4'","P5'","P6'")
+
+table <- table[c(20:1),]
+table_matrix <- data.matrix(table)
+
+pdf(file=pdf.file)
+#my.colours <- colorRampPalette(c("white", "grey", "red"))(n = 299)
+#heatmap(table_matrix, Rowv=NA, Colv=NA, col=my.colours, scale="none", margins=c(5,10), add.expr = abline(h=0, v=6.5))
+
+my.theme <- BuRdTheme()
+my.min <- min(table_matrix)
+my.max <- max(table_matrix)
+my.at <- seq(my.min, my.max, length.out=length(my.theme$regions$col)-1)
+my.ckey <- list(at=my.at, col=my.theme$regions$col)
+
+table_matrix <- t(table_matrix)
+p <- levelplot(table_matrix, par.settings=my.theme, at=my.at, colorkey=my.ckey, xlab="", ylab="",
+scales = list(tck = c(0,0)),    # removes ticks from axes
+panel = function(...){    # add vertical line between P1 and P1'
+panel.levelplot(...)
+panel.abline(v = 6.5)
+})
+print(p)
+
+dev.off()
+}
+
+# check species
+checkSpecies <- function(species, proteins) {
+# Do all protein accessions have the substring <species> in their name?
+return(length(proteins) == length(proteins[grepl(species,proteins)]))
+}
+
+#' Run `annotateAccession` on a projection of `data` onto a single given `specie`.
+#' 
+#' @param data A dataframe containing data. Must have a named `gene` attribute
+#'             that has rows matching the marker for specie (given as `specie[[1]]`).
+#' @param specie A list with two elements. 
+#'               The first element is a string specifying a marker to match 
+#'               in `data$gene` to identify rows for the given specie. 
+#'               The second element is a numeric taxonomy id identifying the specie
+#'               in `UniProt.ws`.
+annotateSingleSpecies <- function(data, specie) {
+# a marker that identifies the given `specie` in data$gene
+marker <- specie[[1]]
+
+# a uniprot taxonomy id used to load uniprot data for our given `specie`
+id <- specie[[2]]
+
+# extract data for `specie`
+species_data <- data[grepl(marker, data$gene),]
+rowcount <- nrow(species_data)
+colcount <- ncol(species_data)
+print(sprintf("Processing data for species with marker '%s' and uniprot id '%d'..", marker, id))
+print(sprintf("Found %d matching rows with %d columns each.", rowcount, colcount))
+
+# load uniprot database
+up <- UniProt.ws(taxId=id)
+
+# annotate accessions for the current specie
+print("Annotating accessions for the given species.")
+annotated_species_data = annotateAccession(species_data, up)
+
+# Collect annotated data.
+print("Returning annotated data..")
+return (annotated_species_data)
+}
+
+#' Annotate protein accessions with columns from UniProt databases for each given species.
+#'
+#' @param data A dataframe containing data. Must have a named `gene` attribute
+#'             that has rows matching the marker for specie (given as `specie[[1]]`).
+#' @param species A list of lists, where each sublist has two elements. 
+#'                Each sublist defines exactly one specie using its two elements.
+#'                The first element is a string specifying a marker to match 
+#'                in `data$gene` to identify rows for this given specie. 
+#'                The second element is a numeric taxonomy id identifying this specie
+#'                in `UniProt.ws`.
+# 
+annotateAccessionMultipleSpecies <- function(data, 
+species=list(list("HUMAN", 9606),
+list("CHLTR", 272561))) {
+
+# construct list of dataframes each containing annotated data for one specie
+annotated_species_data = lapply(species, function(specie) { return (annotateSingleSpecies(data, specie))})
+
+# concatenate all dataframes with specie data into a single large dataframe
+return (do.call(rbind, annotated_species_data))
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+peptide.data <- readMzTabPEP(input.file)
+
+# remove null accessions (TODO: check why there are nulls, FYVPGVAPINFHQND -> should be Q92544 in BM2321 and BM2322)
+peptide.data <- peptide.data[which(peptide.data$accession!="null"),]
+
+# remove decoy and contaminant hits
+peptide.data <- peptide.data[which(substr(peptide.data$accession,1,4)!="dec_"),]
+peptide.data <- peptide.data[which(substr(peptide.data$accession,1,4)!="CON_"),]
+
+# total number of quantified peptides
+n.total <- dim(peptide.data)[1]
+
+peptide.data <- splitAccession(peptide.data)
+print(nrow(peptide.data))
+print(ncol(peptide.data))
+peptide.data <- annotateAccessionMultipleSpecies(peptide.data)
+print(peptide.data)
+print(nrow(peptide.data))
+print(ncol(peptide.data))
+
+# remove unannotated peptides
+peptide.data <- peptide.data[which(peptide.data$SEQUENCE!="NA"),]
+
+# simplify table
+#peptide.data <- peptide.data[,c("sequence", "best_search_engine_score[1]", "opt_global_XTandem_score", "accession", "peptide_abundance_study_variable[1]", "peptide_abundance_study_variable[2]", "peptide_abundance_study_variable[3]")]
+
+# calculate intensities and fold changes
+peptide.data <- calculateIntensityFC(peptide.data)
+
+# pick the quants with highest intensity
+peptide.data <- makeSequencesUnique(peptide.data)
+
+# number of unique, quantified peptides
+n.unique <- dim(peptide.data)[1]
+
+# add N-term acetylation column
+peptide.data$n.term.acetylation <- (grepl("0-UniMod:1,", peptide.data$modifications) | (peptide.data$modifications=="0-UniMod:1"))
+
+# add (non)prime regions
+peptide.data <- addSequenceVicinity(peptide.data)
+
+# add column with amino acid at position P1 and P1'
+peptide.data$P1 <- substr(peptide.data$nonprime.sequence, nchar(peptide.data$nonprime.sequence), nchar(peptide.data$nonprime.sequence))
+peptide.data$P1prime <- substr(peptide.data$prime.sequence, 1, 1)
+
+# number of unique, quantified peptides
+n.after.vicinity.mapping <- dim(peptide.data)[1]
+
+# plot fold change vs log intensity
+plotFcLogIntensity(peptide.data$fc.H.L, peptide.data$intensity, "fc (H:L)", plot.HL)
+
+# global amino acid frequency
+frequency <- generateGlobalAminoAcidFrequency(peptide.data$SEQUENCE)
+frequency.scaling <- 1/frequency
+frequency.scaling <- frequency.scaling/sum(frequency.scaling)
+
+
+idx.HL.mInf <- which(peptide.data$fc.H.L == -FcCutoff)
+idx.HL.zero <- which((peptide.data$fc.H.L > -FcCutoff) & (peptide.data$fc.H.L < FcCutoff))
+idx.HL.pInf <- which(peptide.data$fc.H.L == FcCutoff)
+
+p <- peptide.data[idx.HL.mInf,]
+generateFrequencyMatrix(p$SEQUENCE, p$matching.position, frequency.scaling, frequency.heatmap.HL.mInf)
+p <- peptide.data[idx.HL.zero,]
+generateFrequencyMatrix(p$SEQUENCE, p$matching.position, frequency.scaling, frequency.heatmap.HL.zero)
+p <- peptide.data[idx.HL.pInf,]
+generateFrequencyMatrix(p$SEQUENCE, p$matching.position, frequency.scaling, frequency.heatmap.HL.pInf)
+
+write.table(peptide.data, output.file, sep="\t", row.names=FALSE, col.names=TRUE, quote=FALSE)
+
+
+@
+
+\begin{center}
+\section*{Double TAILS Report\\ \url{FILE_NAME_DUMMY}}
+\end{center}
+
+\vspace{1cm}
+
+\noindent
+This report is based on \Sexpr{format(n.total, big.mark=",")} quantified peptide features provided in the {\tt mzTab} input file. Some peptide sequences have been quantified multiple times (multiple charge states, different fractions). In the following analysis, we will choose the most intense peptide quantifications and focus on the subset of \Sexpr{format(n.unique, big.mark=",")} (\Sexpr{round(100*n.unique/n.total, digits=2)}\%) unique peptide sequences. \Sexpr{format(n.unique - n.after.vicinity.mapping, big.mark=",")} of those peptides are mapped very close to N- or C-terminus (less than 6 amino acid positions) which leaves us with \Sexpr{format(n.after.vicinity.mapping, big.mark=",")} quantified peptides.
+
+\vspace{1.5cm}
+
+\begin{table}[hb]
+\begin{center}
+\begin{tabular}{| c | c | c | c | c |}
+\hline
+ & number of peptides with & number of peptides with & number of peptides with & total number\\
+ & fc $\rightarrow - \infty$ & fc unchanged & fc $\rightarrow + \infty$ & of peptides\\
+\hline
+H:L & \Sexpr{format(length(idx.HL.mInf), big.mark=",")} & \Sexpr{format(length(idx.HL.zero), big.mark=",")} & \Sexpr{format(length(idx.HL.pInf), big.mark=",")} & \Sexpr{format(n.after.vicinity.mapping, big.mark=",")}\\
+\hline
+\end{tabular}
+\caption{Number of peptides for which both or none of the two labelled forms were detected (fc unchanged), or only one of them (fc $\rightarrow \pm \infty$).}
+\end{center}
+\end{table}
+
+\newcommand{\FigureWidthA}{7.0cm}
+\newcommand{\FigureSpacingV}{-0.5cm}
+
+\begin{figure}[hb]
+  \centering
+  \subfloat[H:L (\Sexpr{format(length(idx.HL.mInf), big.mark=",")} peptides no Heavy, \Sexpr{format(length(idx.HL.zero), big.mark=",")} peptides Light and Heavy, \Sexpr{format(length(idx.HL.pInf), big.mark=",")} peptides no Light)]{\includegraphics[width=\FigureWidthA]{FcLogIntensity_HL.pdf}} \\
+  \caption{Fold change vs log intensity for the set of \Sexpr{format(n.after.vicinity.mapping, big.mark=",")} unique peptides. Infinite fold changes (fc $\rightarrow \pm \infty$) are mapped to fc = $\pm 8$. The colour gradient reflects the density of the scatter plot.}
+\end{figure}
+
+\newcommand{\FigureWidthB}{6.5cm}
+\newcommand{\FigureSpacingH}{-1.1cm}
+
+\begin{figure}[hb]
+  \centering
+  \subfloat[H:L $\rightarrow - \infty$ (\Sexpr{format(length(idx.HL.mInf), big.mark=",")} peptides)]{\includegraphics[width=\FigureWidthB]{frequency_heatmap_HL_mInf.pdf}}
+  \hspace{\FigureSpacingH}
+  \subfloat[H:L unchanged (\Sexpr{format(length(idx.HL.zero), big.mark=",")} peptides)]{\includegraphics[width=\FigureWidthB]{frequency_heatmap_HL_zero.pdf}}
+  \hspace{\FigureSpacingH}
+  \subfloat[H:L $\rightarrow + \infty$ (\Sexpr{format(length(idx.HL.pInf), big.mark=",")} peptides)]{\includegraphics[width=\FigureWidthB]{frequency_heatmap_HL_pInf.pdf}}   \caption{Amino acid frequencies fingerprints for the nine subsets listed in Table~1. For example, figure (g) depicts the fingerprint of peptides detected in light (L) but absent in medium (M).}
+\end{figure}
+
+\end{document}
