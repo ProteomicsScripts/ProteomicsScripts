@@ -33,20 +33,20 @@ cp $FILE_ABSOLUTE data.mzTab
 # replace dummy by file name
 
 
-sed -e 's/FILE_NAME_DUMMY/'$FILE_NAME'/g' mzTab2DoubletTAILSMultipleSpeciesReport.Snw > mzTab2DoubletTAILSMultipleSpeciesreport_temp.Snw
+sed -e 's/FILE_NAME_DUMMY/'$FILE_NAME'/g' mzTab2DoubletTAILSMultipleSpeciesReport.Snw > mzTab2DoubletTAILSMultipleSpeciesReport_temp.Snw
 
 # Run the R code
-R -e "Sweave('mzTab2DoubletTAILSMultipleSpeciesreport_temp.Snw')"
+R -e "Sweave('mzTab2DoubletTAILSMultipleSpeciesReport_temp.Snw')"
 
-pdflatex mzTab2DoubletTAILSMultipleSpeciesreport_temp.tex
+pdflatex mzTab2DoubletTAILSMultipleSpeciesReport_temp.tex
 
-mv mzTab2DoubletTAILSMultipleSpeciesreport_temp.pdf $FILE_PATH/$FILE_NAME.pdf
+mv mzTab2DoubletTAILSMultipleSpeciesReport_temp.pdf $FILE_PATH/$FILE_NAME.pdf
 mv data.tsv $FILE_PATH/$FILE_NAME.tsv
 
 # clean-up
 rm data*
 rm FcLogIntensity*
 rm frequency*
-rm mzTab2DoubletTAILSMultipleSpeciesreport_temp.*
+rm mzTab2DoubletTAILSMultipleSpeciesReport_temp.*
 
 cd $CURRENT_PATH

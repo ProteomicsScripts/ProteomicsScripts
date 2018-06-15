@@ -10,7 +10,7 @@ rm(list = ls())
 library(UniProt.ws)
 library(rasterVis)
 
-input.file <- "misc/BM3754_for_Moritz.mzTab"
+input.file <- "data.mzTab"
 output.file <- "data.tsv"
 
 # options
