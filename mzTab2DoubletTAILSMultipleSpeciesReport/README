@@ -1,0 +1,30 @@
++++ DESCRIPTION +++
+
+The script mzTab2TAILSreport takes an mzTab file as input and generates a summary pdf reports and tsv result file for TAILS experiments.
+
+mzTab2TAILSreport example.mzTab
+
+
++++ INSTALLATION +++
+
+(1) Install OpenMS
+(2) Install R
+(3) Install Bioconductor package UniProt.ws
+    source("https://bioconductor.org/biocLite.R")
+    biocLite("UniProt.ws")    
+(4) Install LaTeX, tested with MiKTeX (Windows), MacTeX (macOS)
+(5) Specify the folder with the OpenMS executables (OpenMSHome) in cXML2report
+(6) Add the script folder to your $PATH variable
+(7) Test the installation with misc/example.mzTab
+
+
++++ FILES +++
+
+mzTab2TAILSreport    -> main script (Linux, macOS)
+mzTab2TAILSreport.bat    -> main script (Windows)
+mzTab2TAILSreport.Snw    -> Sweave script containing both R and LaTeX code
+Sweave.sty    -> Sweave style sheet
+misc/example.mzTab    -> example input file
+misc/example.pdf    -> example result file
+misc/example.tsv    -> example result file
+misc/mzTab2TAILSreport.R    -> R code from cXML2report.Snw
