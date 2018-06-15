@@ -34,32 +34,32 @@ rem copy mzTab
 cp %FILE_ABSOLUTE% data.mzTab
 
 rem  replace dummy FILE_NAME_DUMMY by file name %FILE_BASE%
-(for /f "delims=" %%i in (mzTab2DoubletTAILSreport.Snw) do (
+(for /f "delims=" %%i in (mzTab2DoubletTAILSMultipleSpeciesReport.Snw) do (
     set "line=%%i"
     setlocal enabledelayedexpansion
     set "line=!line:FILE_NAME_DUMMY=%FILE_BASE%!"
     echo(!line!
     endlocal
-))>"mzTab2DoubletTAILSreport_temp.Snw"
+))>"mzTab2DoubletTAILSMultipleSpeciesReport_temp.Snw"
 
 rem  Run the R code
-R -e "Sweave('mzTab2DoubletTAILSreport_temp.Snw')"
+R -e "Sweave('mzTab2DoubletTAILSMultipleSpeciesReport_temp.Snw')"
 
 rem Small 5 sec pause.
 timeout /t 5 /NOBREAK
 
 rem  Run LaTeX code
-pdflatex mzTab2DoubletTAILSreport_temp.tex
+pdflatex mzTab2DoubletTAILSMultipleSpeciesReport_temp.tex
 
 rem  Copy final report and table to the input folder
-MOVE mzTab2DoubletTAILSreport_temp.pdf %FILE_PATH%\%FILE_BASE%.pdf
+MOVE mzTab2DoubletTAILSMultipleSpeciesReport_temp.pdf %FILE_PATH%\%FILE_BASE%.pdf
 MOVE data.tsv %FILE_PATH%\%FILE_BASE%.tsv
 
 rem  clean-up
 DEL data*
 DEL FcLogIntensity*
 DEL frequency*
-DEL mzTab2DoubletTAILSreport_temp*
+DEL mzTab2DoubletTAILSMultipleSpeciesReport_temp*
 
 rem  Jump back to original folder
 CD /d %CURRENT_PATH%
