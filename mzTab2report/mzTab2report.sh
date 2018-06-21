@@ -18,20 +18,24 @@ FILE_PATH=$(dirname $FILE_ABSOLUTE)
 FILE_BASE=$(basename $FILE_ABSOLUTE)
 FILE_NAME=${FILE_BASE%.*}
 
+WORK_DIRECTORY="$SCRIPT_PATH/$FILE_NAME"
+
 if ! [[ -f $FILE ]]
 then
 echo "File does not exist."
 exit
 fi
 
+
 echo 'Generating report from mzTab file '$FILE_ABSOLUTE'.'
-cd $SCRIPT_PATH
+mkdir "$WORK_DIRECTORY"
+cd "$WORK_DIRECTORY"
 
 # copy mzTab
 cp $FILE_ABSOLUTE analysis.mzTab
 
 # replace dummy by file name
-sed -e 's/FILE_NAME_DUMMY/'$FILE_NAME'/g' mzTab2report.Snw > mzTab2report_temp.Snw
+sed -e 's/FILE_NAME_DUMMY/'$FILE_NAME'/g' "$SCRIPT_PATH/mzTab2report.Snw" > mzTab2report_temp.Snw
 
 # Run the R code
 R -e "Sweave('mzTab2report_temp.Snw')"
