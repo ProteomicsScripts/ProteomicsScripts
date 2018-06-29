@@ -1,0 +1,28 @@
++++ DESCRIPTION +++
+
+The script MQ2mzTab takes a folder with max quant result files as input and generates an mzTab file from them.
+
+MQ2mzTab maxquant_results
+
+
++++ INSTALLATION +++
+
+
+(1) Install R
+(2) Run: sudo apt-get -y install libcurl4-gnutls-dev libxml2-dev libssl-dev
+(3) In R: 
+    install.packages(devtools)
+    library(devtools)
+(4) Install LaTeX, tested with MacTeX (macOS), TexLive (Ubuntu 16.04 LTS), MiKTeX (Windows)
+(5) Add the script folder to your $PATH variable
+(6) Test the installation with misc/example.mzTab
+
+
++++ FILES +++
+
+MQ2mzTab    -> main script (macOS)
+MQ2mzTab.sh    -> main script (Linux)
+MQ2mzTab.bat    -> main script (Windows)
+misc/maxquant_example -> folder with example max quant result files
+misc/maxquant_example.mzTab    -> example result file
+misc/MQ2mzTab.R    -> R code
