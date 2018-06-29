@@ -6,10 +6,6 @@
 library("tidyr")
 library("dplyr")
 
-## Questions ##
-# 1. Example folder with maxquant output files?
-# 2. are 
-
 # clear entire workspace
 rm(list = ls())
 
@@ -28,43 +24,55 @@ input.folder <- 'misc/maxquant_example'
 ## charge
 
 # Each row is one (in mzTab potentially non-unique) detected peptide.
-# Q: From which files can we obtain this information in "maxquant_folder"
 generatePEP<- function(allPeptidesFile) {
   t = read.table(allPeptidesFile, sep="\t", header=TRUE)
-  print(colnames(t))
-  print(dim(t))
-  mass = t["Mass"]
-  # num_study_variables = length(strsplit(as.character(t["Intensities"][[1]]), ";"))
-  # study_variables = sprintf("peptide_abundance_study_variable[%s]", seq(1: num_study_variables))
-  # split intensities 
-  # (they are ";"-seperated in max quant, but mzTab expects different study variables there)
-  # TODO: Pre-generate list of "peptide_abundance_study_variable[i]" things
+  column_names = sort(colnames(t))
+  t = separate_rows(t, col="Proteins", sep=";", convert=TRUE)
 
+  # Check which type of analysis this is.
+  is_tmt = any(grepl("Reporter.intensity", column_names))
+  is_labeled = any(grepl("Intensity.L", column_names)) && any(grepl("Intensity.H", column_names))
+
+  if (is_labeled) {
+      mztab_column_names = c("sequence", "accession", "mass", 
+                             "best_search_engine_score[1]",
+                             "mz", "rt", "charge",
+                             "modifications",
+                             "peptide_abundance_study_variables[1]", 
+                             "peptide_abundance_study_variables[2]")
+
+      if (any(grepl("Intensity.M", column_names))) {
+          mztab_column_names = c(mztab_column_names, 
+                                 "peptide_abundance_study_variables[3]")
+          df = data.frame(t["Sequence"], t["Proteins"], t["Mass"], 
+                          t["Score"], t["m.z"], t["Retention.time"], t["Charge"], 
+                          t["Modifications"], 
+                          t["Intensity.L"], t["Intensity.H"], t["Intensity.M"])
+      } else {
+          df = data.frame(t["Sequence"], t["Proteins"], t["Mass"], 
+                          t["Score"], t["m.z"], t["Retention.time"], t["Charge"], 
+                          t["Modifications"], t["Intensity.L"], t["Intensity.H"])
+      }
+  } else if (is_tmt) {
+      # XXX: handle tmt, reporter.intensity seems to be how peptide_abundance_study_variables are represented here.
+      stop("It seems as if your input is a TMT analysis. Currently only labeled analyses are supported!")
+  } else {
+      stop("Unsupported type of analysis.\nExpected TMT analysis (with at least one column starting with 'Reporter.intensity') or labeled analysis (with at least columns 'Intensity H', 'Intensity L').")
+  }
+
+  print(is_tmt)
+  print(is_labeled)
   # maxquant lists matching proteins in a ";" seperated string for each peptide
   # => mzTab expects a single protein accession per listed peptide, 
   # so we need to seperate each row whose "Proteins" column lists multiple proteins
   # into many rows with one protein each.
-  t = separate_rows(t, col="Proteins", sep=";", convert=TRUE)
-  # seperate(t, col="Intensities", into=c("peptide_abundance_study_variable_1", "peptide_abundance_study_variable_2") sep=";", convert=TRUE)
-  print(t["Proteins"])
+  # NOTE: mz vs uncalibrated mz?
 
-
-  sequence = c(0, 0)
-  accession = c(0, 0)
-  peptide_abundance_study_variable_1 = c(0, 0)
-  peptide_abundance_study_variable_2 = c(0, 0)
-  rt = c(0, 0)
-  mz = c(0, 0)
-  charge = c(0, 0)
-
-  # mz vs uncalibrated mz?
-  # Proteins = is this comma seperated? mzTab spec says "duplicate rows in case of multiple protein accessions for a peptide"
-  frame = data.frame(t["Sequence"], t["Proteins"], t["m.z"], t["Retention.time"], t["Charge"])
-
-  colnames(frame) = c("sequence", "accession", "mz", "rt", "charge")
-  return (frame)
+  colnames(df) = mztab_column_names
+  return (df)
 }
 
 
 f = file.path(input.folder, "allPeptides.txt")
 pep <- generatePEP(f)
+print(pep)
