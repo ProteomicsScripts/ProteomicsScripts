@@ -24,10 +24,12 @@ input.folder <- 'misc/maxquant_example'
 ## charge
 
 # Each row is one (in mzTab potentially non-unique) detected peptide.
+# NOTE: Check how modifications are represented in maxquant => 
 generatePEP<- function(allPeptidesFile) {
   t = read.table(allPeptidesFile, sep="\t", header=TRUE)
   column_names = sort(colnames(t))
   t = separate_rows(t, col="Proteins", sep=";", convert=TRUE)
+  print(t["Raw.file"])
 
   # Check which type of analysis this is.
   is_tmt = any(grepl("Reporter.intensity", column_names))
@@ -68,11 +70,28 @@ generatePEP<- function(allPeptidesFile) {
   # into many rows with one protein each.
   # NOTE: mz vs uncalibrated mz?
 
-  colnames(df) = mztab_column_names
+  df <- cbind(rep("PEP", nrow(df)), df)
+  colnames(df)[1] <- "PEH"
   return (df)
 }
 
 
 f = file.path(input.folder, "allPeptides.txt")
 pep <- generatePEP(f)
-print(pep)
+
+output_file <- file("misc/maxquant_example.mzTab", open="wt")
+on.exit(close(output_file))
+
+header = c("MTD\tmzTab-version\t1.0.0", "MTD\tmzTab-mode\tSummary",
+           "MTD\tmzTab-type\tQuantification", "MTD\tdescription\tGenerated automatically from MaxQuant Output",
+           "MTD\tpeptide_search_engine_score[1]\tnull",
+           "MTD\tpsm_search_engine_score[1]\tnull",
+           paste("MTD\turi[1]\t", normalizePath(input.folder, "allPeptides.txt")),
+           "\n")
+           # NOTE: modifications missing and maybe there is an equivalent of `ms_run[1]-location`?
+    
+
+# Write mzTab header to file
+cat(header, sep="\n", file=output_file)
+
+write.table(pep, file=output_file, quote=FALSE, sep="\t", append=T, row.names=FALSE)
