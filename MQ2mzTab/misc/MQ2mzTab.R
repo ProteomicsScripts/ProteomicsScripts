@@ -14,7 +14,7 @@ rm(list = ls())
 # options and parameters
 options(digits=10)
 
-input.folder <- 'maxquant_example'
+input.folder <- 'misc/maxquant_example'
 
 # generate a PEP section from files in `maxquant_folder`.
 # The following columns are considered necessary:
@@ -27,7 +27,9 @@ input.folder <- 'maxquant_example'
 
 # Each row is one (in mzTab potentially non-unique) detected peptide.
 # Q: From which files can we obtain this information in "maxquant_folder"
-generatePEP<- function(maxquant_folder) {
+generatePEP<- function(allPeptidesFile) {
+  t = read.table(allPeptidesFile, sep="\t", header=TRUE)
+  print(t)
   sequence = c(0, 0)
   accession = c(0, 0)
   peptide_abundance_study_variable_1 = c(0, 0)
@@ -41,5 +43,8 @@ generatePEP<- function(maxquant_folder) {
   return (frame)
 }
 
-pep <- generatePEP(maxquant_folder=input.folder)
+
+files <- list.files(path=input.folder, pattern = "allPeptides.txt")
+print(files)
+pep <- generatePEP(allPeptidesFile=list.files(path=input.folder, pattern="allPeptides.txt"))
 print(pep)
