@@ -1,8 +1,10 @@
 ## This is an R script for the conversion of mzTab to a better readable tsv format
 ## To install dependencies, run in R:
 ## install.packages(devtools)
-## library(devtools)
-## install_github("corrplot", username = "MFreidank")
+## install.packages(tidyr)
+
+library("tidyr")
+library("dplyr")
 
 ## Questions ##
 # 1. Example folder with maxquant output files?
@@ -29,7 +31,24 @@ input.folder <- 'misc/maxquant_example'
 # Q: From which files can we obtain this information in "maxquant_folder"
 generatePEP<- function(allPeptidesFile) {
   t = read.table(allPeptidesFile, sep="\t", header=TRUE)
-  print(t)
+  print(colnames(t))
+  print(dim(t))
+  mass = t["Mass"]
+  # num_study_variables = length(strsplit(as.character(t["Intensities"][[1]]), ";"))
+  # study_variables = sprintf("peptide_abundance_study_variable[%s]", seq(1: num_study_variables))
+  # split intensities 
+  # (they are ";"-seperated in max quant, but mzTab expects different study variables there)
+  # TODO: Pre-generate list of "peptide_abundance_study_variable[i]" things
+
+  # maxquant lists matching proteins in a ";" seperated string for each peptide
+  # => mzTab expects a single protein accession per listed peptide, 
+  # so we need to seperate each row whose "Proteins" column lists multiple proteins
+  # into many rows with one protein each.
+  t = separate_rows(t, col="Proteins", sep=";", convert=TRUE)
+  # seperate(t, col="Intensities", into=c("peptide_abundance_study_variable_1", "peptide_abundance_study_variable_2") sep=";", convert=TRUE)
+  print(t["Proteins"])
+
+
   sequence = c(0, 0)
   accession = c(0, 0)
   peptide_abundance_study_variable_1 = c(0, 0)
@@ -38,13 +57,14 @@ generatePEP<- function(allPeptidesFile) {
   mz = c(0, 0)
   charge = c(0, 0)
 
-  frame = data.frame(sequence, accession, peptide_abundance_study_variable_1, peptide_abundance_study_variable_2, rt, mz, charge)
-  colnames(frame) = c("sequence", "accession", "peptide_abundance_study_variable[1]", "peptide_abundance_study_variable[2]", "rt", "mz", "charge")
+  # mz vs uncalibrated mz?
+  # Proteins = is this comma seperated? mzTab spec says "duplicate rows in case of multiple protein accessions for a peptide"
+  frame = data.frame(t["Sequence"], t["Proteins"], t["m.z"], t["Retention.time"], t["Charge"])
+
+  colnames(frame) = c("sequence", "accession", "mz", "rt", "charge")
   return (frame)
 }
 
 
-files <- list.files(path=input.folder, pattern = "allPeptides.txt")
-print(files)
-pep <- generatePEP(allPeptidesFile=list.files(path=input.folder, pattern="allPeptides.txt"))
-print(pep)
+f = file.path(input.folder, "allPeptides.txt")
+pep <- generatePEP(f)
