@@ -1,0 +1,35 @@
+MTD	mzTab-version	1.0.0
+MTD	mzTab-mode	Summary
+MTD	mzTab-type	Quantification
+MTD	description	Generated using MQ2mzTab.R from MaxQuant Output
+MTD	maintainer	Moritz Freidank, freidankm@gmail.com
+MTD	peptide_search_engine_score[1]	null
+MTD	psm_search_engine_score[1]	null
+MTD	uri[1]	 /home/moritz/ProteomicsScripts/MQ2mzTab/misc/maxquant_example
+
+PEH	sequence	accession	unique	database	database_version	search_engine	best_search_engine_score[1]	search_engine_score[1]_ms_run[1]	modifications	retention_time	retention_time_window	charge	mass_to_charge	spectra_ref	peptide_abundance_study_variable[1]	peptide_abundance_stdev_study_variable[1]	peptide_abundance_std_error_study_variable[1]	peptide_abundance_study_variable[2]	peptide_abundance_stdev_study_variable[2]	peptide_abundance_std_error_study_variable[2]
+PEP	 	 	null	null	null	null	null	null	 	84.938	null	1	null	426600	null	null	333550	null	null
+PEP	 	 	null	null	null	null	null	null	 	46.421	null	1	null	9373900	null	null	10377000	null	null
+PEP	 	 	null	null	null	null	null	null	 	84.93	null	1	null	490340	null	null	420770	null	null
+PEP	 	 	null	null	null	null	null	null	 	85.378	null	1	null	1341900	null	null	975150	null	null
+PEP	 	 	null	null	null	null	null	null	 	75.68	null	1	null	591590	null	null	478940	null	null
+PEP	NMAEQIIQEIYSQVQSK	P40142	null	null	null	null	95.6658935546875	null	Unmodified	69.003	null	2	null	3058300	null	null	4296100	null	null
+PEP	 	 	null	null	null	null	null	null	 	37.029	null	2	null	4910700	null	null	5613700	null	null
+PEP	 	 	null	null	null	null	null	null	 	51.122	null	2	null	5967400	null	null	4563600	null	null
+PEP	 	 	null	null	null	null	null	null	 	55.469	null	2	null	16058000	null	null	22517000	null	null
+PEP	 	 	null	null	null	null	null	null	 	17.648	null	2	null	2615700	null	null	3027800	null	null
+PEP	 	 	null	null	null	null	null	null	 	25.082	null	2	null	2049300	null	null	1580700	null	null
+PEP	 	 	null	null	null	null	null	null	 	68.806	null	2	null	2751000	null	null	2812900	null	null
+PEP	 	 	null	null	null	null	null	null	 	17.716	null	2	null	2160300	null	null	1832900	null	null
+PEP	 	 	null	null	null	null	null	null	 	76.083	null	2	null	3464900	null	null	3482100	null	null
+PEP	 	 	null	null	null	null	null	null	 	63.837	null	2	null	32681000	null	null	25550000	null	null
+PEP	 	 	null	null	null	null	null	null	 	6.253	null	2	null	1801000	null	null	1501000	null	null
+PEP	 	 	null	null	null	null	null	null	 	25.017	null	2	null	2142800	null	null	2996200	null	null
+PEP	 	 	null	null	null	null	null	null	 	36.947	null	2	null	2222000	null	null	2382100	null	null
+PEP	 	 	null	null	null	null	null	null	 	18.733	null	2	null	981110	null	null	1236600	null	null
+PEP	 	 	null	null	null	null	null	null	 	27.812	null	2	null	1895200	null	null	1352300	null	null
+PEP	 	 	null	null	null	null	null	null	 	68.452	null	2	null	4169700	null	null	4036100	null	null
+PEP	 	 	null	null	null	null	null	null	 	36.625	null	2	null	16972000	null	null	16538000	null	null
+PEP	LPGMEYVDGDFQCHAFDSSNVE	Q07079	null	null	null	null	121.321327209473	null	Unmodified	53.831	null	2	null	12180000	null	null	15120000	null	null
+PEP	APWMEQEGPEYWER	P01898	null	null	null	null	66.2887954711914	null	Unmodified	43.207	null	2	null	5534700	null	null	4278400	null	null
+PEP	APWMEQEGPEYWER	P01899	null	null	null	null	66.2887954711914	null	Unmodified	43.207	null	2	null	5534700	null	null	4278400	null	null
