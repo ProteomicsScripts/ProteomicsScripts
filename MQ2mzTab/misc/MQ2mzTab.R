@@ -34,26 +34,51 @@ generatePEP<- function(allPeptidesFile) {
   # Check which type of analysis this is.
   is_tmt = any(grepl("Reporter.intensity", column_names))
   is_labeled = any(grepl("Intensity.L", column_names)) && any(grepl("Intensity.H", column_names))
+  mztab_column_names = c(
+    "PEH", "sequence", "accession", "unique", "database",	
+    "database_version", "search_engine", "best_search_engine_score[1]", 
+    "search_engine_score[1]_ms_run[1]", "modifications", "retention_time",
+    "retention_time_window",	
+    "charge",	"mass_to_charge	spectra_ref")
+
 
   if (is_labeled) {
-      mztab_column_names = c("sequence", "accession", "mass", 
-                             "best_search_engine_score[1]",
-                             "mz", "rt", "charge",
-                             "modifications",
-                             "peptide_abundance_study_variables[1]", 
-                             "peptide_abundance_study_variables[2]")
+      mztab_column_names = c(mztab_column_names, 
+                             "peptide_abundance_study_variable[1]", 
+                             "peptide_abundance_stdev_study_variable[1]", 
+                             "peptide_abundance_std_error_study_variable[1]",
+                             "peptide_abundance_study_variable[2]", 
+                             "peptide_abundance_stdev_study_variable[2]", 
+                             "peptide_abundance_std_error_study_variable[2]")
 
+      nulls = rep("null", nrow(t))  # a column with only null values
       if (any(grepl("Intensity.M", column_names))) {
           mztab_column_names = c(mztab_column_names, 
-                                 "peptide_abundance_study_variables[3]")
-          df = data.frame(t["Sequence"], t["Proteins"], t["Mass"], 
-                          t["Score"], t["m.z"], t["Retention.time"], t["Charge"], 
-                          t["Modifications"], 
-                          t["Intensity.L"], t["Intensity.H"], t["Intensity.M"])
+                             "peptide_abundance_study_variable[3]", 
+                             "peptide_abundance_stdev_study_variable[3]", 
+                             "peptide_abundance_std_error_study_variable[3]")
+          df = data.frame(rep("PEP", nrow(t)), t["Sequence"], t["Proteins"],
+                         nulls, nulls, nulls, nulls, t["Score"],
+                         nulls, t["Modifications"], t["Retention.time"],
+                         nulls, t["Charge"], nulls, 
+                         t["Intensity.L"], nulls, nulls,
+                         t["Intensity.H"], nulls, nulls,
+                         t["Intensity.M"], nulls, nulls)
       } else {
-          df = data.frame(t["Sequence"], t["Proteins"], t["Mass"], 
-                          t["Score"], t["m.z"], t["Retention.time"], t["Charge"], 
-                          t["Modifications"], t["Intensity.L"], t["Intensity.H"])
+          print(nrow(t["Sequence"]))
+          print(nrow(t["Proteins"]))
+          print(nrow(t["Score"]))
+          print(nrow(t["Modifications"]))
+          print(nrow(t["Retention.time"]))
+          print(nrow(t["Charge"]))
+          print(nrow(t["Intensity.L"]))
+          print(nrow(t["Intensity.H"]))
+          df = data.frame(rep("PEP", nrow(t)), t["Sequence"], t["Proteins"],
+                         nulls, nulls, nulls, nulls, t["Score"],
+                         nulls, t["Modifications"], t["Retention.time"],
+                         nulls, t["Charge"], nulls, 
+                         t["Intensity.L"], nulls, nulls,
+                         t["Intensity.H"], nulls, nulls)
       }
   } else if (is_tmt) {
       # XXX: handle tmt, reporter.intensity seems to be how peptide_abundance_study_variables are represented here.
@@ -69,9 +94,10 @@ generatePEP<- function(allPeptidesFile) {
   # so we need to seperate each row whose "Proteins" column lists multiple proteins
   # into many rows with one protein each.
   # NOTE: mz vs uncalibrated mz?
+  colnames(df) <- mztab_column_names
 
-  df <- cbind(rep("PEP", nrow(df)), df)
-  colnames(df)[1] <- "PEH"
+  # replace NA with "null"
+  df[is.na(df)] <- "null"
   return (df)
 }
 
@@ -83,15 +109,15 @@ output_file <- file("misc/maxquant_example.mzTab", open="wt")
 on.exit(close(output_file))
 
 header = c("MTD\tmzTab-version\t1.0.0", "MTD\tmzTab-mode\tSummary",
-           "MTD\tmzTab-type\tQuantification", "MTD\tdescription\tGenerated automatically from MaxQuant Output",
+           "MTD\tmzTab-type\tQuantification", "MTD\tdescription\tGenerated using MQ2mzTab.R from MaxQuant Output",
+           "MTD\tmaintainer\tMoritz Freidank, freidankm@gmail.com", 
            "MTD\tpeptide_search_engine_score[1]\tnull",
            "MTD\tpsm_search_engine_score[1]\tnull",
-           paste("MTD\turi[1]\t", normalizePath(input.folder, "allPeptides.txt")),
-           "\n")
+           paste("MTD\turi[1]\t", normalizePath(input.folder, "allPeptides.txt")))
            # NOTE: modifications missing and maybe there is an equivalent of `ms_run[1]-location`?
     
 
 # Write mzTab header to file
 cat(header, sep="\n", file=output_file)
-
+cat("\n", file=output_file)
 write.table(pep, file=output_file, quote=FALSE, sep="\t", append=T, row.names=FALSE)
