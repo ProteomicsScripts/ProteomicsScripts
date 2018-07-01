@@ -25,8 +25,7 @@ input.folder <- 'misc/maxquant_example'
 
 # Each row is one (in mzTab potentially non-unique) detected peptide.
 # NOTE: Check how modifications are represented in maxquant => 
-generatePEP<- function(allPeptidesFile) {
-  t = read.table(allPeptidesFile, sep="\t", header=TRUE)
+generatePEP<- function(t) {
   column_names = sort(colnames(t))
   t = separate_rows(t, col="Proteins", sep=";", convert=TRUE)
   print(t["Raw.file"])
@@ -101,11 +100,24 @@ generatePEP<- function(allPeptidesFile) {
   return (df)
 }
 
+outputFilename<- function(input_files) {
+    single_input_file = length(unique(input_files)) == 1
+    first_input_file = input_files[[1]]
+    if (single_input_file) {
+        return (paste(first_input_file, ".mzTab", sep=""))
+    }
+    return (paste(first_input_file, "_etal.mzTab", sep=""))
+}
+
 
 f = file.path(input.folder, "allPeptides.txt")
-pep <- generatePEP(f)
+max_quant_peptides = read.table(f, sep="\t", header=TRUE, stringsAsFactors=FALSE)
 
-output_file <- file("misc/maxquant_example.mzTab", open="wt")
+output_filename <- outputFilename(input_files=max_quant_peptides$Raw.file)
+
+pep_section <- generatePEP(max_quant_peptides)
+
+output_file <- file(output_filename, open="wt")
 on.exit(close(output_file))
 
 header = c("MTD\tmzTab-version\t1.0.0", "MTD\tmzTab-mode\tSummary",
@@ -120,4 +132,11 @@ header = c("MTD\tmzTab-version\t1.0.0", "MTD\tmzTab-mode\tSummary",
 # Write mzTab header to file
 cat(header, sep="\n", file=output_file)
 cat("\n", file=output_file)
-write.table(pep, file=output_file, quote=FALSE, sep="\t", append=T, row.names=FALSE)
+
+# Append PEP section.
+write.table(pep_section, 
+            file=output_file, 
+            quote=FALSE, 
+            sep="\t", 
+            append=T, 
+            row.names=FALSE)
