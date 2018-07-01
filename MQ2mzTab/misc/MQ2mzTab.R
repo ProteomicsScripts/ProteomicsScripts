@@ -4,7 +4,6 @@
 ## install.packages(tidyr)
 
 library("tidyr")
-library("dplyr")
 
 # clear entire workspace
 rm(list = ls())
@@ -25,10 +24,12 @@ input.folder <- 'misc/maxquant_example'
 
 # Each row is one (in mzTab potentially non-unique) detected peptide.
 # NOTE: Check how modifications are represented in maxquant => 
-generatePEP<- function(t) {
-  column_names = sort(colnames(t))
-  t = separate_rows(t, col="Proteins", sep=";", convert=TRUE)
-  print(t["Raw.file"])
+generatePEP<- function(max_quant_peptides) {
+  column_names = sort(colnames(max_quant_peptides))
+  max_quant_peptides = separate_rows(max_quant_peptides, 
+                                     col="Proteins", 
+                                     sep=";", 
+                                     convert=TRUE)
 
   # Check which type of analysis this is.
   is_tmt = any(grepl("Reporter.intensity", column_names))
@@ -50,34 +51,37 @@ generatePEP<- function(t) {
                              "peptide_abundance_stdev_study_variable[2]", 
                              "peptide_abundance_std_error_study_variable[2]")
 
-      nulls = rep("null", nrow(t))  # a column with only null values
+      nulls = rep("null", nrow(max_quant_peptides))  # a column with only null values
       if (any(grepl("Intensity.M", column_names))) {
           mztab_column_names = c(mztab_column_names, 
                              "peptide_abundance_study_variable[3]", 
                              "peptide_abundance_stdev_study_variable[3]", 
                              "peptide_abundance_std_error_study_variable[3]")
-          df = data.frame(rep("PEP", nrow(t)), t["Sequence"], t["Proteins"],
-                         nulls, nulls, nulls, nulls, t["Score"],
-                         nulls, t["Modifications"], t["Retention.time"],
-                         nulls, t["Charge"], nulls, 
-                         t["Intensity.L"], nulls, nulls,
-                         t["Intensity.H"], nulls, nulls,
-                         t["Intensity.M"], nulls, nulls)
+          df = data.frame(rep("PEP", nrow(max_quant_peptides)), 
+                          max_quant_peptides["Sequence"], 
+                          max_quant_peptides["Proteins"],
+                          nulls, nulls, nulls, nulls, 
+                          max_quant_peptides["Score"], nulls, 
+                          max_quant_peptides["Modifications"], 
+                          max_quant_peptides["Retention.time"],
+                          nulls, max_quant_peptides["Charge"], nulls, 
+                          max_quant_peptides["Intensity.L"], nulls, nulls,
+                          max_quant_peptides["Intensity.H"], nulls, nulls,
+                          max_quant_peptides["Intensity.M"], nulls, nulls)
       } else {
-          print(nrow(t["Sequence"]))
-          print(nrow(t["Proteins"]))
-          print(nrow(t["Score"]))
-          print(nrow(t["Modifications"]))
-          print(nrow(t["Retention.time"]))
-          print(nrow(t["Charge"]))
-          print(nrow(t["Intensity.L"]))
-          print(nrow(t["Intensity.H"]))
-          df = data.frame(rep("PEP", nrow(t)), t["Sequence"], t["Proteins"],
-                         nulls, nulls, nulls, nulls, t["Score"],
-                         nulls, t["Modifications"], t["Retention.time"],
-                         nulls, t["Charge"], nulls, 
-                         t["Intensity.L"], nulls, nulls,
-                         t["Intensity.H"], nulls, nulls)
+          df = data.frame(rep("PEP", nrow(max_quant_peptides)), 
+                          max_quant_peptides["Sequence"], 
+                          max_quant_peptides["Proteins"],
+                          nulls, nulls, nulls, nulls, 
+                          max_quant_peptides["Score"],
+                          nulls, 
+                          max_quant_peptides["Modifications"], 
+                          max_quant_peptides["Retention.time"],
+                          nulls, 
+                          max_quant_peptides["Charge"], 
+                          nulls, 
+                          max_quant_peptides["Intensity.L"], nulls, nulls,
+                          max_quant_peptides["Intensity.H"], nulls, nulls)
       }
   } else if (is_tmt) {
       # XXX: handle tmt, reporter.intensity seems to be how peptide_abundance_study_variables are represented here.
