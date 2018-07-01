@@ -87,7 +87,7 @@ generatePEP<- function(max_quant_peptides) {
       # XXX: handle tmt, reporter.intensity seems to be how peptide_abundance_study_variables are represented here.
       stop("It seems as if your input is a TMT analysis. Currently only labeled analyses are supported!")
   } else {
-      stop("Unsupported type of analysis.\nExpected TMT analysis (with at least one column starting with 'Reporter.intensity') or labeled analysis (with at least columns 'Intensity H', 'Intensity L').")
+      stop("Unsupported type of analysis.\nExpected TMT analysis (with at least one column starting with 'Reporter intensity') or labeled analysis (with at least columns 'Intensity H', 'Intensity L').")
   }
 
   print(is_tmt)
