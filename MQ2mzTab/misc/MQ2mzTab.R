@@ -26,10 +26,15 @@ input.folder <- 'misc/maxquant_example'
 # NOTE: Check how modifications are represented in maxquant => 
 generatePEP<- function(max_quant_peptides) {
   column_names = sort(colnames(max_quant_peptides))
-  max_quant_peptides = separate_rows(max_quant_peptides, 
-                                     col="Proteins", 
-                                     sep=";", 
-                                     convert=TRUE)
+
+  # max_quant_peptides = separate_rows(max_quant_peptides, 
+  #                                    col="Proteins", 
+  #                                    sep=";", 
+  #                                    convert=TRUE)
+  rest_of_dataframe = max_quant_peptides[, -which(names(max_quant_peptides) == "Proteins")]
+  proteins_split = strsplit(max_quant_peptides$Proteins, ";")
+  duplicated = rep(rest_of_dataframe$, sapply(proteins_split, length))
+  max_quant_peptides = data.frame(unlist(proteins_split), rest_of_dataframe)
 
   # Check which type of analysis this is.
   is_tmt = any(grepl("Reporter.intensity", column_names))
@@ -99,7 +104,7 @@ generatePEP<- function(max_quant_peptides) {
   # NOTE: mz vs uncalibrated mz?
   colnames(df) <- mztab_column_names
 
-  # replace NA with "null"
+  # replace NA with "null" (as this is the 'missing information marker' for mzTab)
   df[is.na(df)] <- "null"
   return (df)
 }
