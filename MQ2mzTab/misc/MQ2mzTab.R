@@ -11,23 +11,32 @@ rm(list = ls())
 # options and parameters
 options(digits=10)
 
-# TODO: Assert that folder exists and that a first argument exists.
 
+# ANSI Escape sequences to print in (red) color to terminal screens and 
+# to turn color printing off again.
+# https://en.wikipedia.org/wiki/ANSI_escape_code
 FAIL_COLOR_ANSI = "\033[91m"
 END_COLOR_ANSI = "\033[0m"
 
-command_line_arguments <- commandArgs(trailingOnly = TRUE)
 
-if (length(command_line_arguments) != 1) {
-    message = "Invalid amount of arguments!\nUsage: MQ2mzTab.R MAXQUANT_OUTPUT_FOLDER"
-    stop(sprintf("%s%s%s", FAIL_COLOR_ANSI, message, END_COLOR_ANSI))    
-}
+#' Assert that a given folder exists and contains all necessary MaxQuant result files.
 
-input.folder <- commandArgs(trailingOnly = TRUE)[[1]]
+#' Required files for processing are: allPeptides.txt 
 
-if (!dir.exists(file.path(input.folder))) {
-    message = sprintf("Folder at path '%s' not found.", input.folder)
-    stop(sprintf("%s%s%s", FAIL_COLOR_ANSI, message, END_COLOR_ANSI))    
+#' @param folder Character, path to a folder on disk that should contain MaxQuant results.
+#' @param relevant_files List of files that are necessary for conversion to \code{mzTab}.
+checkMaxQuantFolder <- function(folder, relevant_files=c("allPeptides.txt")) {
+    if (!dir.exists(file.path(folder))) {
+        message = sprintf("Folder at path '%s' not found.", input.folder)
+        stop(sprintf("%s%s%s", FAIL_COLOR_ANSI, message, END_COLOR_ANSI))    
+    }
+    for (file in relevant_files) {
+        if (!file.exists(file.path(folder, file))) {
+            message = sprintf("Found folder at path '%s' but it does not contain necessary file '%s'.", folder, file
+            )
+            stop(sprintf("%s%s%s", FAIL_COLOR_ANSI, message, END_COLOR_ANSI))
+        }
+    }
 }
 
 separateRows <- function(dataframe, col, sep) {
@@ -143,6 +152,27 @@ outputFilename<- function(input_files) {
     return (paste(first_input_file, "_etal.mzTab", sep=""))
 }
 
+mzTabHeader <- function(uri, maintainer="Moritz Freidank, freidankm@gmail.com") {
+    return (c("MTD\tmzTab-version\t1.0.0", "MTD\tmzTab-mode\tSummary",
+               "MTD\tmzTab-type\tQuantification", "MTD\tdescription\tGenerated using MQ2mzTab.R from MaxQuant Output",
+               "MTD\tmaintainer\tMoritz Freidank, freidankm@gmail.com", 
+               "MTD\tpeptide_search_engine_score[1]\tnull",
+               "MTD\tpsm_search_engine_score[1]\tnull",
+               paste("MTD\turi[1]\t", uri)))
+
+}
+
+
+command_line_arguments <- commandArgs(trailingOnly = TRUE)
+
+if (length(command_line_arguments) != 1) {
+    message = "Invalid amount of arguments!\nUsage: MQ2mzTab.R MAXQUANT_OUTPUT_FOLDER"
+    stop(sprintf("%s%s%s", FAIL_COLOR_ANSI, message, END_COLOR_ANSI))    
+}
+
+input.folder <- commandArgs(trailingOnly = TRUE)[[1]]
+checkMaxQuantFolder(input.folder)
+
 
 f = file.path(input.folder, "allPeptides.txt")
 max_quant_peptides = read.table(f, sep="\t", header=TRUE, stringsAsFactors=FALSE)
@@ -154,23 +184,21 @@ pep_section <- generatePEP(max_quant_peptides)
 output_file <- file(output_filename, open="wt")
 on.exit(close(output_file))
 
-header = c("MTD\tmzTab-version\t1.0.0", "MTD\tmzTab-mode\tSummary",
-           "MTD\tmzTab-type\tQuantification", "MTD\tdescription\tGenerated using MQ2mzTab.R from MaxQuant Output",
-           "MTD\tmaintainer\tMoritz Freidank, freidankm@gmail.com", 
-           "MTD\tpeptide_search_engine_score[1]\tnull",
-           "MTD\tpsm_search_engine_score[1]\tnull",
-           paste("MTD\turi[1]\t", normalizePath(input.folder, "allPeptides.txt")))
            # NOTE: modifications missing and maybe there is an equivalent of `ms_run[1]-location`?
     
+#  Write mzTab header to file {{{ # 
 
-# Write mzTab header to file
-cat(header, sep="\n", file=output_file)
+# uri is the source used to generate a given mzTab file. 
+# In our context here it is 'MAXQUANT_RESULTS_FOLDER/allPeptides.txt'
+uri = normalizePath(input.folder, "allPeptides.txt")
+
+cat(mzTabHeader(uri=uri), sep="\n", file=output_file)
 cat("\n", file=output_file)
+#  }}} Write mzTab header to file # 
 
 # Append PEP section.
 write.table(pep_section, 
             file=output_file, 
             quote=FALSE, 
             sep="\t", 
-            append=T, 
             row.names=FALSE)
