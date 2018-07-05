@@ -1,10 +1,9 @@
+#!/usr/bin/env Rscript
 ## TODO: Change docu here.
 ## This is an R script for the conversion of mzTab to a better readable tsv format
 
-# NOTE: modifications missing 
-
 library("methods")  # required to avoid a warning from R
-library("tidyr")
+library("tidyr")  # allows simple and efficient separation of semi-colon separated "Proteins" column into multiple rows
 
 # clear entire workspace
 rm(list = ls())
@@ -17,6 +16,7 @@ options(digits=10)
 # to turn color printing off again.
 # https://en.wikipedia.org/wiki/ANSI_escape_code
 FAIL_COLOR_ANSI = "\033[91m"
+SUCCESS_COLOR_ANSI = '\033[32m'
 END_COLOR_ANSI = "\033[0m"
 
 
@@ -89,6 +89,7 @@ generatePEP<- function(max_quant_peptides) {
   )
 
 
+  # NOTE: modifications missing 
   if (analysis == "Labeled") {
       # Results stem from TMT analysis.
       mztab_column_names = c(mztab_column_names, 
@@ -226,3 +227,5 @@ write.table(pep_section,
             sep="\t", 
             row.names=FALSE)
 #  }}} Append PEP section. # 
+
+cat(sprintf("%sDone. Your mzTab file is available at: %s%s\n", SUCCESS_COLOR_ANSI, output_filename, END_COLOR_ANSI))

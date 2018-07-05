@@ -1,0 +1,32 @@
+# Script to convert MaxQuant result files to (OpenMS-compatible) mzTab format.
+
+#!/bin/sh
+
+# function for absolute path of a file (replacement for readlink in Linux)
+# see https://stackoverflow.com/questions/3572030/bash-script-absolute-path-with-osx
+realpath() {
+    [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
+}
+
+# script directory
+SCRIPT_PATH=$(dirname $(realpath $0))
+
+if [[ $1 == "" ]]
+then
+echo "Please specify a folder."
+exit
+fi
+
+# input file
+FOLDER=$1; shift
+FOLDER_ABSOLUTE=$(realpath $FOLDER)
+
+if ! [[ -d $FOLDER ]]
+then
+echo "Folder does not exist."
+exit
+fi
+
+# Call script and write output file
+echo 'Generating mzTab from MaxQuant input folder '$FOLDER_ABSOLUTE'.'
+misc/MQ2mzTab.R "$FOLDER_ABSOLUTE"
