@@ -11,7 +11,30 @@ rm(list = ls())
 # options and parameters
 options(digits=10)
 
-input.folder <- 'misc/maxquant_example'
+# TODO: Assert that folder exists and that a first argument exists.
+
+FAIL_COLOR_ANSI = "\033[91m"
+END_COLOR_ANSI = "\033[0m"
+
+command_line_arguments <- commandArgs(trailingOnly = TRUE)
+
+if (length(command_line_arguments) != 1) {
+    message = "Invalid amount of arguments!\nUsage: MQ2mzTab.R MAXQUANT_OUTPUT_FOLDER"
+    stop(sprintf("%s%s%s", FAIL_COLOR_ANSI, message, END_COLOR_ANSI))    
+}
+
+input.folder <- commandArgs(trailingOnly = TRUE)[[1]]
+
+if (!dir.exists(file.path(input.folder))) {
+    message = sprintf("Folder at path '%s' not found.", input.folder)
+    stop(sprintf("%s%s%s", FAIL_COLOR_ANSI, message, END_COLOR_ANSI))    
+}
+
+separateRows <- function(dataframe, col, sep) {
+    rest_of_dataframe = dataframe[, -which(names(dataframe) == col)]
+    # print(rep(rest_of_dataframe, 2))
+    return (dataframe)
+}
 
 # generate a PEP section from files in `maxquant_folder`.
 # The following columns are considered necessary:
@@ -31,10 +54,12 @@ generatePEP<- function(max_quant_peptides) {
   #                                    col="Proteins", 
   #                                    sep=";", 
   #                                    convert=TRUE)
-  rest_of_dataframe = max_quant_peptides[, -which(names(max_quant_peptides) == "Proteins")]
-  proteins_split = strsplit(max_quant_peptides$Proteins, ";")
-  duplicated = rep(rest_of_dataframe$, sapply(proteins_split, length))
-  max_quant_peptides = data.frame(unlist(proteins_split), rest_of_dataframe)
+
+  # rest_of_dataframe = max_quant_peptides[, -which(names(max_quant_peptides) == "Proteins")]
+  # proteins_split = strsplit(max_quant_peptides$Proteins, ";")
+  # duplicated = rep(rest_of_dataframe$, sapply(proteins_split, length))
+  # max_quant_peptides = data.frame(unlist(proteins_split), rest_of_dataframe)
+  max_quant_peptides = separateRows(max_quant_peptides, col="Proteins", sep=";")
 
   # Check which type of analysis this is.
   is_tmt = any(grepl("Reporter.intensity", column_names))
