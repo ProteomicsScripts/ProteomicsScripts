@@ -134,9 +134,20 @@ generatePEP<- function(max_quant_peptides) {
       }
   } else if (analysis == "TMT") {
       # XXX: handle tmt, reporter.intensity seems to be how peptide_abundance_study_variables are represented here.
-      stop("It seems as if your input is a TMT analysis. Currently only labeled analyses are supported!")
-  } else {
-      stop("Unsupported type of analysis.\nExpected TMT analysis (with at least one column starting with 'Reporter intensity') or labeled analysis (with at least columns 'Intensity H', 'Intensity L').")
+          mztab_column_names = c(mztab_column_names, 
+                             "peptide_abundance_study_variable[1]", 
+                             "peptide_abundance_stdev_study_variable[1]", 
+                             "peptide_abundance_std_error_study_variable[1]")
+          df = data.frame(rep("PEP", nrow(max_quant_peptides)), 
+                          max_quant_peptides["Sequence"], 
+                          max_quant_peptides["Proteins"],
+                          nulls, nulls, nulls, nulls, 
+                          max_quant_peptides["Score"], nulls, 
+                          max_quant_peptides["Modifications"], 
+                          max_quant_peptides["Retention.time"],
+                          nulls, max_quant_peptides["Charge"], nulls, 
+                          max_quant_peptides["Reporter.intensity"], nulls, nulls,
+                          )
   }
 
   # Overwrite column names with correct ones.
