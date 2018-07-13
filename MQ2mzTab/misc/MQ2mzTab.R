@@ -57,6 +57,9 @@ analysisType <- function(column_names) {
                any(grepl("Intensity.H", column_names)))
     {
         return("Labeled")
+    } else if (any(grepl("Intensities", column_names))) {
+        return ("Labelfree")
+
     }
     message = "Unknown type of analysis.\nTMT analyses are expected to have a column named 'Reporter intensity'.\nLabeled analyses are expected to have at least a column named 'Intensity.L' and a column named 'Intensity.H'."
     stop(sprintf("%s%s%s", FAIL_COLOR_ANSI, message, END_COLOR_ANSI))
@@ -85,8 +88,9 @@ generatePEP<- function(max_quant_peptides) {
     "database_version", "search_engine", "best_search_engine_score[1]", 
     "search_engine_score[1]_ms_run[1]", "modifications", "retention_time",
     "retention_time_window",	
-    "charge",	"mass_to_charge	spectra_ref"
+    "charge",	"mass_to_charge", "spectra_ref"
   )
+  print(colnames(max_quant_peptides))
 
 
   # NOTE: modifications missing 
@@ -112,8 +116,11 @@ generatePEP<- function(max_quant_peptides) {
                           nulls, nulls, nulls, nulls, 
                           max_quant_peptides["Score"], nulls, 
                           max_quant_peptides["Modifications"], 
-                          max_quant_peptides["Retention.time"],
-                          nulls, max_quant_peptides["Charge"], nulls, 
+                          max_quant_peptides["Retention.time"] * 60,  # minutes to seconds
+                          max_quant_peptides["Retention.length"] * 60,  # minutes to seconds
+                          max_quant_peptides["Charge"], 
+                          max_quant_peptides["Uncalibrated.m.z"],
+                          nulls,
                           max_quant_peptides["Intensity.L"], nulls, nulls,
                           max_quant_peptides["Intensity.H"], nulls, nulls,
                           max_quant_peptides["Intensity.M"], nulls, nulls,)
@@ -122,17 +129,18 @@ generatePEP<- function(max_quant_peptides) {
                           max_quant_peptides["Sequence"], 
                           max_quant_peptides["Proteins"],
                           nulls, nulls, nulls, nulls, 
-                          max_quant_peptides["Score"],
-                          nulls, 
+                          max_quant_peptides["Score"], nulls, 
                           max_quant_peptides["Modifications"], 
-                          max_quant_peptides["Retention.time"],
-                          nulls, 
+                          max_quant_peptides["Retention.time"] * 60,
+                          max_quant_peptides["Retention.length"] * 60,
                           max_quant_peptides["Charge"], 
-                          nulls, 
+                          max_quant_peptides["Uncalibrated.m.z"],
+                          nulls,
                           max_quant_peptides["Intensity.L"], nulls, nulls,
                           max_quant_peptides["Intensity.H"], nulls, nulls)
       }
-  } else if (analysis == "TMT") {
+  }
+  else if (analysis == "TMT" || analysis == "Labelfree") {
       # XXX: handle tmt, reporter.intensity seems to be how peptide_abundance_study_variables are represented here.
           mztab_column_names = c(mztab_column_names, 
                              "peptide_abundance_study_variable[1]", 
@@ -144,9 +152,11 @@ generatePEP<- function(max_quant_peptides) {
                           nulls, nulls, nulls, nulls, 
                           max_quant_peptides["Score"], nulls, 
                           max_quant_peptides["Modifications"], 
-                          max_quant_peptides["Retention.time"],
-                          nulls, max_quant_peptides["Charge"], nulls, 
-                          max_quant_peptides["Reporter.intensity"], nulls, nulls,
+                          max_quant_peptides["Retention.time"] * 60,  # minutes to seconds
+                          max_quant_peptides["Retention.length"] * 60,  # minutes to seconds
+                          max_quant_peptides["Charge"],  
+                          max_quant_peptides["Uncalibrated.m.z"],
+                          nulls, null, nulls, nulls,
                           )
   }
 
@@ -209,7 +219,7 @@ checkMaxQuantFolder(input.folder)
 #  Generate PEP section {{{ # 
 
 f = file.path(input.folder, "allPeptides.txt")
-max_quant_peptides = read.table(f, sep="\t", header=TRUE, stringsAsFactors=FALSE)
+max_quant_peptides = read.table(f, sep="\t", header=TRUE, stringsAsFactors=FALSE, na.strings=c("", "NA", " ", "  "))
 
 output_filename <- outputFilename(input_files=max_quant_peptides$Raw.file)
 
