@@ -90,7 +90,6 @@ generatePEP<- function(max_quant_peptides) {
     "retention_time_window",	
     "charge",	"mass_to_charge", "spectra_ref"
   )
-  print(colnames(max_quant_peptides))
 
 
   # NOTE: modifications missing 
