@@ -220,9 +220,6 @@ checkMaxQuantFolder(input.folder)
 #  Generate PEP section {{{ # 
 
 allPeptides_file = file.path(input.folder, "allPeptides.txt")
-proteinGroups_file = file.path(input.folder, "proteinGroups.txt")
-protein_groups = read.table(proteinGroups_file, sep="\t", header=TRUE, stringsAsFactors=FALSE, na.strings=c("", "NA", " ", "  "))
-
 max_quant_peptides = read.table(allPeptides_file, sep="\t", header=TRUE, stringsAsFactors=FALSE, na.strings=c("", "NA", " ", "  "))
 
 analyis_type = analysisType(colnames(max_quant_peptides))
