@@ -72,7 +72,7 @@ analysisType <- function(column_names) {
 #' \code{allPeptides.txt}. 
 #'
 #' @param max_quant_peptides data.frame, Peptides parsed from MaxQuant's \code{allPeptides.txt}, possibly with semicolon separated \code{"Proteins"} column for each peptide. 
-generatePEP<- function(max_quant_peptides) {
+generatePEP<- function(max_quant_peptides, intensities) {
 
   # Determine type of analysis used.
   column_names = sort(colnames(max_quant_peptides))
@@ -138,9 +138,6 @@ generatePEP<- function(max_quant_peptides) {
                           max_quant_peptides["Intensity.H"], nulls, nulls)
       }
   } else if (analysis == "TMT" || analysis == "Labelfree") {
-          # TODO: Where/how to extract intensities for study variables from TMT/Labelfree columns?
-          # Intensities is semicolon separated, but has varying amounts of semicolons 
-          # that do not seem related to the amount of experiment samples.
           mztab_column_names = c(mztab_column_names, 
                              "peptide_abundance_study_variable[1]", 
                              "peptide_abundance_stdev_study_variable[1]", 
@@ -157,7 +154,11 @@ generatePEP<- function(max_quant_peptides) {
                           max_quant_peptides["Charge"], 
                           max_quant_peptides["Uncalibrated.m.z"],
                           nulls,
-                          max_quant_peptides["Intensities"], nulls, nulls)
+                          # max_quant_peptides["Intensities"], 
+                          # NOTE: Currently we use random numbers here, because it is unclear
+                          # where to obtain the actual intensities.
+                          runif(nrow(max_quant_peptides), min=0, max=5000),
+                          nulls, nulls)
   }
 
   # Overwrite column names with correct ones.
@@ -218,8 +219,11 @@ checkMaxQuantFolder(input.folder)
 
 #  Generate PEP section {{{ # 
 
-f = file.path(input.folder, "allPeptides.txt")
-max_quant_peptides = read.table(f, sep="\t", header=TRUE, stringsAsFactors=FALSE, na.strings=c("", "NA", " ", "  "))
+allPeptides_file = file.path(input.folder, "allPeptides.txt")
+proteinGroups_file = file.path(input.folder, "proteinGroups.txt")
+protein_groups = read.table(proteinGroups_file, sep="\t", header=TRUE, stringsAsFactors=FALSE, na.strings=c("", "NA", " ", "  "))
+
+max_quant_peptides = read.table(allPeptides_file, sep="\t", header=TRUE, stringsAsFactors=FALSE, na.strings=c("", "NA", " ", "  "))
 
 analyis_type = analysisType(colnames(max_quant_peptides))
 
