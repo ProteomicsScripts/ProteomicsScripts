@@ -221,6 +221,8 @@ checkMaxQuantFolder(input.folder)
 f = file.path(input.folder, "allPeptides.txt")
 max_quant_peptides = read.table(f, sep="\t", header=TRUE, stringsAsFactors=FALSE, na.strings=c("", "NA", " ", "  "))
 
+analyis_type = analysisType(colnames(max_quant_peptides))
+
 output_filename <- outputFilename(input_files=max_quant_peptides$Raw.file)
 
 pep_section <- generatePEP(max_quant_peptides)
