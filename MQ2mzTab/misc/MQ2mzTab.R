@@ -81,7 +81,7 @@ generatePEP<- function(max_quant_peptides, intensities) {
   # use tidyr magic to split a row with semicolon-separated column "Proteins" into 
   # multiple rows that each have a single protein 
   # (and the same values in all remaining columns).
-  max_quant_peptides = separate_rows(max_quant_peptides, col="Proteins", sep=";")
+  max_quant_peptides = separate_rows(max_quant_peptides, col=Proteins, sep=";")
 
   mztab_column_names = c("PEH", "sequence", "accession", "unique", "database",	
     "database_version", "search_engine", "best_search_engine_score[1]", 
@@ -224,7 +224,8 @@ max_quant_peptides = read.table(allPeptides_file, sep="\t", header=TRUE, strings
 
 analyis_type = analysisType(colnames(max_quant_peptides))
 
-output_filename <- outputFilename(input_files=max_quant_peptides$Raw.file)
+output_filename <- file.path(input.folder, 
+                             outputFilename(input_files=max_quant_peptides$Raw.file))
 
 pep_section <- generatePEP(max_quant_peptides)
 #  }}} Generate PEP section # 
@@ -236,10 +237,8 @@ output_file <- file(output_filename, open="wt")
 on.exit(close(output_file))
 
 # uri is the source used to generate a given mzTab file. 
-# In our context here it is 'MAXQUANT_RESULTS_FOLDER/allPeptides.txt'
-uri = normalizePath(input.folder, "allPeptides.txt")
-
-cat(mzTabHeader(uri=uri), sep="\n", file=output_file)
+# In our context here it is 'MAXQUANT_RESULTS_FOLDER'
+cat(mzTabHeader(uri=input.folder), sep="\n", file=output_file)
 cat("\n", file=output_file)
 #  }}} Write mzTab header to file # 
 
