@@ -24,4 +24,4 @@ SET FOLDER_ABSOLUTE=%~dpnx1
 ECHO Generating report from MaxQuant input folder %FOLDER_ABSOLUTE%.
 
 rem  Run the R code
-R -f %SCRIPT_PATH/misc/MQ2mzTab.R --args "%FOLDER_ABSOLUTE"
+Rscript %SCRIPT_PATH%/misc/MQ2mzTab.R "%FOLDER_ABSOLUTE"
