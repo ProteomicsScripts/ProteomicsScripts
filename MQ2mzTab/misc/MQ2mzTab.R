@@ -83,16 +83,16 @@ generatePEP<- function(max_quant_peptides) {
   # (and the same values in all remaining columns).
   max_quant_peptides = separate_rows(max_quant_peptides, col="Proteins", sep=";")
 
-  # NOTE: The code below this is quite lengthy and can probably be improved.
   mztab_column_names = c("PEH", "sequence", "accession", "unique", "database",	
     "database_version", "search_engine", "best_search_engine_score[1]", 
     "search_engine_score[1]_ms_run[1]", "modifications", "retention_time",
     "retention_time_window",	
-    "charge",	"mass_to_charge", "spectra_ref"
+    "charge", "mass_to_charge", "spectra_ref"
   )
 
 
-  # NOTE: modifications missing 
+  # NOTE: modifications must be formatted properly! (this is missing, we simply copy them over)
+  nulls = rep("null", nrow(max_quant_peptides))  # a column with only null values
   if (analysis == "Labeled") {
       # Results stem from TMT analysis.
       mztab_column_names = c(mztab_column_names, 
@@ -103,7 +103,6 @@ generatePEP<- function(max_quant_peptides) {
                              "peptide_abundance_stdev_study_variable[2]", 
                              "peptide_abundance_std_error_study_variable[2]")
 
-      nulls = rep("null", nrow(max_quant_peptides))  # a column with only null values
       if (any(grepl("Intensity.M", column_names))) {
           mztab_column_names = c(mztab_column_names, 
                              "peptide_abundance_study_variable[3]", 
@@ -138,25 +137,27 @@ generatePEP<- function(max_quant_peptides) {
                           max_quant_peptides["Intensity.L"], nulls, nulls,
                           max_quant_peptides["Intensity.H"], nulls, nulls)
       }
-  }
-  else if (analysis == "TMT" || analysis == "Labelfree") {
-      # XXX: handle tmt, reporter.intensity seems to be how peptide_abundance_study_variables are represented here.
+  } else if (analysis == "TMT" || analysis == "Labelfree") {
+          # TODO: Where/how to extract intensities for study variables from TMT/Labelfree columns?
+          # Intensities is semicolon separated, but has varying amounts of semicolons 
+          # that do not seem related to the amount of experiment samples.
           mztab_column_names = c(mztab_column_names, 
                              "peptide_abundance_study_variable[1]", 
                              "peptide_abundance_stdev_study_variable[1]", 
                              "peptide_abundance_std_error_study_variable[1]")
+          print(colnames(max_quant_peptides))
           df = data.frame(rep("PEP", nrow(max_quant_peptides)), 
                           max_quant_peptides["Sequence"], 
                           max_quant_peptides["Proteins"],
                           nulls, nulls, nulls, nulls, 
                           max_quant_peptides["Score"], nulls, 
                           max_quant_peptides["Modifications"], 
-                          max_quant_peptides["Retention.time"] * 60,  # minutes to seconds
-                          max_quant_peptides["Retention.length"] * 60,  # minutes to seconds
-                          max_quant_peptides["Charge"],  
+                          max_quant_peptides["Retention.time"] * 60,
+                          max_quant_peptides["Retention.length"] * 60,
+                          max_quant_peptides["Charge"], 
                           max_quant_peptides["Uncalibrated.m.z"],
-                          nulls, null, nulls, nulls,
-                          )
+                          nulls,
+                          max_quant_peptides["Intensities"], nulls, nulls)
   }
 
   # Overwrite column names with correct ones.
