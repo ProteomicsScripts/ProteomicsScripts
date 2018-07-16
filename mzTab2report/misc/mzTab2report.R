@@ -1,8 +1,8 @@
 ## This is an R script for the conversion of mzTab to a better readable tsv format
 ## To install dependencies, run in R:
-## install.packages(devtools)
-## library(devtools)
-## install_github("corrplot", username = "MFreidank")
+## install.packages("devtools")
+## library("devtools")
+## install_github("taiyun/corrplot")
 
 library("corrplot")
 
