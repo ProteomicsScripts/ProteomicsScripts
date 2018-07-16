@@ -215,7 +215,7 @@ max_quant_peptides = read.table(allPeptides_file, sep="\t", header=TRUE, strings
 
 analyis_type = analysisType(colnames(max_quant_peptides))
 
-output_filename <- file.path(input.folder, 
+output_filename <- file.path(input.folder, "..", 
                              outputFilename(input_files=max_quant_peptides$Raw.file))
 
 pep_section <- generatePEP(max_quant_peptides)
