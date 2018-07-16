@@ -12,14 +12,6 @@ rm(list = ls())
 options(digits=10)
 
 
-# ANSI Escape sequences to print in (red) color to terminal screens and 
-# to turn color printing off again.
-# https://en.wikipedia.org/wiki/ANSI_escape_code
-FAIL_COLOR_ANSI = "\033[91m"
-SUCCESS_COLOR_ANSI = '\033[32m'
-END_COLOR_ANSI = "\033[0m"
-
-
 #' Assert that a given folder exists and contains all necessary MaxQuant result files.
 
 #' Required files for processing are: allPeptides.txt 
@@ -29,13 +21,13 @@ END_COLOR_ANSI = "\033[0m"
 checkMaxQuantFolder <- function(folder, relevant_files=c("allPeptides.txt")) {
     if (!dir.exists(file.path(folder))) {
         message = sprintf("Folder at path '%s' not found.", input.folder)
-        stop(sprintf("%s%s%s", FAIL_COLOR_ANSI, message, END_COLOR_ANSI))    
+        stop(message)    
     }
     for (file in relevant_files) {
         if (!file.exists(file.path(folder, file))) {
             message = sprintf("Found folder at path '%s' but it does not contain necessary file '%s'.", folder, file
             )
-            stop(sprintf("%s%s%s", FAIL_COLOR_ANSI, message, END_COLOR_ANSI))
+            stop(message)
         }
     }
 }
@@ -251,4 +243,4 @@ write.table(pep_section,
             row.names=FALSE)
 #  }}} Append PEP section. # 
 
-cat(sprintf("%sDone. Your mzTab file is available at: %s%s\n", SUCCESS_COLOR_ANSI, output_filename, END_COLOR_ANSI))
+cat(sprintf("Done. Your mzTab file is available at: %s\n", output_filename))
