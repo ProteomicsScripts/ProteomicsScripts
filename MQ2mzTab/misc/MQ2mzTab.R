@@ -72,7 +72,7 @@ analysisType <- function(column_names) {
 #' \code{allPeptides.txt}. 
 #'
 #' @param max_quant_peptides data.frame, Peptides parsed from MaxQuant's \code{allPeptides.txt}, possibly with semicolon separated \code{"Proteins"} column for each peptide. 
-generatePEP<- function(max_quant_peptides) {
+generatePEP<- function(max_quant_peptides, intensities) {
 
   # Determine type of analysis used.
   column_names = sort(colnames(max_quant_peptides))
@@ -81,18 +81,18 @@ generatePEP<- function(max_quant_peptides) {
   # use tidyr magic to split a row with semicolon-separated column "Proteins" into 
   # multiple rows that each have a single protein 
   # (and the same values in all remaining columns).
-  max_quant_peptides = separate_rows(max_quant_peptides, col="Proteins", sep=";")
+  max_quant_peptides = separate_rows(max_quant_peptides, col=Proteins, sep=";")
 
-  # NOTE: The code below this is quite lengthy and can probably be improved.
   mztab_column_names = c("PEH", "sequence", "accession", "unique", "database",	
     "database_version", "search_engine", "best_search_engine_score[1]", 
     "search_engine_score[1]_ms_run[1]", "modifications", "retention_time",
     "retention_time_window",	
-    "charge",	"mass_to_charge", "spectra_ref"
+    "charge", "mass_to_charge", "spectra_ref"
   )
 
 
-  # NOTE: modifications missing 
+  # NOTE: modifications must be formatted properly! (this is missing, we simply copy them over)
+  nulls = rep("null", nrow(max_quant_peptides))  # a column with only null values
   if (analysis == "Labeled") {
       # Results stem from TMT analysis.
       mztab_column_names = c(mztab_column_names, 
@@ -103,7 +103,6 @@ generatePEP<- function(max_quant_peptides) {
                              "peptide_abundance_stdev_study_variable[2]", 
                              "peptide_abundance_std_error_study_variable[2]")
 
-      nulls = rep("null", nrow(max_quant_peptides))  # a column with only null values
       if (any(grepl("Intensity.M", column_names))) {
           mztab_column_names = c(mztab_column_names, 
                              "peptide_abundance_study_variable[3]", 
@@ -138,25 +137,28 @@ generatePEP<- function(max_quant_peptides) {
                           max_quant_peptides["Intensity.L"], nulls, nulls,
                           max_quant_peptides["Intensity.H"], nulls, nulls)
       }
-  }
-  else if (analysis == "TMT" || analysis == "Labelfree") {
-      # XXX: handle tmt, reporter.intensity seems to be how peptide_abundance_study_variables are represented here.
+  } else if (analysis == "TMT" || analysis == "Labelfree") {
           mztab_column_names = c(mztab_column_names, 
                              "peptide_abundance_study_variable[1]", 
                              "peptide_abundance_stdev_study_variable[1]", 
                              "peptide_abundance_std_error_study_variable[1]")
+          print(colnames(max_quant_peptides))
           df = data.frame(rep("PEP", nrow(max_quant_peptides)), 
                           max_quant_peptides["Sequence"], 
                           max_quant_peptides["Proteins"],
                           nulls, nulls, nulls, nulls, 
                           max_quant_peptides["Score"], nulls, 
                           max_quant_peptides["Modifications"], 
-                          max_quant_peptides["Retention.time"] * 60,  # minutes to seconds
-                          max_quant_peptides["Retention.length"] * 60,  # minutes to seconds
-                          max_quant_peptides["Charge"],  
+                          max_quant_peptides["Retention.time"] * 60,
+                          max_quant_peptides["Retention.length"] * 60,
+                          max_quant_peptides["Charge"], 
                           max_quant_peptides["Uncalibrated.m.z"],
-                          nulls, null, nulls, nulls,
-                          )
+                          nulls,
+                          # max_quant_peptides["Intensities"], 
+                          # NOTE: Currently we use random numbers here, because it is unclear
+                          # where to obtain the actual intensities.
+                          runif(nrow(max_quant_peptides), min=0, max=5000),
+                          nulls, nulls)
   }
 
   # Overwrite column names with correct ones.
@@ -217,10 +219,13 @@ checkMaxQuantFolder(input.folder)
 
 #  Generate PEP section {{{ # 
 
-f = file.path(input.folder, "allPeptides.txt")
-max_quant_peptides = read.table(f, sep="\t", header=TRUE, stringsAsFactors=FALSE, na.strings=c("", "NA", " ", "  "))
+allPeptides_file = file.path(input.folder, "allPeptides.txt")
+max_quant_peptides = read.table(allPeptides_file, sep="\t", header=TRUE, stringsAsFactors=FALSE, na.strings=c("", "NA", " ", "  "))
 
-output_filename <- outputFilename(input_files=max_quant_peptides$Raw.file)
+analyis_type = analysisType(colnames(max_quant_peptides))
+
+output_filename <- file.path(input.folder, 
+                             outputFilename(input_files=max_quant_peptides$Raw.file))
 
 pep_section <- generatePEP(max_quant_peptides)
 #  }}} Generate PEP section # 
@@ -232,10 +237,8 @@ output_file <- file(output_filename, open="wt")
 on.exit(close(output_file))
 
 # uri is the source used to generate a given mzTab file. 
-# In our context here it is 'MAXQUANT_RESULTS_FOLDER/allPeptides.txt'
-uri = normalizePath(input.folder, "allPeptides.txt")
-
-cat(mzTabHeader(uri=uri), sep="\n", file=output_file)
+# In our context here it is 'MAXQUANT_RESULTS_FOLDER'
+cat(mzTabHeader(uri=input.folder), sep="\n", file=output_file)
 cat("\n", file=output_file)
 #  }}} Write mzTab header to file # 
 
