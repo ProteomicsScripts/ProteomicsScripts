@@ -54,7 +54,7 @@ analysisType <- function(column_names) {
 
     }
     message = "Unknown type of analysis.\nTMT analyses are expected to have a column named 'Reporter intensity'.\nLabeled analyses are expected to have at least a column named 'Intensity.L' and a column named 'Intensity.H'."
-    stop(sprintf("%s%s%s", FAIL_COLOR_ANSI, message, END_COLOR_ANSI))
+    stop(message)
 }
 
 # Each row is one (in mzTab potentially non-unique) detected peptide.
@@ -64,7 +64,7 @@ analysisType <- function(column_names) {
 #' \code{allPeptides.txt}. 
 #'
 #' @param max_quant_peptides data.frame, Peptides parsed from MaxQuant's \code{allPeptides.txt}, possibly with semicolon separated \code{"Proteins"} column for each peptide. 
-generatePEP<- function(max_quant_peptides, intensities) {
+generatePEP<- function(max_quant_peptides) {
 
   # Determine type of analysis used.
   column_names = sort(colnames(max_quant_peptides))
@@ -200,7 +200,7 @@ command_line_arguments <- commandArgs(trailingOnly = TRUE)
 
 if (length(command_line_arguments) != 1) {
     message = "Invalid amount of arguments!\nUsage: MQ2mzTab.R MAXQUANT_OUTPUT_FOLDER"
-    stop(sprintf("%s%s%s", FAIL_COLOR_ANSI, message, END_COLOR_ANSI))    
+    stop(message)    
 }
 
 input.folder <- commandArgs(trailingOnly = TRUE)[[1]]
@@ -231,6 +231,7 @@ on.exit(close(output_file))
 # In our context here it is 'MAXQUANT_RESULTS_FOLDER'
 cat(mzTabHeader(uri=input.folder), sep="\n", file=output_file)
 cat("\n", file=output_file)
+
 #  }}} Write mzTab header to file # 
 
 #  Append PEP section. {{{ # 
