@@ -134,7 +134,6 @@ generatePEP<- function(max_quant_peptides, intensities) {
                              "peptide_abundance_study_variable[1]", 
                              "peptide_abundance_stdev_study_variable[1]", 
                              "peptide_abundance_std_error_study_variable[1]")
-          print(colnames(max_quant_peptides))
           df = data.frame(rep("PEP", nrow(max_quant_peptides)), 
                           max_quant_peptides["Sequence"], 
                           max_quant_peptides["Proteins"],
