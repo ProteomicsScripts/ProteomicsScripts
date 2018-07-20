@@ -45,6 +45,12 @@ rem  replace dummy FILE_NAME_DUMMY by file name %FILE_BASE%
 rem  Run the R code
 R -e "Sweave('mzTab2report_temp.Snw')"
 
+rem If sweave fails, exit with error code.
+if %errorlevel% neq 0 (
+    ECHO "Sweave encountered an error! Exiting."
+    exit \b %errorlevel%
+)
+
 rem Small 5 sec pause.
 timeout /t 5 /NOBREAK
 
