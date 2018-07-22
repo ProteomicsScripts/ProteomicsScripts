@@ -148,9 +148,11 @@ generatePEP<- function(max_quant_peptides) {
          
          for (i in seq(1, num_study_variables, by=1)) {
              # append intensity columns for each study variable to dataframe
-             column_name = sprintf("peptide_abundance_study_variable[%d]", i)
-             stdev_column_name = sprintf("peptide_abundance_stdev_study_variable[%d]", i)
-             std_error_column_name = sprintf("peptide_abundance_std_error_study_variable[%d]", i)
+             # use i - 1 to maintain matching names of reporter.intensity columns
+             # (they start from 0!)
+             column_name = sprintf("peptide_abundance_study_variable[%d]", i - 1)
+             stdev_column_name = sprintf("peptide_abundance_stdev_study_variable[%d]", i - 1)
+             std_error_column_name = sprintf("peptide_abundance_std_error_study_variable[%d]", i - 1)
              mztab_column_names = c(mztab_column_names, column_name, stdev_column_name,
                                     std_error_column_name)
              df[, column_name] = max_quant_peptides[reporter_intensity_columns[[i]]]
