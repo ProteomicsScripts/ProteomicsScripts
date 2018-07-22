@@ -133,30 +133,29 @@ generatePEP<- function(max_quant_peptides) {
          reporter_intensity_columns = column_names[grepl(pattern="Reporter.intensity.[[:digit:]]+", column_names)]
          num_study_variables = length(reporter_intensity_columns)
          intensity_columns = c(max_quant_peptides[reporter_intensity_columns[[1]]], nulls, nulls)
-         
-         for (i in seq(0, num_study_variables - 1, by=1)) {
-             mztab_column_names = c(mztab_column_names, 
-                                    sprintf("peptide_abundance_study_variable[%d]", i),
-                                    sprintf("peptide_abundance_stdev_study_variable[%d]", i),
-                                    sprintf("peptide_abundance_std_error_study_variable[%d]", i))
-              if (i >= 1) {
-                  intensity_columns = c(intensity_columns, 
-                                        max_quant_peptides[reporter_intensity_columns[[i]]], nulls, nulls)
-              }
-        df = data.frame(rep("PEP", nrow(max_quant_peptides)),
-                        max_quant_peptides["Sequence"],
-                        max_quant_peptides["Proteins"],
-                        nulls, nulls, nulls, nulls, 
-                        max_quant_peptides["Score"], nulls, 
-                        max_quant_peptides["Modifications"], 
-                        max_quant_peptides["Retention.time"] * 60,
-                        max_quant_peptides["Retention.length"] * 60,
-                        max_quant_peptides["Charge"], 
-                        max_quant_peptides["m.z"],
-                        nulls,
-                        intensity_columns,
-                        )
 
+         df = data.frame(rep("PEP", nrow(max_quant_peptides)), 
+                         max_quant_peptides["Sequence"], 
+                         max_quant_peptides["Proteins"],
+                         nulls, nulls, nulls, nulls, 
+                         max_quant_peptides["Score"], nulls, 
+                         max_quant_peptides["Modifications"], 
+                         max_quant_peptides["Retention.time"] * 60,
+                         max_quant_peptides["Retention.length"] * 60,
+                         max_quant_peptides["Charge"], 
+                         max_quant_peptides["m.z"],
+                         nulls)
+         
+         for (i in seq(1, num_study_variables, by=1)) {
+             # append intensity columns for each study variable to dataframe
+             column_name = sprintf("peptide_abundance_study_variable[%d]", i)
+             stdev_column_name = sprintf("peptide_abundance_stdev_study_variable[%d]", i)
+             std_error_column_name = sprintf("peptide_abundance_std_error_study_variable[%d]", i)
+             mztab_column_names = c(mztab_column_names, column_name, stdev_column_name,
+                                    std_error_column_name)
+             df[, column_name] = max_quant_peptides[reporter_intensity_columns[[i]]]
+             df[, stdev_column_name] = nulls
+             df[, std_error_column_name] = nulls
          }
 
   } else if (analysis == "Labelfree") {
