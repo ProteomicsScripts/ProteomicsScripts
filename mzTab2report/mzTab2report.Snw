@@ -293,21 +293,25 @@ The {\tt PEP} section of the {\tt mzTab} file contains $\Sexpr{format(n.peptides
 \centering
 \vspace{-1cm}
 \subfloat[peptide abundances 3, $\operatorname{median}(\operatorname{intensity}) = \Sexpr{format(median.abundance.3, big.mark=",")}$]{\includegraphics[width=\FigureWidthA]{plot_DistributionIntensity_3.pdf}}\\
-}
-{}
 \caption{peptide abundance distributions.}
 \end{figure}
+}
+{}
 
 
 %
 % Kendrick nominal-fractional mass plot
 %
 
+\IfFileExists{plot_DistributionIntensity_3.pdf}
+{
 \begin{figure}[hb]
 \centering
 \includegraphics[width=10.0cm]{plot_Kendrick.pdf}
 \caption{Kendrick nominal fractional mass plot}
 \end{figure}
+}
+{}
 
 
 %
