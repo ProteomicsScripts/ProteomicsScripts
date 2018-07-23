@@ -29,9 +29,11 @@ EXIT /B
 )
 
 ECHO "Generating report from OpenMS consensusXML file"
-
-rem Changing the directory to that of the script
-CD /d %SCRIPT_PATH%
+rem Unique directory to avoid name clashes in `analysis.mzTab` etc. when 
+rem running multiple processes at once.
+SET WORK_DIRECTORY=%SCRIPT_PATH%\%FILE_BASE%
+mkdir %WORK_DIRECTORY%
+CD /d %WORK_DIRECTORY%
 
 COPY %file_absolute% analysis.consensusXML
 START %OpenMSHome%\%TextExporter -separator , -in analysis.consensusXML -out analysis.csv

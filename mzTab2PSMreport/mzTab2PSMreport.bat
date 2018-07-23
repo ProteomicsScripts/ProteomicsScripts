@@ -28,13 +28,17 @@ SET FILE_BASE=%~n1
 
 ECHO Generating report from mzTab file %FILE_BASE%.
 
-CD /d %SCRIPT_PATH%
+rem Unique directory to avoid name clashes in `analysis.mzTab` etc. when 
+rem running multiple processes at once.
+SET WORK_DIRECTORY=%SCRIPT_PATH%\%FILE_BASE%
+mkdir %WORK_DIRECTORY%
+CD /d %WORK_DIRECTORY%
 
 rem copy mzTab
 cp %FILE_ABSOLUTE% analysis.mzTab
 
 rem  replace dummy FILE_NAME_DUMMY by file name %FILE_BASE%
-(for /f "delims=" %%i in (mzTab2PSMreport.Snw) do (
+(for /f "delims=" %%i in (%SCRIPT_PATH%\mzTab2PSMreport.Snw) do (
     set "line=%%i"
     setlocal enabledelayedexpansion
     set "line=!line:FILE_NAME_DUMMY=%FILE_BASE%!"

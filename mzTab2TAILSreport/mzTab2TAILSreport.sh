@@ -18,6 +18,8 @@ FILE_PATH=$(dirname $FILE_ABSOLUTE)
 FILE_BASE=$(basename $FILE_ABSOLUTE)
 FILE_NAME=${FILE_BASE%.*}
 
+WORK_DIRECTORY="$SCRIPT_PATH/$FILE_NAME"
+
 if ! [[ -f $FILE ]]
 then
 echo "File does not exist."
@@ -25,13 +27,14 @@ exit
 fi
 
 echo 'Generating TAILS report from mzTab file '$FILE_ABSOLUTE'.'
-cd $SCRIPT_PATH
+mkdir "$WORK_DIRECTORY"
+cd "$WORK_DIRECTORY"
 
 # copy mzTab
 cp $FILE_ABSOLUTE data.mzTab
 
 # replace dummy by file name
-sed -e 's/FILE_NAME_DUMMY/'$FILE_NAME'/g' mzTab2TAILSreport.Snw > mzTab2TAILSreport_temp.Snw
+sed -e 's/FILE_NAME_DUMMY/'$FILE_NAME'/g' "$SCRIPT_PATH/mzTab2TAILSreport.Snw" > mzTab2TAILSreport_temp.Snw
 
 # Run the R code
 R -e "Sweave('mzTab2TAILSreport_temp.Snw')"
@@ -46,5 +49,7 @@ rm data*
 rm FcLogIntensity*
 rm frequency*
 rm mzTab2TAILSreport_temp.*
+
+rmdir "$WORK_DIRECTORY"
 
 cd $CURRENT_PATH
