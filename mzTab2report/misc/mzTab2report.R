@@ -13,7 +13,8 @@ rm(list = ls())
 options(digits=10)
 FcCutoff <- 8    # fold change cutoff, i.e. infinite fc values are mapped to +/-FcCutoff
 
-input.file <- 'example_3.mzTab'
+# input.file <- 'example_3.mzTab'
+input.file <- 'misc/Galaxy150_copy.mzTab'
 
 # find start of the section
 startSection <- function(file, section.identifier) {
@@ -174,6 +175,50 @@ plotCorrelations <- function(data, pdf.file) {
 
 }
 
+# Table with modifications
+writeModificationTable <- function(data, output.file) {
+    modifications = data[!is.na(data)]
+    df <- data.frame("Mod"=character(0), 
+                     "City"=character(0), 
+                     "Total"=double(0),
+                     "Per Peptide"=character(0)
+                    )
+    df <- data.frame("allMods"=modifications)
+
+    positions = NULL
+    accessions = NULL
+    peptide_ids = NULL
+
+    id = 0
+    for (modified_peptide in modifications) {
+        id <- id + 1
+        peptide_modifications <- strsplit(modified_peptide, ",")[[1]]
+        for (modification in peptide_modifications) {
+            print(modification)
+            position <- substr(modification, 1, 1)[[1]]
+            accession <- (strsplit(modification, ":")[[1]][[2]])
+
+            # XXX: Hardcode and recover mod + city combinations
+
+            positions <- c(positions, position)
+            accessions <- c(accessions, accession)
+            
+            peptide_ids <- c(peptide_ids, id)
+        }
+        # XXX: Per peptide?
+    }
+    df <- data.frame("ID"=peptide_ids, "Mod"=accessions, "City"=positions)
+    print(df)
+    # XXX: Get unique mod + city combinations in df
+    # XXX: Construct new dataframe that has these as mod + city and 
+    # TOTAL = number of occurences in total of this mod + city combination
+    # and uses "ID" to construct "per peptide" numbers
+    
+
+    return (df)
+
+}
+
 # read mzTab data
 peptide.data <- readMzTabPEP(input.file)
 
@@ -195,60 +240,63 @@ sd.fc.13 <-0
 sd.fc.23 <-0
 
 # Kendrick plot
-plotKendrick((peptide.data$mass_to_charge - 1.00784) * peptide.data$charge, "plot_Kendrick.pdf")
+# plotKendrick((peptide.data$mass_to_charge - 1.00784) * peptide.data$charge, "plot_Kendrick.pdf")
+
+# Modification Tabular
+writeModificationTable(peptide.data$modifications, "modification_tabular.pdf")
 
 
 # plot peptide abundance distributions
-if (abundance.exists(peptide.data,1)) {
-  median.abundance.1 <- median(peptide.data$"peptide_abundance_study_variable[1]", na.rm=TRUE)
-  plotDistribution(log10(peptide.data$"peptide_abundance_study_variable[1]"), expression('log'[10]*' intensity'), "plot_DistributionIntensity_1.pdf")
-}
-if (abundance.exists(peptide.data,2)) {
-  median.abundance.2 <- median(peptide.data$"peptide_abundance_study_variable[2]", na.rm=TRUE)
-  plotDistribution(log10(peptide.data$"peptide_abundance_study_variable[2]"), expression('log'[10]*' intensity'), "plot_DistributionIntensity_2.pdf")
-}
-if (abundance.exists(peptide.data,3)) {
-  median.abundance.3 <- median(peptide.data$"peptide_abundance_study_variable[3]", na.rm=TRUE)
-  plotDistribution(log10(peptide.data$"peptide_abundance_study_variable[3]"), expression('log'[10]*' intensity'), "plot_DistributionIntensity_3.pdf")
-}
-
-# plot fold change distributions and scatter plots
-if (abundance.exists(peptide.data,1) && abundance.exists(peptide.data,2)) {
-  a <- peptide.data$"peptide_abundance_study_variable[1]"
-  b <- peptide.data$"peptide_abundance_study_variable[2]"
-  fc <- calculateFoldChange(a, b)
-  intensity <- a + median(a/b, na.rm=TRUE)*b
-  median.fc.12 <- median(fc, na.rm=TRUE)
-  sd.fc.12 <- sd(fc, na.rm=TRUE)
-  plotFcLogIntensity(fc, intensity, "fold change", "plot_FoldChangeLogIntensity_12.pdf")
-  plotDistribution(fc, "fold change", "plot_DistributionFoldChange_12.pdf")
-}
-if (abundance.exists(peptide.data,1) && abundance.exists(peptide.data,3)) {
-  a <- peptide.data$"peptide_abundance_study_variable[1]"
-  b <- peptide.data$"peptide_abundance_study_variable[3]"
-  fc <- calculateFoldChange(a, b)
-  intensity <- a + median(a/b, na.rm=TRUE)*b
-  median.fc.13 <- median(fc, na.rm=TRUE)
-  sd.fc.13 <- sd(fc, na.rm=TRUE)
-  plotFcLogIntensity(fc, intensity, "fold change", "plot_FoldChangeLogIntensity_13.pdf")
-  plotDistribution(fc, "fold change", "plot_DistributionFoldChange_13.pdf")
-}
-if (abundance.exists(peptide.data,2) && abundance.exists(peptide.data,3)) {
-  a <- peptide.data$"peptide_abundance_study_variable[2]"
-  b <- peptide.data$"peptide_abundance_study_variable[3]"
-  fc <- calculateFoldChange(a, b)
-  intensity <- a + median(a/b, na.rm=TRUE)*b
-  median.fc.23 <- median(fc, na.rm=TRUE)
-  sd.fc.23 <- sd(fc, na.rm=TRUE)
-  plotFcLogIntensity(fc, intensity, "fold change", "plot_FoldChangeLogIntensity_23.pdf")
-  plotDistribution(fc, "fold change", "plot_DistributionFoldChange_23.pdf")
-}
-
-# Determine number of study variables.
-study_variables.index <- grepl("peptide_abundance_study_variable", colnames(peptide.data))
-study_variables.n <- sum(study_variables.index, na.rm=TRUE)
-
-# plot correlation matrix of peptide abundances
-if (study_variables.n >= 3) {
-    plotCorrelations(data = peptide.data, pdf.file = "correlations.pdf")
-}
+# if (abundance.exists(peptide.data,1)) {
+#   median.abundance.1 <- median(peptide.data$"peptide_abundance_study_variable[1]", na.rm=TRUE)
+#   plotDistribution(log10(peptide.data$"peptide_abundance_study_variable[1]"), expression('log'[10]*' intensity'), "plot_DistributionIntensity_1.pdf")
+# }
+# if (abundance.exists(peptide.data,2)) {
+#   median.abundance.2 <- median(peptide.data$"peptide_abundance_study_variable[2]", na.rm=TRUE)
+#   plotDistribution(log10(peptide.data$"peptide_abundance_study_variable[2]"), expression('log'[10]*' intensity'), "plot_DistributionIntensity_2.pdf")
+# }
+# if (abundance.exists(peptide.data,3)) {
+#   median.abundance.3 <- median(peptide.data$"peptide_abundance_study_variable[3]", na.rm=TRUE)
+#   plotDistribution(log10(peptide.data$"peptide_abundance_study_variable[3]"), expression('log'[10]*' intensity'), "plot_DistributionIntensity_3.pdf")
+# }
+# 
+# # plot fold change distributions and scatter plots
+# if (abundance.exists(peptide.data,1) && abundance.exists(peptide.data,2)) {
+#   a <- peptide.data$"peptide_abundance_study_variable[1]"
+#   b <- peptide.data$"peptide_abundance_study_variable[2]"
+#   fc <- calculateFoldChange(a, b)
+#   intensity <- a + median(a/b, na.rm=TRUE)*b
+#   median.fc.12 <- median(fc, na.rm=TRUE)
+#   sd.fc.12 <- sd(fc, na.rm=TRUE)
+#   plotFcLogIntensity(fc, intensity, "fold change", "plot_FoldChangeLogIntensity_12.pdf")
+#   plotDistribution(fc, "fold change", "plot_DistributionFoldChange_12.pdf")
+# }
+# if (abundance.exists(peptide.data,1) && abundance.exists(peptide.data,3)) {
+#   a <- peptide.data$"peptide_abundance_study_variable[1]"
+#   b <- peptide.data$"peptide_abundance_study_variable[3]"
+#   fc <- calculateFoldChange(a, b)
+#   intensity <- a + median(a/b, na.rm=TRUE)*b
+#   median.fc.13 <- median(fc, na.rm=TRUE)
+#   sd.fc.13 <- sd(fc, na.rm=TRUE)
+#   plotFcLogIntensity(fc, intensity, "fold change", "plot_FoldChangeLogIntensity_13.pdf")
+#   plotDistribution(fc, "fold change", "plot_DistributionFoldChange_13.pdf")
+# }
+# if (abundance.exists(peptide.data,2) && abundance.exists(peptide.data,3)) {
+#   a <- peptide.data$"peptide_abundance_study_variable[2]"
+#   b <- peptide.data$"peptide_abundance_study_variable[3]"
+#   fc <- calculateFoldChange(a, b)
+#   intensity <- a + median(a/b, na.rm=TRUE)*b
+#   median.fc.23 <- median(fc, na.rm=TRUE)
+#   sd.fc.23 <- sd(fc, na.rm=TRUE)
+#   plotFcLogIntensity(fc, intensity, "fold change", "plot_FoldChangeLogIntensity_23.pdf")
+#   plotDistribution(fc, "fold change", "plot_DistributionFoldChange_23.pdf")
+# }
+# 
+# # Determine number of study variables.
+# study_variables.index <- grepl("peptide_abundance_study_variable", colnames(peptide.data))
+# study_variables.n <- sum(study_variables.index, na.rm=TRUE)
+# 
+# # plot correlation matrix of peptide abundances
+# if (study_variables.n >= 3) {
+#     plotCorrelations(data = peptide.data, pdf.file = "correlations.pdf")
+# }
