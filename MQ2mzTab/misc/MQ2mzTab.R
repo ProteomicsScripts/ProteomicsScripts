@@ -109,7 +109,7 @@ generatePEP<- function(max_quant_peptides) {
                           max_quant_peptides["Retention.time"] * 60,  # minutes to seconds
                           max_quant_peptides["Retention.length"] * 60,  # minutes to seconds
                           max_quant_peptides["Charge"], 
-                          max_quant_peptides["Uncalibrated.m.z"],
+                          max_quant_peptides["m.z"],
                           nulls,
                           max_quant_peptides["Intensity.L"], nulls, nulls,
                           max_quant_peptides["Intensity.H"], nulls, nulls,
@@ -124,12 +124,45 @@ generatePEP<- function(max_quant_peptides) {
                           max_quant_peptides["Retention.time"] * 60,
                           max_quant_peptides["Retention.length"] * 60,
                           max_quant_peptides["Charge"], 
-                          max_quant_peptides["Uncalibrated.m.z"],
+                          max_quant_peptides["m.z"],
                           nulls,
                           max_quant_peptides["Intensity.L"], nulls, nulls,
                           max_quant_peptides["Intensity.H"], nulls, nulls)
       }
-  } else if (analysis == "TMT" || analysis == "Labelfree") {
+  } else if (analysis == "TMT") {
+         reporter_intensity_columns = column_names[grepl(pattern="Reporter.intensity.[[:digit:]]+", column_names)]
+         num_study_variables = length(reporter_intensity_columns)
+         intensity_columns = c(max_quant_peptides[reporter_intensity_columns[[1]]], nulls, nulls)
+
+         df = data.frame(rep("PEP", nrow(max_quant_peptides)), 
+                         max_quant_peptides["Sequence"], 
+                         max_quant_peptides["Proteins"],
+                         nulls, nulls, nulls, nulls, 
+                         max_quant_peptides["Score"], nulls, 
+                         max_quant_peptides["Modifications"], 
+                         max_quant_peptides["Retention.time"] * 60,
+                         max_quant_peptides["Retention.length"] * 60,
+                         max_quant_peptides["Charge"], 
+                         max_quant_peptides["m.z"],
+                         nulls)
+         
+         for (i in seq(1, num_study_variables, by=1)) {
+             # append intensity columns for each study variable to dataframe
+             # use i - 1 to maintain matching names of reporter.intensity columns
+             # (they start from 0!)
+             column_name = sprintf("peptide_abundance_study_variable[%d]", i - 1)
+             stdev_column_name = sprintf("peptide_abundance_stdev_study_variable[%d]", i - 1)
+             std_error_column_name = sprintf("peptide_abundance_std_error_study_variable[%d]", i - 1)
+             mztab_column_names = c(mztab_column_names, column_name, stdev_column_name,
+                                    std_error_column_name)
+             df[, column_name] = max_quant_peptides[reporter_intensity_columns[[i]]]
+             df[, stdev_column_name] = nulls
+             df[, std_error_column_name] = nulls
+         }
+
+  } else if (analysis == "Labelfree") {
+          # Labelfree not yet supported, needs linking of evidence.txt with peptides.txt
+          # we simply use random numbers for the intensities here.
           mztab_column_names = c(mztab_column_names, 
                              "peptide_abundance_study_variable[1]", 
                              "peptide_abundance_stdev_study_variable[1]", 
@@ -143,13 +176,15 @@ generatePEP<- function(max_quant_peptides) {
                           max_quant_peptides["Retention.time"] * 60,
                           max_quant_peptides["Retention.length"] * 60,
                           max_quant_peptides["Charge"], 
-                          max_quant_peptides["Uncalibrated.m.z"],
+                          max_quant_peptides["m.z"],
                           nulls,
                           # max_quant_peptides["Intensities"], 
                           # NOTE: Currently we use random numbers here, because it is unclear
                           # where to obtain the actual intensities.
                           runif(nrow(max_quant_peptides), min=0, max=5000),
                           nulls, nulls)
+
+
   }
 
   # Overwrite column names with correct ones.
@@ -210,8 +245,8 @@ checkMaxQuantFolder(input.folder)
 
 #  Generate PEP section {{{ # 
 
-allPeptides_file = file.path(input.folder, "allPeptides.txt")
-max_quant_peptides = read.table(allPeptides_file, sep="\t", header=TRUE, stringsAsFactors=FALSE, na.strings=c("", "NA", " ", "  "))
+evidence_file = file.path(input.folder, "evidence.txt")
+max_quant_peptides = read.table(evidence_file, sep="\t", header=TRUE, stringsAsFactors=FALSE, na.strings=c("", "NA", " ", "  "))
 
 analyis_type = analysisType(colnames(max_quant_peptides))
 

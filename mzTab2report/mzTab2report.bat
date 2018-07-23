@@ -50,6 +50,12 @@ rem  XXX: mzTab2report.Snw now needs to be addressed via full path by joining SC
 rem  Run the R code
 R -e "Sweave('mzTab2report_temp.Snw')"
 
+rem If sweave fails, exit with error code.
+if %errorlevel% neq 0 (
+    ECHO "Sweave encountered an error! Exiting."
+    exit \b %errorlevel%
+)
+
 rem Small 5 sec pause.
 timeout /t 5 /NOBREAK
 
