@@ -358,5 +358,5 @@ The {\tt PEP} section of the {\tt mzTab} file contains $\Sexpr{format(n.peptides
 \caption{Correlation of all peptide abundances.}
 \end{figure}
 }
-
+{}
 \end{document}
