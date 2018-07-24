@@ -36,6 +36,7 @@ CD /d %WORK_DIRECTORY%
 
 rem copy mzTab
 cp %FILE_ABSOLUTE% analysis.mzTab
+cp %SCRIPT_PATH%\Sweave.sty Sweave.sty
 
 rem  replace dummy FILE_NAME_DUMMY by file name %FILE_BASE%
 rem  XXX: mzTab2report.Snw now needs to be addressed via full path by joining SCRIPT_PATH with that filename (only in first occurrence!)
