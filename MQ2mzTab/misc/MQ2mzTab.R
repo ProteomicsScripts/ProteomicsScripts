@@ -106,8 +106,8 @@ generatePEP<- function(max_quant_peptides) {
                           nulls, nulls, nulls, nulls, 
                           max_quant_peptides["Score"], nulls, 
                           max_quant_peptides["Modifications"], 
-                          max_quant_peptides["Retention.time"],  # minutes to seconds
-                          max_quant_peptides["Retention.length"],  # minutes to seconds
+                          max_quant_peptides["Retention.time"],
+                          max_quant_peptides["Retention.length"],
                           max_quant_peptides["Charge"], 
                           max_quant_peptides["m.z"],
                           nulls,
