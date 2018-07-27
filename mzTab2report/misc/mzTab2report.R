@@ -14,7 +14,7 @@ options(digits=10)
 FcCutoff <- 8    # fold change cutoff, i.e. infinite fc values are mapped to +/-FcCutoff
 
 # input.file <- 'example_3.mzTab'
-input.file <- 'misc/Galaxy150_copy.mzTab'
+input.file <- 'misc/Galaxy150_copy2.mzTab'
 
 # find start of the section
 startSection <- function(file, section.identifier) {
@@ -176,7 +176,7 @@ plotCorrelations <- function(data, pdf.file) {
 }
 
 # Table with modifications
-writeModificationTable <- function(data, output.file) {
+ModificationTable <- function(data) {
     modifications = data[!is.na(data)]
     df <- data.frame("Mod"=character(0), 
                      "City"=character(0), 
@@ -221,10 +221,16 @@ writeModificationTable <- function(data, output.file) {
     colnames(df2) <- c("Mod", "Site", "Total")
 
     ToModification <- function(accession) {
-      if (accession == "737") {
+      if (accession == "1") {
+        return ("Acetyl")
+      } else if (accession == "4") {
+        return ("Carbamidomethyl")
+      } else if (accession == "737") {
         return ("TMT6plex")
       } else if (accession == "738") {
         return ("TMT2plex")
+      }  else if (accession == "35") {
+        return ("Oxidation")
       }
       else {
         stop(sprintf("Unsupported accession %s", accession))
@@ -236,6 +242,8 @@ writeModificationTable <- function(data, output.file) {
     }
     df2["Mod"] <- apply(FUN=ToModification, MARGIN=1, X=df2["Mod"])
     df2["Site"] <- apply(FUN=ToSite, MARGIN=1, X=df2["Site"])
+    df2 <- df2[order(df2["Mod"], -df2["Total"]),]
+    rownames(df2) <- c()
     return (df2)
 }
 
@@ -263,7 +271,8 @@ sd.fc.23 <-0
 # plotKendrick((peptide.data$mass_to_charge - 1.00784) * peptide.data$charge, "plot_Kendrick.pdf")
 
 # Modification Tabular
-writeModificationTable(peptide.data$modifications, "modification_tabular.pdf")
+df <- ModificationTable(data=peptide.data$modifications)
+write.table(df, "./test.csv", row.names=FALSE)
 
 
 # plot peptide abundance distributions
