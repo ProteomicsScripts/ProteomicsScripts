@@ -194,7 +194,6 @@ writeModificationTable <- function(data, output.file) {
         id <- id + 1
         peptide_modifications <- strsplit(modified_peptide, ",")[[1]]
         for (modification in peptide_modifications) {
-            print(modification)
             position <- substr(modification, 1, 1)[[1]]
             accession <- (strsplit(modification, ":")[[1]][[2]])
 
@@ -207,16 +206,37 @@ writeModificationTable <- function(data, output.file) {
         }
         # XXX: Per peptide?
     }
-    df <- data.frame("ID"=peptide_ids, "Mod"=accessions, "City"=positions)
-    print(df)
-    # XXX: Get unique mod + city combinations in df
-    # XXX: Construct new dataframe that has these as mod + city and 
-    # TOTAL = number of occurences in total of this mod + city combination
-    # and uses "ID" to construct "per peptide" numbers
-    
+    df <- data.frame("ID"=peptide_ids, "Accession"=accessions, "Position"=positions)
 
-    return (df)
+    df2 <- unique(df[,c('Accession','Position')])
+    df2["Total"] = 0
 
+    # Increment "total counter" in unique dataframe for each row in non-unique dataframe.
+    apply(df, 1, FUN=function(row) {
+      row_accession = row["Accession"]
+      row_position = row["Position"]
+      unique_row <- df2[df2["Accession"] == row_accession & df2["Position"] == row_position,]
+      df2[df2["Accession"] == row_accession & df2["Position"] == row_position,]["Total"] <<- unique_row["Total"] + 1
+    })
+    colnames(df2) <- c("Mod", "Site", "Total")
+
+    ToModification <- function(accession) {
+      if (accession == "737") {
+        return ("TMT6plex")
+      } else if (accession == "738") {
+        return ("TMT2plex")
+      }
+      else {
+        stop(sprintf("Unsupported accession %s", accession))
+      }
+    }
+
+    ToSite <- function(position) {
+      return (position);
+    }
+    df2["Mod"] <- apply(FUN=ToModification, MARGIN=1, X=df2["Mod"])
+    df2["Site"] <- apply(FUN=ToSite, MARGIN=1, X=df2["Site"])
+    return (df2)
 }
 
 # read mzTab data
