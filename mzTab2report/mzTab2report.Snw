@@ -33,7 +33,7 @@ options(digits=10)
 FcCutoff <- 8    # fold change cutoff, i.e. infinite fc values are mapped to +/-FcCutoff
 
 peptidesOfInterest <- c("DVTTGDTLCDPDAPIILER", "GALVDDIVYTIALTAIQSAQQQ")
-input.file <- 'misc/example_2.mzTab'
+input.file <- 'analysis.mzTab'
 
 # find start of the section
 startSection <- function(file, section.identifier) {
@@ -294,12 +294,19 @@ plotCorrelations(data = peptide.data, pdf.file = "correlations.pdf")
 
 The {\tt PEP} section of the {\tt mzTab} file contains $\Sexpr{format(n.peptides, big.mark=",")}$ quantified peptide features. 
 
+\hspace{5pt}
+
+\begin{center}
+\textbf{Peptides of Interest}
+\end{center}
+<<echo=FALSE,results=tex>>=
+library(xtable)
+print(xtable(interestPeptides.matches), include.rownames=FALSE)
+@
+
 %
 % peptide abundance distributions
 %
-library(xtable)
-xtable(interestPeptides.matches)
-
 \begin{figure}[hb]
 \IfFileExists{plot_DistributionIntensity_1.pdf}
 {
