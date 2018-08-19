@@ -13,7 +13,8 @@ rm(list = ls())
 options(digits=10)
 FcCutoff <- 8    # fold change cutoff, i.e. infinite fc values are mapped to +/-FcCutoff
 
-input.file <- 'example_3.mzTab'
+peptidesOfInterest <- c("DVTTGDTLCDPDAPIILER", "GALVDDIVYTIALTAIQSAQQQ")
+input.file <- 'misc/example_2.mzTab'
 
 # find start of the section
 startSection <- function(file, section.identifier) {
@@ -174,8 +175,17 @@ plotCorrelations <- function(data, pdf.file) {
 
 }
 
+findPeptidesOfInterest <- function(data, retain_columns=c("sequence", "accession", "charge", "retention_time", "modifications"), new_column_names=c("Sequence", "Accession", "Charge", "Retention Time", "Modifications" )) {
+    pattern = paste(peptidesOfInterest, collapse="|")
+    df = as.data.frame(data[grepl(pattern, data$sequence), retain_columns])
+    colnames(df) <- new_column_names
+    return(df)
+}
+
 # read mzTab data
 peptide.data <- readMzTabPEP(input.file)
+
+interestPeptides.matches <- findPeptidesOfInterest(peptide.data)
 
 n.peptides = dim(peptide.data)[1]
 
