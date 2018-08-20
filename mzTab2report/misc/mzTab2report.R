@@ -13,7 +13,8 @@ rm(list = ls())
 options(digits=10)
 FcCutoff <- 8    # fold change cutoff, i.e. infinite fc values are mapped to +/-FcCutoff
 
-input.file <- 'example_3.mzTab'
+# input.file <- 'example_3.mzTab'
+input.file <- 'misc/Galaxy150_copy2.mzTab'
 
 # find start of the section
 startSection <- function(file, section.identifier) {
@@ -174,6 +175,110 @@ plotCorrelations <- function(data, pdf.file) {
 
 }
 
+# Table with modifications
+ModificationTable <- function(data) {
+    modifications = data[!is.na(data)]
+    df <- data.frame("Mod"=character(0), 
+                     "City"=character(0), 
+                     "Total"=double(0),
+                     "Per Peptide"=character(0)
+                    )
+    df <- data.frame("allMods"=modifications)
+
+    positions = NULL
+    accessions = NULL
+    peptide_ids = NULL
+
+    id = 0
+    for (modified_peptide in modifications) {
+        id <- id + 1
+        peptide_modifications <- strsplit(modified_peptide, ",")[[1]]
+        for (modification in peptide_modifications) {
+            position <- substr(modification, 1, 1)[[1]]
+            accession <- (strsplit(modification, ":")[[1]][[2]])
+
+            # XXX: Hardcode and recover mod + city combinations
+
+            positions <- c(positions, position)
+            accessions <- c(accessions, accession)
+            
+            peptide_ids <- c(peptide_ids, id)
+        }
+        # XXX: Per peptide?
+    }
+    df <- data.frame("ID"=peptide_ids, "Accession"=accessions, "Position"=positions)
+
+    df2 <- unique(df[,c('Accession','Position')])
+    df2["Total"] = 0
+
+    # Increment "total counter" in unique dataframe for each row in non-unique dataframe.
+    apply(df, 1, FUN=function(row) {
+      row_accession = row["Accession"]
+      row_position = row["Position"]
+      unique_row <- df2[df2["Accession"] == row_accession & df2["Position"] == row_position,]
+      df2[df2["Accession"] == row_accession & df2["Position"] == row_position,]["Total"] <<- unique_row["Total"] + 1
+    })
+    colnames(df2) <- c("Mod", "Site", "Total")
+
+    ToModification <- function(accession) {
+      if (accession == "1") {
+        return ("Acetyl")
+      } else if (accession == "4") {
+        return ("Carbamidomethyl")
+      } else if (accession == "737") {
+        return ("TMT6plex")
+      } else if (accession == "738") {
+        return ("TMT2plex")
+      }  else if (accession == "35") {
+        return ("Oxidation")
+      }
+      else {
+        stop(sprintf("Unsupported accession %s", accession))
+      }
+    }
+
+
+    ToSite <- function(position) {
+      return (position);
+    }
+    df2["Mod"] <- apply(FUN=ToModification, MARGIN=1, X=df2["Mod"])
+    df2["Site"] <- apply(FUN=ToSite, MARGIN=1, X=df2["Site"])
+    df2 <- df2[order(df2["Mod"], -df2["Total"]),]
+    rownames(df2) <- c()
+
+    countOccurrences <- function(mod, site) {
+        return (nrow(subset(df2, df2["Mod"] == mod & df2["Site"] == site)))
+
+    }
+
+    sitesFor <- function(mod) {
+        return(subset(df2, df2["Mod"] == mod)["Site"])
+    }
+
+    buildString <- function(sites, occurences) {
+        s <- ""
+        for (i in seq_along(sites)) {
+            t <- paste("(", sites[[i]], ")", occurences[[i]], sep="")
+            s <- paste(s, t, sep=" ")
+        }
+        return(substring(text=s, first=2))
+    }
+
+    position_index = c()
+    for (mod in df2[["Mod"]]) {
+        sites <- unique(sitesFor(mod=mod)[["Site"]])
+
+        occurences <- lapply(sites, function(site) {return (countOccurrences(mod=mod, site=site));})
+
+        position_index <- c(position_index, buildString(sites, occurences))
+
+    }
+    df2["Position"] <- position_index
+    df2["Total"] <- as.character(df2["Total"])
+
+    return (df2)
+}
+
 # read mzTab data
 peptide.data <- readMzTabPEP(input.file)
 
@@ -197,8 +302,11 @@ sd.fc.23 <-0
 # Kendrick plot
 plotKendrick((peptide.data$mass_to_charge - 1.00784) * peptide.data$charge, "plot_Kendrick.pdf")
 
+# Modification Tabular
+modification_dataframe <- ModificationTable(data=peptide.data$modifications)
 
-# plot peptide abundance distributions
+
+plot peptide abundance distributions
 if (abundance.exists(peptide.data,1)) {
   median.abundance.1 <- median(peptide.data$"peptide_abundance_study_variable[1]", na.rm=TRUE)
   plotDistribution(log10(peptide.data$"peptide_abundance_study_variable[1]"), expression('log'[10]*' intensity'), "plot_DistributionIntensity_1.pdf")
