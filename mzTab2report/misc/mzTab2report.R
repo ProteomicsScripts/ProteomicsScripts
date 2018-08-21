@@ -13,8 +13,8 @@ rm(list = ls())
 options(digits=10)
 FcCutoff <- 8    # fold change cutoff, i.e. infinite fc values are mapped to +/-FcCutoff
 
-peptidesOfInterest <- c("DVTTGDTLCDPDAPIILER", "GALVDDIVYTIALTAIQSAQQQ")
-proteinsOfInterest <- c("P0ABH9")
+peptidesOfInterest <- c("SSAAPPPPPR", "GISNEGQNASIK", "HVLTSIGEK", "DIPVPKPK", "IGDYAGIK", "TASEFDSAIAQDK", "SAAGAFGPELSR", "ELGQSGVDTYLQTK", "GLILVGGYGTR", "GILFVGSGVSGGEEGAR", "SFANQPLEVVYSK", "LTILEELR", "NGFILDGFPR", "ELASGLSFPVGFK", "LSSEAPALFQFDLK")
+proteinsOfInterest <- c("O15117")
 input.file <- 'misc/example_2.mzTab'
 
 # find start of the section
