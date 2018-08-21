@@ -2,6 +2,7 @@
 
 \usepackage{subfig, fullpage, graphicx, amsmath}
 \usepackage{url}
+\usepackage{float}
 
 %\setlength{\voffset}{0pt}
 %\setlength{\topmargin}{0pt}
@@ -16,8 +17,14 @@
 \begin{document}
 
 <<echo=false,results=hide>>=
+## This is an R script for the conversion of mzTab to a better readable tsv format
+## To install dependencies, run in R:
+## install.packages("devtools")
+## library("devtools")
+## install_github("taiyun/corrplot")
 
 library("corrplot")
+
 # clear entire workspace
 rm(list = ls())
 
@@ -25,6 +32,8 @@ rm(list = ls())
 options(digits=10)
 FcCutoff <- 8    # fold change cutoff, i.e. infinite fc values are mapped to +/-FcCutoff
 
+peptidesOfInterest <- c("DVTTGDTLCDPDAPIILER", "GALVDDIVYTIALTAIQSAQQQ")
+proteinsOfInterest <- c("P0ABH9")
 input.file <- 'analysis.mzTab'
 
 # find start of the section
@@ -108,7 +117,7 @@ return (column %in% colnames(data))
 # fc = log2(abundances1/abundances2)
 calculateFoldChange <- function(abundances1, abundances2) {
 offset <- 1e-10       # avoids devisions by zero
-max.fc <- FcCutoff    # map knock-out fold changes to finite values
+max.fc <- FcCutoff    # map knock-out fold changes to finite values 
 
 # calculate fold changes
 abundances1 <- abundances1 + offset
@@ -172,21 +181,40 @@ plotCorrelations <- function(data, pdf.file) {
 study_variables.index <- grepl("peptide_abundance_study_variable", colnames(peptide.data))
 study_variables.n <- sum(study_variables.index, na.rm=TRUE)
 study_variables.data = peptide.data[, study_variables.index]
+
 corr = cor(study_variables.data[complete.cases(study_variables.data),])
+
 # rename columns and rows
 colnames(corr) <- 1: study_variables.n
 rownames(corr) <- 1: study_variables.n
 cols <- colorRampPalette(c("#2166AC", "#3F8EC0", "#80B9D8", "#BCDAEA", "#E6EFF3", "#F9EAE1", "#FAC8AF", "#ED9576", "#D25749", "#B2182B"))(256)
 pdf(file=pdf.file)
 corrplot(corr, cl.lim=c(min(corr),max(corr)), col = cols, is.corr=FALSE)
+
 dev.off()
+
+}
+
+findPeptidesOfInterest <- function(data, retain_columns=c("sequence", "accession", "charge", "retention_time", "modifications"), new_column_names=c("Sequence", "Accession", "Charge", "Retention Time", "Modifications" )) {
+pattern = paste(peptidesOfInterest, collapse="|")
+df = as.data.frame(data[grepl(pattern, data$sequence), retain_columns])
+colnames(df) <- new_column_names
+return(df)
 }
 
 
-
+findProteinsOfInterest <- function(data, retain_columns=c("sequence", "accession", "charge", "retention_time", "modifications"), new_column_names=c("Sequence", "Accession", "Charge", "Retention Time", "Modifications" )) {
+pattern = paste(proteinsOfInterest, collapse="|")
+df = as.data.frame(data[grepl(pattern, data$accession), retain_columns])
+colnames(df) <- new_column_names
+return(df)
+}
 
 # read mzTab data
 peptide.data <- readMzTabPEP(input.file)
+
+interestPeptides.matches <- findPeptidesOfInterest(peptide.data)
+interestProteins.matches <- findProteinsOfInterest(peptide.data)
 
 n.peptides = dim(peptide.data)[1]
 
@@ -207,6 +235,7 @@ sd.fc.23 <-0
 
 # Kendrick plot
 plotKendrick((peptide.data$mass_to_charge - 1.00784) * peptide.data$charge, "plot_Kendrick.pdf")
+
 
 # plot peptide abundance distributions
 if (abundance.exists(peptide.data,1)) {
@@ -253,11 +282,16 @@ sd.fc.23 <- sd(fc, na.rm=TRUE)
 plotFcLogIntensity(fc, intensity, "fold change", "plot_FoldChangeLogIntensity_23.pdf")
 plotDistribution(fc, "fold change", "plot_DistributionFoldChange_23.pdf")
 }
+
+# Determine number of study variables.
 study_variables.index <- grepl("peptide_abundance_study_variable", colnames(peptide.data))
 study_variables.n <- sum(study_variables.index, na.rm=TRUE)
+
+# plot correlation matrix of peptide abundances
 if (study_variables.n >= 3) {
-plotCorrelations(data = peptide.data, pdf.file = "plot_Correlations.pdf")
+plotCorrelations(data = peptide.data, pdf.file = "correlations.pdf")
 }
+
 
 @
 
@@ -270,10 +304,29 @@ plotCorrelations(data = peptide.data, pdf.file = "plot_Correlations.pdf")
 
 The {\tt PEP} section of the {\tt mzTab} file contains $\Sexpr{format(n.peptides, big.mark=",")}$ quantified peptide features. 
 
+\hspace{5pt}
+
+\begin{center}
+\textbf{Peptides of Interest}
+\end{center}
+<<echo=FALSE,results=tex>>=
+library(xtable)
+print(xtable(interestPeptides.matches), include.rownames=FALSE, table.placement="H")
+@
+
+\hspace{5pt}
+
+\begin{center}
+\textbf{Proteins of Interest}
+\end{center}
+<<echo=FALSE,results=tex>>=
+library(xtable)
+print(xtable(interestProteins.matches), include.rownames=FALSE, table.placement="H")
+@
+
 %
 % peptide abundance distributions
 %
-
 \begin{figure}[hb]
 \IfFileExists{plot_DistributionIntensity_1.pdf}
 {
