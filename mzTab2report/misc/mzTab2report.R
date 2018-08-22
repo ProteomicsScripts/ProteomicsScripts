@@ -305,5 +305,5 @@ study_variables.n <- sum(study_variables.index, na.rm=TRUE)
 
 # plot correlation matrix of peptide abundances
 if (study_variables.n >= 3) {
-    plotCorrelations(data = peptide.data, pdf.file = "correlations.pdf")
+    plotCorrelations(data = peptide.data, pdf.file = "plot_Correlations.pdf")
 }
