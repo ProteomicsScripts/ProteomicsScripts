@@ -13,8 +13,9 @@ rm(list = ls())
 options(digits=10)
 FcCutoff <- 8    # fold change cutoff, i.e. infinite fc values are mapped to +/-FcCutoff
 
-peptidesOfInterest <- c("SSAAPPPPPR", "GISNEGQNASIK", "HVLTSIGEK", "DIPVPKPK", "IGDYAGIK", "TASEFDSAIAQDK", "SAAGAFGPELSR", "ELGQSGVDTYLQTK", "GLILVGGYGTR", "GILFVGSGVSGGEEGAR", "SFANQPLEVVYSK", "LTILEELR", "NGFILDGFPR", "ELASGLSFPVGFK", "LSSEAPALFQFDLK")
-proteinsOfInterest <- c("O15117")
+peptides.of.interest <- c("SSAAPPPPPR", "GISNEGQNASIK", "HVLTSIGEK", "DIPVPKPK", "IGDYAGIK", "TASEFDSAIAQDK", "SAAGAFGPELSR", "ELGQSGVDTYLQTK", "GLILVGGYGTR", "GILFVGSGVSGGEEGAR", "SFANQPLEVVYSK", "LTILEELR", "NGFILDGFPR", "ELASGLSFPVGFK", "LSSEAPALFQFDLK")
+proteins.of.interest <- c("O15117")
+
 input.file <- 'misc/example_2.mzTab'
 
 # find start of the section
@@ -41,7 +42,7 @@ countOccurrences <- function(char,s) {
 # check that the protein accession is of the format *|*|*
 # Note that NA returns TRUE.
 checkAccessionFormat <- function(accession) {
-  if (is.na(accession)) {
+  if (all(is.na(accession))) {
     return (TRUE)
   }
   n <- length(accession)
@@ -83,6 +84,19 @@ readMzTabPEP <- function(file) {
   if (all(sapply(peptide.data$accession, checkAccessionFormat))) {
     peptide.data$gene <- sapply(peptide.data$accession, getGene)
     peptide.data$accession <- sapply(peptide.data$accession, getAccession)
+  }
+  
+  return (peptide.data)
+}
+
+# splits fasta protein accession into UniProt accession and gene name
+splitAccession <- function(peptide.data) {
+  # simplify accession (in case it is of the format *|*|* )
+  peptide.data$accession <- as.character(peptide.data$accession)
+  if (checkAccessionFormat(peptide.data$accession)) {
+    list <- strsplit(peptide.data$accession,"[|]")
+    peptide.data$accession <- unlist(lapply(list, '[[', 2))
+    peptide.data$gene <- unlist(lapply(list, '[[', 3))
   }
   
   return (peptide.data)
@@ -173,31 +187,46 @@ plotCorrelations <- function(data, pdf.file) {
     corrplot(corr, cl.lim=c(min(corr),max(corr)), col = cols, is.corr=FALSE)
 
     dev.off()
-
 }
 
-findPeptidesOfInterest <- function(data, retain_columns=c("sequence", "accession", "charge", "retention_time", "modifications"), new_column_names=c("Sequence", "Accession", "Charge", "Retention Time", "Modifications" )) {
-    pattern = paste(peptidesOfInterest, collapse="|")
-    df = as.data.frame(data[grepl(pattern, data$sequence), retain_columns])
-    colnames(df) <- new_column_names
+findPeptidesOfInterest <- function(data, retain.columns=c("sequence", "accession", "charge", "retention_time", "mass_to_charge"), new.column.names=c("Sequence", "Accession", "Charge", "Retention Time", "m/z" )) {
+    pattern = paste(peptides.of.interest, collapse="|")
+    df = as.data.frame(data[grepl(pattern, data$sequence), retain.columns])
+    colnames(df) <- new.column.names
+    return(df)
+}
+
+findProteinsOfInterest <- function(data, retain.columns=c("sequence", "accession", "charge", "retention_time", "mass_to_charge"), new.column.names=c("Sequence", "Accession", "Charge", "Retention Time", "m/z" )) {
+    pattern = paste(proteins.of.interest, collapse="|")
+    df = as.data.frame(data[grepl(pattern, data$accession), retain.columns])
+    colnames(df) <- new.column.names
     return(df)
 }
 
 
-findProteinsOfInterest <- function(data, retain_columns=c("sequence", "accession", "charge", "retention_time", "modifications"), new_column_names=c("Sequence", "Accession", "Charge", "Retention Time", "Modifications" )) {
-    pattern = paste(proteinsOfInterest, collapse="|")
-    df = as.data.frame(data[grepl(pattern, data$accession), retain_columns])
-    colnames(df) <- new_column_names
-    return(df)
-}
+
+
+
+
+
+
+
+
 
 # read mzTab data
 peptide.data <- readMzTabPEP(input.file)
 
-interestPeptides.matches <- findPeptidesOfInterest(peptide.data)
-interestProteins.matches <- findProteinsOfInterest(peptide.data)
+# remove decoy and contaminant hits
+peptide.data <- peptide.data[which(substr(peptide.data$accession,1,4)!="dec_"),]
+peptide.data <- peptide.data[which(substr(peptide.data$accession,1,4)!="CON_"),]
 
-n.peptides = dim(peptide.data)[1]
+# total number of quantified peptides
+n.peptides <- dim(peptide.data)[1]
+
+peptide.data <- splitAccession(peptide.data)
+
+interest.peptides.matches <- findPeptidesOfInterest(peptide.data)
+interest.proteins.matches <- findProteinsOfInterest(peptide.data)
 
 # pre-define variables which will be called from LaTeX
 # Needed even with IfFileExists()
