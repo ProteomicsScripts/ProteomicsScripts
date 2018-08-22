@@ -192,6 +192,8 @@ plotCorrelations <- function(data, pdf.file) {
 findPeptidesOfInterest <- function(data, retain.columns=c("sequence", "accession", "charge", "retention_time", "mass_to_charge"), new.column.names=c("Sequence", "Accession", "Charge", "Retention Time", "m/z" )) {
     pattern = paste(peptides.of.interest, collapse="|")
     df = as.data.frame(data[grepl(pattern, data$sequence), retain.columns])
+    # sort in the same order as peptides.of.interest vector
+    df <- df[order(match(df$sequence, peptides.of.interest)),]
     colnames(df) <- new.column.names
     return(df)
 }
@@ -199,6 +201,10 @@ findPeptidesOfInterest <- function(data, retain.columns=c("sequence", "accession
 findProteinsOfInterest <- function(data, retain.columns=c("sequence", "accession", "charge", "retention_time", "mass_to_charge"), new.column.names=c("Sequence", "Accession", "Charge", "Retention Time", "m/z" )) {
     pattern = paste(proteins.of.interest, collapse="|")
     df = as.data.frame(data[grepl(pattern, data$accession), retain.columns])
+    # sort sequences in alphabetic order
+    df <- df[order(df$sequence),]
+    # sort in the same order as proteins.of.interest vector
+    df <- df[order(match(df$accession, proteins.of.interest)),]
     colnames(df) <- new.column.names
     return(df)
 }
