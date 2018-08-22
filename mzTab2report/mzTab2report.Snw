@@ -228,6 +228,51 @@ colnames(df) <- new.column.names
 return(df)
 }
 
+# create a summary table of all modifications and their specificities
+# required input is a dataframe with a "sequence" and "modifications" column in mzTab standard
+createModsSummary <- function(data)
+{
+# extract relevant data
+data <- data[,c("sequence","modifications")]
+data <- data[!is.na(data$modifications),]
+
+# split comma-separted mods into multiple columns
+all.mods <- strsplit(data$modifications, split=",")
+l <- sapply(all.mods, length)
+idx <- rep(1:length(l), l)
+data <- data[idx,]
+data$modifications <- unlist(all.mods)
+
+# extract specificity
+getSiteIndex <- function(mod)
+{
+return(unlist(strsplit(mod, split="-"))[1])
+}
+data$idx <- sapply(data$modifications, getSiteIndex)
+data$specificity <- substr(data$sequence, data$idx, data$idx)
+
+# extract mod accession
+getModAccession <- function(mod)
+{
+return(unlist(strsplit(mod, split=":"))[2])
+}
+data$accession <- sapply(data$modifications, getModAccession)
+
+# create summary statistics
+stats <- aggregate(data$accession, by=list(data$accession, data$specificity), FUN=length)
+colnames(stats) = c("mod","specificity","number")
+stats <- stats[order(stats$number, decreasing = TRUE),]
+
+# replace mod accession by mod name
+Accession2Mod <- rep("",3000)
+Accession2Mod[35] <- "Oxidation"
+Accession2Mod[39] <- "Methylthio"
+Accession2Mod[259] <- "Label:13C(6)15N(2)"
+Accession2Mod[267] <- "Label:13C(6)15N(4)"
+stats$mod <- Accession2Mod[as.numeric(stats$mod)]
+
+return(stats)
+}
 
 
 
@@ -240,6 +285,9 @@ return(df)
 
 # read mzTab data
 peptide.data <- readMzTabPEP(input.file)
+
+# create mod summary statistics
+stats <- createModsSummary(peptide.data)
 
 # remove decoy and contaminant hits
 peptide.data <- peptide.data[which(substr(peptide.data$accession,1,4)!="dec_"),]
