@@ -266,6 +266,8 @@ createModsSummary <- function(data)
   Accession2Mod[199] <- "Dimethyl:2H(4)"
   Accession2Mod[259] <- "Label:13C(6)15N(2)"
   Accession2Mod[267] <- "Label:13C(6)15N(4)"
+  Accession2Mod[284] <- "Methyl:2H(2)"
+  Accession2Mod[329] <- "Methyl:2H(3)13C(1)"
   Accession2Mod[330] <- "Dimethyl:2H(6)13C(2)"
   Accession2Mod[425] <- "Dioxidation"
   Accession2Mod[510] <- "Dimethyl:2H(4)13C(2)"
