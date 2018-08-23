@@ -255,10 +255,6 @@ if (idx == 0)
 {
 return("N-term")
 }
-else if ((idx < 0) || (idx > length(sequence)))
-{
-return("Index outside range.")
-}
 else
 {
 return(substr(sequence, idx, idx))
@@ -280,11 +276,18 @@ stats <- stats[order(stats$number, decreasing = TRUE),]
 
 # replace mod accession by mod name
 Accession2Mod <- rep("",3000)
+Accession2Mod[1] <- "Acetyl"
+Accession2Mod[4] <- "Carbamidomethyl"
 Accession2Mod[35] <- "Oxidation"
+Accession2Mod[36] <- "Dimethyl"
 Accession2Mod[39] <- "Methylthio"
+Accession2Mod[188] <- "Label:13C(6)"
+Accession2Mod[199] <- "Dimethyl:2H(4)"
 Accession2Mod[259] <- "Label:13C(6)15N(2)"
 Accession2Mod[267] <- "Label:13C(6)15N(4)"
+Accession2Mod[330] <- "Dimethyl:2H(6)13C(2)"
 Accession2Mod[425] <- "Dioxidation"
+Accession2Mod[510] <- "Dimethyl:2H(4)13C(2)"
 Accession2Mod[737] <- "TMT6plex"
 stats$mod <- Accession2Mod[as.numeric(stats$mod)]
 
