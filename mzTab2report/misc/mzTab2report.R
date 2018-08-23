@@ -16,7 +16,7 @@ FcCutoff <- 8    # fold change cutoff, i.e. infinite fc values are mapped to +/-
 peptides.of.interest <- c("SSAAPPPPPR", "GISNEGQNASIK", "HVLTSIGEK", "DIPVPKPK", "IGDYAGIK", "TASEFDSAIAQDK", "SAAGAFGPELSR", "ELGQSGVDTYLQTK", "GLILVGGYGTR", "GILFVGSGVSGGEEGAR", "SFANQPLEVVYSK", "LTILEELR", "NGFILDGFPR", "ELASGLSFPVGFK", "LSSEAPALFQFDLK")
 proteins.of.interest <- c("O15117")
 
-input.file <- 'misc/example_2.mzTab'
+input.file <- 'example_4.mzTab'
 
 # find start of the section
 startSection <- function(file, section.identifier) {
@@ -250,6 +250,7 @@ createModsSummary <- function(data)
   Accession2Mod[39] <- "Methylthio"
   Accession2Mod[259] <- "Label:13C(6)15N(2)"
   Accession2Mod[267] <- "Label:13C(6)15N(4)"
+  Accession2Mod[425] <- "Dioxidation"
   stats$mod <- Accession2Mod[as.numeric(stats$mod)]
   
   return(stats)
