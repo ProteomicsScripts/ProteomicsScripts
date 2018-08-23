@@ -211,9 +211,19 @@ corr = cor(study_variables.data[complete.cases(study_variables.data),])
 colnames(corr) <- 1: study_variables.n
 rownames(corr) <- 1: study_variables.n
 cols <- colorRampPalette(c("#2166AC", "#3F8EC0", "#80B9D8", "#BCDAEA", "#E6EFF3", "#F9EAE1", "#FAC8AF", "#ED9576", "#D25749", "#B2182B"))(256)
-pdf(file=pdf.file)
-corrplot(corr, cl.lim=c(min(corr),max(corr)), col = cols, is.corr=FALSE)
 
+# determine plotting method (for SILAC, TMT etc. numbers, for LFQ circles)
+if (study_variables.n < 12)
+{
+corr.plot.method = "number"
+}
+else
+{
+corr.plot.method = "circle"
+}
+
+pdf(file=pdf.file)
+corrplot(corr, cl.lim=c(min(corr),max(corr)), col = cols, is.corr=FALSE, method = corr.plot.method)
 dev.off()
 }
 
