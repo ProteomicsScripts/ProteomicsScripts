@@ -230,7 +230,22 @@ createModsSummary <- function(data)
     return(unlist(strsplit(mod, split="-"))[1])
   }
   data$idx <- sapply(data$modifications, getSiteIndex)
-  data$specificity <- substr(data$sequence, data$idx, data$idx)
+  getSiteAA <- function(idx, sequence)
+  {
+    if (idx == 0)
+    {
+      return("N-term")
+    }
+    else if ((idx < 0) || (idx > length(sequence)))
+    {
+      return("Index outside range.")    
+    }
+    else
+    {
+      return(substr(sequence, idx, idx))
+    }
+  }
+  data$specificity <- mapply(getSiteAA, idx = data$idx, sequence = data$sequence)
   
   # extract mod accession
   getModAccession <- function(mod)
