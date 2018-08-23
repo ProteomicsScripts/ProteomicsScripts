@@ -208,6 +208,17 @@ plotCorrelations <- function(data, pdf.file) {
     dev.off()
 }
 
+plotBoxplot <- function(data, pdf.file) {
+  # extract study variables
+  study_variables.index <- grepl("peptide_abundance_study_variable", colnames(peptide.data))
+  study_variables.data = peptide.data[, study_variables.index]
+  colnames(study_variables.data) <- as.character(1:(dim(study_variables.data)[2]))
+  
+  pdf(file=pdf.file, height = 6, width = 10)
+  boxplot(study_variables.data, log="y", ylab="expression", xlab="samples", las=2)
+  dev.off()
+}
+
 findPeptidesOfInterest <- function(data, retain.columns=c("sequence", "accession", "charge", "retention_time", "mass_to_charge"), new.column.names=c("Sequence", "Accession", "Charge", "Retention Time", "m/z" )) {
     pattern = paste(peptides.of.interest, collapse="|")
     df = as.data.frame(data[grepl(pattern, data$sequence), retain.columns])
@@ -392,3 +403,6 @@ if (abundanceExists(peptide.data,2) && abundanceExists(peptide.data,3)) {
 if (numberOfAbundances(peptide.data) >= 3) {
     plotCorrelations(data = peptide.data, pdf.file = "plot_Correlations.pdf")
 }
+
+# plot boxplot of peptide abundances
+plotBoxplot(peptide.data, "plot_Boxplot.pdf")
