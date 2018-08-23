@@ -266,6 +266,7 @@ createModsSummary <- function(data)
   Accession2Mod[259] <- "Label:13C(6)15N(2)"
   Accession2Mod[267] <- "Label:13C(6)15N(4)"
   Accession2Mod[425] <- "Dioxidation"
+  Accession2Mod[737] <- "TMT6plex"
   stats$mod <- Accession2Mod[as.numeric(stats$mod)]
   
   return(stats)
