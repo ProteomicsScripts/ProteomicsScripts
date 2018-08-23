@@ -103,9 +103,17 @@ splitAccession <- function(peptide.data) {
 }
 
 # check if a specific "peptide_abundance_study_variable[n]" column exists
-abundance.exists <- function(data, n) {
+abundance.exists <- function(data, n)
+{
   column <- paste("peptide_abundance_study_variable[",as.character(n),"]",sep="")
   return (column %in% colnames(data))
+}
+
+# returns the number of quantification channels i.e. the number of "peptide_abundance_study_variable[*]" columns
+number.of.abundances <- function(data)
+{
+  columns <- colnames(data)
+  return(length(which(grepl("peptide_abundance_study_variable", columns))))
 }
 
 # determine fold changes and map to finite numbers
