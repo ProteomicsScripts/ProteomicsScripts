@@ -209,9 +209,8 @@ return(data[,idx])
 
 plotCorrelations <- function(data, pdf.file) {
 # extract study variables
-study_variables.index <- grepl("peptide_abundance_study_variable", colnames(peptide.data))
-study_variables.n <- sum(study_variables.index, na.rm=TRUE)
-study_variables.data = peptide.data[, study_variables.index]
+study_variables.n <- numberOfAbundances(data)
+study_variables.data = getPeptideQuants(data)
 
 corr = cor(study_variables.data[complete.cases(study_variables.data),])
 
