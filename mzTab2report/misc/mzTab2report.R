@@ -192,6 +192,9 @@ plotCorrelations <- function(data, pdf.file) {
     # extract study variables
     study_variables.n <- numberOfAbundances(data)
     study_variables.data = getPeptideQuants(data)
+    
+    # (optional) z-score normalisation
+    #study_variables.data <- scale(study_variables.data, center = TRUE, scale = TRUE)
 
     corr = cor(study_variables.data[complete.cases(study_variables.data),])
 
@@ -220,6 +223,9 @@ plotBoxplot <- function(data, pdf.file) {
   study_variables.data = getPeptideQuants(data)
   colnames(study_variables.data) <- as.character(1:(dim(study_variables.data)[2]))
   
+  # (optional) z-score normalisation
+  #study_variables.data <- scale(study_variables.data, center = TRUE, scale = TRUE)
+
   pdf(file=pdf.file, height = 6, width = 10)
   boxplot(study_variables.data, log="y", ylab="expression", xlab="samples", las=2)
   dev.off()
