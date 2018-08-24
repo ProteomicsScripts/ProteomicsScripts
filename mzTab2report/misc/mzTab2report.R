@@ -180,6 +180,14 @@ plotKendrick <- function(mass, pdf.file) {
   dev.off()
 }
 
+# returns a dataframe containing only the peptide quantification columns
+# required input is a dataframe with columns "peptide_abundance_study_variable[*]"
+getPeptideQuants <- function(data)
+{
+  idx <- grepl("peptide_abundance_study_variable", colnames(data))
+  return(data[,idx])
+}
+
 plotCorrelations <- function(data, pdf.file) {
     # extract study variables
     study_variables.index <- grepl("peptide_abundance_study_variable", colnames(peptide.data))
@@ -210,8 +218,7 @@ plotCorrelations <- function(data, pdf.file) {
 
 plotBoxplot <- function(data, pdf.file) {
   # extract study variables
-  study_variables.index <- grepl("peptide_abundance_study_variable", colnames(peptide.data))
-  study_variables.data = peptide.data[, study_variables.index]
+  study_variables.data = getPeptideQuants(data)
   colnames(study_variables.data) <- as.character(1:(dim(study_variables.data)[2]))
   
   pdf(file=pdf.file, height = 6, width = 10)
