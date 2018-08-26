@@ -16,7 +16,7 @@ peptides.of.interest <- c("SSAAPPPPPR", "GISNEGQNASIK", "HVLTSIGEK", "DIPVPKPK",
 proteins.of.interest <- c("O15117")
 
 #input.file <- 'analysis.mzTab'
-input.file <- 'example_4.mzTab'
+input.file <- 'misc/example_3.mzTab'
 
 # find start of the section
 startSection <- function(file, section.identifier) {
@@ -205,7 +205,7 @@ plotCorrelations <- function(data, pdf.file) {
     # determine plotting method (for SILAC, TMT etc. numbers, for LFQ circles)
     if (study_variables.n < 12)
     {
-      corr.plot.method = "number"
+      corr.plot.method = "mixed"
     }
     else
     {
@@ -258,6 +258,7 @@ createModsSummary <- function(data)
   data <- data[,c("sequence","modifications")]
   data <- data[!is.na(data$modifications),]
   
+  print(data$modifications)
   # split comma-separted mods into multiple columns
   all.mods <- strsplit(data$modifications, split=",")
   l <- sapply(all.mods, length)
@@ -331,7 +332,13 @@ createModsSummary <- function(data)
 peptide.data <- readMzTabPEP(input.file)
 
 # create mod summary statistics
-stats <- createModsSummary(peptide.data)
+if(any(!is.na(peptide.data$modifications))) 
+{
+    stats <- createModsSummary(peptide.data)
+} else 
+{
+    stats <- data.frame()
+}
 
 # remove decoy and contaminant hits
 peptide.data <- peptide.data[which(substr(peptide.data$accession,1,4)!="dec_"),]
