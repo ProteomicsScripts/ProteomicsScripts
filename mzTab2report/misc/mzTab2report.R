@@ -34,6 +34,15 @@ startSection <- function(file, section.identifier) {
   return (row)
 }
 
+# check if the vector/column is empty
+# i.e. all entries are NA or "" etc. or the the vector is of length 0
+isEmpty <- function(column)
+{
+  column <- column[!is.na(column)]
+  column <- column[column != c("")]
+  return(length(column) == 0)
+}
+
 # count the occurences of character c in string s
 countOccurrences <- function(char,s) {
   s2 <- gsub(char,"",s)
@@ -43,6 +52,10 @@ countOccurrences <- function(char,s) {
 # check that the protein accession is of the format *|*|*
 # Note that NA returns TRUE.
 checkAccessionFormat <- function(accession) {
+  if (isEmpty(accession)) {
+    return(FALSE)
+  }
+  
   if (all(is.na(accession))) {
     return (TRUE)
   }
@@ -232,23 +245,64 @@ plotBoxplot <- function(data, pdf.file) {
 }
 
 findPeptidesOfInterest <- function(data, retain.columns=c("sequence", "accession", "charge", "retention_time", "mass_to_charge"), new.column.names=c("Sequence", "Accession", "Charge", "Retention Time", "m/z" )) {
-    pattern = paste(peptides.of.interest, collapse="|")
-    df = as.data.frame(data[grepl(pattern, data$sequence), retain.columns])
-    # sort in the same order as peptides.of.interest vector
-    df <- df[order(match(df$sequence, peptides.of.interest)),]
+  # check if sequence column is non-empty
+  if (isEmpty(data$sequence))
+  {
+    df <- t(data.frame(c("no sequences reported", rep("", length(retain.columns)-1))))
     colnames(df) <- new.column.names
+    rownames(df) <- c()
     return(df)
+  }
+  
+  pattern = paste(peptides.of.interest, collapse="|")
+  df = as.data.frame(data[grepl(pattern, data$sequence), retain.columns])
+    
+  # sort in the same order as peptides.of.interest vector
+  df <- df[order(match(df$sequence, peptides.of.interest)),]
+  colnames(df) <- new.column.names
+  
+  # check if results are empty
+  if (dim(df)[1] == 0)
+  {
+    df <- t(data.frame(c("no matching sequences found", rep("", length(retain.columns)-1))))
+    colnames(df) <- new.column.names
+    rownames(df) <- c()
+    return(df)
+  }
+  
+  return(df)
 }
 
 findProteinsOfInterest <- function(data, retain.columns=c("sequence", "accession", "charge", "retention_time", "mass_to_charge"), new.column.names=c("Sequence", "Accession", "Charge", "Retention Time", "m/z" )) {
-    pattern = paste(proteins.of.interest, collapse="|")
-    df = as.data.frame(data[grepl(pattern, data$accession), retain.columns])
-    # sort sequences in alphabetic order
-    df <- df[order(df$sequence),]
-    # sort in the same order as proteins.of.interest vector
-    df <- df[order(match(df$accession, proteins.of.interest)),]
+  # check if protein accession column is non-empty
+  if (isEmpty(data$accession))
+  {
+    df <- t(data.frame(c("", "no accessions reported", rep("", length(retain.columns)-2))))
     colnames(df) <- new.column.names
+    rownames(df) <- c()
     return(df)
+  }
+
+  pattern = paste(proteins.of.interest, collapse="|")
+  df = as.data.frame(data[grepl(pattern, data$accession), retain.columns])
+  
+  # sort sequences in alphabetic order
+  df <- df[order(df$sequence),]
+  
+  # sort in the same order as proteins.of.interest vector
+  df <- df[order(match(df$accession, proteins.of.interest)),]
+  colnames(df) <- new.column.names
+  
+  # check if results are empty
+  if (dim(df)[1] == 0)
+  {
+    df <- t(data.frame(c("", "no matching accessions found", rep("", length(retain.columns)-2))))
+    colnames(df) <- new.column.names
+    rownames(df) <- c()
+    return(df)
+  }
+  
+  return(df)
 }
 
 # create a summary table of all modifications and their specificities
@@ -258,6 +312,16 @@ createModsSummary <- function(data)
   # extract relevant data
   data <- data[,c("sequence","modifications")]
   data <- data[!is.na(data$modifications),]
+  data <- data[data$modifications != c(""),]
+  
+  # check if any mods are reported
+  if (dim(data)[1] == 0)
+  {
+    stats <- t(data.frame(c("no mods reported","","")))
+    colnames(stats) <- c("modification","specificity","number")
+    rownames(stats) <- c()
+    return(stats)
+  }
   
   # split comma-separted mods into multiple columns
   all.mods <- strsplit(data$modifications, split=",")
@@ -331,18 +395,24 @@ createModsSummary <- function(data)
 # read mzTab data
 peptide.data <- readMzTabPEP(input.file)
 
+# remove decoy and contaminant hits and split accession
+if (!isEmpty(peptide.data$accession))
+{
+  peptide.data <- peptide.data[which(substr(peptide.data$accession,1,4)!="dec_"),]
+  peptide.data <- peptide.data[which(substr(peptide.data$accession,1,4)!="CON_"),]
+  
+  # Note that decoys and contaminants might not be of the form *|*|* and accessions might not have been split in readMzTabPEP().
+  # Hence we split the accessions here again after removing decoys and accessions.
+  peptide.data <- splitAccession(peptide.data)
+}
+
 # create mod summary statistics
 stats <- createModsSummary(peptide.data)
-
-# remove decoy and contaminant hits
-peptide.data <- peptide.data[which(substr(peptide.data$accession,1,4)!="dec_"),]
-peptide.data <- peptide.data[which(substr(peptide.data$accession,1,4)!="CON_"),]
 
 # total number of quantified peptides
 n.peptides <- dim(peptide.data)[1]
 
-peptide.data <- splitAccession(peptide.data)
-
+# extract peptides and proteins of interest
 interest.peptides.matches <- findPeptidesOfInterest(peptide.data)
 interest.proteins.matches <- findProteinsOfInterest(peptide.data)
 
