@@ -17,7 +17,7 @@ peptides.of.interest <- c("SSAAPPPPPR", "GISNEGQNASIK", "HVLTSIGEK", "DIPVPKPK",
 proteins.of.interest <- c("O15117")
 
 #input.file <- 'analysis.mzTab'
-input.file <- 'example_4.mzTab'
+input.file <- 'example_1.mzTab'
 
 # find start of the section
 startSection <- function(file, section.identifier) {
@@ -434,7 +434,6 @@ sd.fc.23 <-0
 # Kendrick plot
 plotKendrick((peptide.data$mass_to_charge - 1.00784) * peptide.data$charge, "plot_Kendrick.pdf")
 
-
 # plot peptide abundance distributions
 if (abundanceExists(peptide.data,1)) {
   median.abundance.1 <- median(peptide.data$"peptide_abundance_study_variable[1]", na.rm=TRUE)
@@ -483,8 +482,10 @@ if (abundanceExists(peptide.data,2) && abundanceExists(peptide.data,3)) {
 
 # plot correlation matrix of peptide abundances
 if (numberOfAbundances(peptide.data) >= 3) {
-    plotCorrelations(data = peptide.data, pdf.file = "plot_Correlations.pdf")
+  plotCorrelations(data = peptide.data, pdf.file = "plot_Correlations.pdf")
 }
 
 # plot boxplot of peptide abundances
-plotBoxplot(peptide.data, "plot_Boxplot.pdf")
+if (numberOfAbundances(peptide.data) >= 3) {
+  plotBoxplot(peptide.data, "plot_Boxplot.pdf")
+}
