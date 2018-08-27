@@ -17,7 +17,7 @@ peptides.of.interest <- c("SSAAPPPPPR", "GISNEGQNASIK", "HVLTSIGEK", "DIPVPKPK",
 proteins.of.interest <- c("O15117")
 
 #input.file <- 'analysis.mzTab'
-input.file <- 'example_1.mzTab'
+input.file <- 'example_4.mzTab'
 
 # find start of the section
 startSection <- function(file, section.identifier) {
@@ -409,8 +409,12 @@ if (!isEmpty(peptide.data$accession))
 # create mod summary statistics
 stats <- createModsSummary(peptide.data)
 
-# total number of quantified peptides
+# total number of quantified and identified peptides
 n.peptides <- dim(peptide.data)[1]
+peptide.data.identified <- peptide.data[which(!is.na(peptide.data$sequence)),]
+n.peptides.identified <- dim(peptide.data.identified)[1]
+n.peptides.identified.modified.unique <- length(unique(peptide.data.identified$opt_global_modified_sequence))
+n.peptides.identified.stripped.unique <- length(unique(peptide.data.identified$sequence))
 
 # extract peptides and proteins of interest
 interest.peptides.matches <- findPeptidesOfInterest(peptide.data)

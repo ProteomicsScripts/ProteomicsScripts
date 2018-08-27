@@ -428,8 +428,12 @@ peptide.data <- splitAccession(peptide.data)
 # create mod summary statistics
 stats <- createModsSummary(peptide.data)
 
-# total number of quantified peptides
+# total number of quantified and identified peptides
 n.peptides <- dim(peptide.data)[1]
+peptide.data.identified <- peptide.data[which(!is.na(peptide.data$sequence)),]
+n.peptides.identified <- dim(peptide.data.identified)[1]
+n.peptides.identified.modified.unique <- length(unique(peptide.data.identified$opt_global_modified_sequence))
+n.peptides.identified.stripped.unique <- length(unique(peptide.data.identified$sequence))
 
 # extract peptides and proteins of interest
 interest.peptides.matches <- findPeptidesOfInterest(peptide.data)
@@ -519,6 +523,24 @@ plotBoxplot(peptide.data, "plot_Boxplot.pdf")
 \end{center}
 
 The {\tt PEP} section of the {\tt mzTab} file contains $\Sexpr{format(n.peptides, big.mark=",")}$ quantified peptide features. 
+
+\hspace{5pt}
+
+\begin{table}[hb]
+\begin{center}
+\begin{tabular}{| l | c |}
+\hline
+& number of peptides \\
+\hline
+quantified & \Sexpr{format(n.peptides, big.mark=",")}\\
+identified (total) & \Sexpr{format(n.peptides.identified, big.mark=",")}\\
+identified (unique modified) & \Sexpr{format(n.peptides.identified.modified.unique, big.mark=",")}\\
+identified (unique stripped) & \Sexpr{format(n.peptides.identified.stripped.unique, big.mark=",")}\\
+\hline
+\end{tabular}
+\caption{Total number of quantified and identified peptides.}
+\end{center}
+\end{table}
 
 \hspace{5pt}
 
