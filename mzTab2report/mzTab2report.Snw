@@ -597,7 +597,7 @@ print(xtable(stats), include.rownames=FALSE, table.placement="H")
 
 \hspace{5pt}
 
-\IfFileExists{plot_Boxplot.pdf}
+\IfFileExists{plot_QuantFrequency.pdf}
 {
 \begin{figure}[hb]
 \centering
