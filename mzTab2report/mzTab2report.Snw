@@ -36,7 +36,7 @@ peptides.of.interest <- c("SSAAPPPPPR", "GISNEGQNASIK", "HVLTSIGEK", "DIPVPKPK",
 proteins.of.interest <- c("O15117")
 
 input.file <- 'analysis.mzTab'
-#input.file <- 'example_1.mzTab'
+#input.file <- 'example_4.mzTab'
 
 # find start of the section
 startSection <- function(file, section.identifier) {
@@ -402,6 +402,26 @@ stats$mod <- Accession2Mod[as.numeric(stats$mod)]
 return(stats)
 }
 
+# (in)complete quantification plot
+# Not all peptides need to be quantified in all channels/samples. See for example knock-out or TAILS experiments.
+# The plot below summarises how many peptides were quantified in x smaples. 1 <= x <= number of samples
+plotQuantFrequency <- function(quants, pdf.file)
+{
+countNonNA <- function(vector)
+{
+return(length(which(!is.na(vector))))
+}
+counts.non.na <- apply(quants, 1, countNonNA)
+countOccurrenceInVector <- function(n)
+{
+return(length(which(counts.non.na == n)))
+}
+frequency <- unlist(lapply(dim(quants)[2]:1, countOccurrenceInVector))
+
+pdf(file=pdf.file)
+barplot(frequency, names.arg = as.character(dim(quants)[2]:1), xlab = "number of samples in which peptide was quantified", ylab = "peptide count")
+dev.off()
+}
 
 
 
@@ -434,6 +454,11 @@ peptide.data.identified <- peptide.data[which(!is.na(peptide.data$sequence)),]
 n.peptides.identified <- dim(peptide.data.identified)[1]
 n.peptides.identified.modified.unique <- length(unique(peptide.data.identified$opt_global_modified_sequence))
 n.peptides.identified.stripped.unique <- length(unique(peptide.data.identified$sequence))
+
+# plot frequency of peptide quants
+if (numberOfAbundances(peptide.data) >= 2) {
+plotQuantFrequency(getPeptideQuants(peptide.data), "plot_QuantFrequency.pdf")
+}
 
 # extract peptides and proteins of interest
 interest.peptides.matches <- findPeptidesOfInterest(peptide.data)
@@ -522,9 +547,7 @@ plotBoxplot(peptide.data, "plot_Boxplot.pdf")
 \section*{Report for {\tt PEP} Section in {\tt mzTab} File\\ \url{FILE_NAME_DUMMY}}
 \end{center}
 
-The {\tt PEP} section of the {\tt mzTab} file contains $\Sexpr{format(n.peptides, big.mark=",")}$ quantified peptide features. 
-
-\hspace{5pt}
+The {\tt PEP} section of the {\tt mzTab} file contains $\Sexpr{format(n.peptides, big.mark=",")}$ quantified peptide features measured in $\Sexpr{format(numberOfAbundances(peptide.data), big.mark=",")}$ samples.
 
 \begin{table}[hb]
 \begin{center}
@@ -571,6 +594,20 @@ print(xtable(interest.proteins.matches), include.rownames=FALSE, table.placement
 library(xtable)
 print(xtable(stats), include.rownames=FALSE, table.placement="H")
 @
+
+\hspace{5pt}
+
+\IfFileExists{plot_Boxplot.pdf}
+{
+\begin{figure}[hb]
+\centering
+\includegraphics[width=12.0cm]{plot_QuantFrequency.pdf}
+\caption{Frequency plot of peptide quantifications.}
+\end{figure}
+}
+{}
+
+\hspace{5pt}
 
 %
 % peptide abundance distributions

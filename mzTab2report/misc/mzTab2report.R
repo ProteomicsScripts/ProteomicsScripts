@@ -17,7 +17,7 @@ peptides.of.interest <- c("SSAAPPPPPR", "GISNEGQNASIK", "HVLTSIGEK", "DIPVPKPK",
 proteins.of.interest <- c("O15117")
 
 #input.file <- 'analysis.mzTab'
-input.file <- 'example_4.mzTab'
+input.file <- 'example_2.mzTab'
 
 # find start of the section
 startSection <- function(file, section.identifier) {
@@ -383,6 +383,26 @@ createModsSummary <- function(data)
   return(stats)
 }
 
+# (in)complete quantification plot
+# Not all peptides need to be quantified in all channels/samples. See for example knock-out or TAILS experiments.
+# The plot below summarises how many peptides were quantified in x smaples. 1 <= x <= number of samples
+plotQuantFrequency <- function(quants, pdf.file)
+{
+  countNonNA <- function(vector)
+  {
+    return(length(which(!is.na(vector))))
+  }
+  counts.non.na <- apply(quants, 1, countNonNA)
+  countOccurrenceInVector <- function(n)
+  {
+    return(length(which(counts.non.na == n)))
+  }
+  frequency <- unlist(lapply(dim(quants)[2]:1, countOccurrenceInVector))
+
+  pdf(file=pdf.file)
+  barplot(frequency, names.arg = as.character(dim(quants)[2]:1), xlab = "number of samples in which peptide was quantified", ylab = "peptide count")
+  dev.off()
+}
 
 
 
@@ -400,7 +420,7 @@ if (!isEmpty(peptide.data$accession))
 {
   peptide.data <- peptide.data[which(substr(peptide.data$accession,1,4)!="dec_"),]
   peptide.data <- peptide.data[which(substr(peptide.data$accession,1,4)!="CON_"),]
-  
+
   # Note that decoys and contaminants might not be of the form *|*|* and accessions might not have been split in readMzTabPEP().
   # Hence we split the accessions here again after removing decoys and accessions.
   peptide.data <- splitAccession(peptide.data)
@@ -415,6 +435,11 @@ peptide.data.identified <- peptide.data[which(!is.na(peptide.data$sequence)),]
 n.peptides.identified <- dim(peptide.data.identified)[1]
 n.peptides.identified.modified.unique <- length(unique(peptide.data.identified$opt_global_modified_sequence))
 n.peptides.identified.stripped.unique <- length(unique(peptide.data.identified$sequence))
+
+# plot frequency of peptide quants
+if (numberOfAbundances(peptide.data) >= 2) {
+  plotQuantFrequency(getPeptideQuants(peptide.data), "plot_QuantFrequency.pdf")
+}
 
 # extract peptides and proteins of interest
 interest.peptides.matches <- findPeptidesOfInterest(peptide.data)
