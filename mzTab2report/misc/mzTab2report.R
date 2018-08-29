@@ -15,8 +15,7 @@ FcCutoff <- 8    # fold change cutoff, i.e. infinite fc values are mapped to +/-
 peptides.of.interest <- c("SSAAPPPPPR", "GISNEGQNASIK", "HVLTSIGEK", "DIPVPKPK", "IGDYAGIK", "TASEFDSAIAQDK", "SAAGAFGPELSR", "ELGQSGVDTYLQTK", "GLILVGGYGTR", "GILFVGSGVSGGEEGAR", "SFANQPLEVVYSK", "LTILEELR", "NGFILDGFPR", "ELASGLSFPVGFK", "LSSEAPALFQFDLK")
 proteins.of.interest <- c("O15117")
 
-#input.file <- 'analysis.mzTab'
-input.file <- 'misc/example_3.mzTab'
+input.file <- 'example_2.mzTab'
 
 # find start of the section
 startSection <- function(file, section.identifier) {
@@ -33,6 +32,15 @@ startSection <- function(file, section.identifier) {
   return (row)
 }
 
+# check if the vector/column is empty
+# i.e. all entries are NA or "" etc. or the the vector is of length 0
+isEmpty <- function(column)
+{
+  column <- column[!is.na(column)]
+  column <- column[column != c("")]
+  return(length(column) == 0)
+}
+
 # count the occurences of character c in string s
 countOccurrences <- function(char,s) {
   s2 <- gsub(char,"",s)
@@ -42,6 +50,10 @@ countOccurrences <- function(char,s) {
 # check that the protein accession is of the format *|*|*
 # Note that NA returns TRUE.
 checkAccessionFormat <- function(accession) {
+  if (isEmpty(accession)) {
+    return(FALSE)
+  }
+  
   if (all(is.na(accession))) {
     return (TRUE)
   }
@@ -202,18 +214,19 @@ plotCorrelations <- function(data, pdf.file) {
     rownames(corr) <- 1: study_variables.n
     cols <- colorRampPalette(c("#2166AC", "#3F8EC0", "#80B9D8", "#BCDAEA", "#E6EFF3", "#F9EAE1", "#FAC8AF", "#ED9576", "#D25749", "#B2182B"))(256)
     
+    pdf(file=pdf.file)
+
     # determine plotting method (for SILAC, TMT etc. numbers, for LFQ circles)
     if (study_variables.n < 12)
     {
-      corr.plot.method = "mixed"
+        corrplot.mixed(corr, cl.lim=c(min(corr), max(corr)), cols=cols, 
+                       is.corr=FALSE, lower="number", upper="circle")
     }
     else
     {
-      corr.plot.method = "circle"
+      corrplot(corr, cl.lim=c(min(corr),max(corr)), col = cols, is.corr=FALSE, method="circle")
     }
     
-    pdf(file=pdf.file)
-    corrplot(corr, cl.lim=c(min(corr),max(corr)), col = cols, is.corr=FALSE, method = corr.plot.method)
     dev.off()
 }
 
@@ -231,23 +244,64 @@ plotBoxplot <- function(data, pdf.file) {
 }
 
 findPeptidesOfInterest <- function(data, retain.columns=c("sequence", "accession", "charge", "retention_time", "mass_to_charge"), new.column.names=c("Sequence", "Accession", "Charge", "Retention Time", "m/z" )) {
-    pattern = paste(peptides.of.interest, collapse="|")
-    df = as.data.frame(data[grepl(pattern, data$sequence), retain.columns])
-    # sort in the same order as peptides.of.interest vector
-    df <- df[order(match(df$sequence, peptides.of.interest)),]
+  # check if sequence column is non-empty
+  if (isEmpty(data$sequence))
+  {
+    df <- t(data.frame(c("no sequences reported", rep("", length(retain.columns)-1))))
     colnames(df) <- new.column.names
+    rownames(df) <- c()
     return(df)
+  }
+  
+  pattern = paste(peptides.of.interest, collapse="|")
+  df = as.data.frame(data[grepl(pattern, data$sequence), retain.columns])
+    
+  # sort in the same order as peptides.of.interest vector
+  df <- df[order(match(df$sequence, peptides.of.interest)),]
+  colnames(df) <- new.column.names
+  
+  # check if results are empty
+  if (dim(df)[1] == 0)
+  {
+    df <- t(data.frame(c("no matching sequences found", rep("", length(retain.columns)-1))))
+    colnames(df) <- new.column.names
+    rownames(df) <- c()
+    return(df)
+  }
+  
+  return(df)
 }
 
 findProteinsOfInterest <- function(data, retain.columns=c("sequence", "accession", "charge", "retention_time", "mass_to_charge"), new.column.names=c("Sequence", "Accession", "Charge", "Retention Time", "m/z" )) {
-    pattern = paste(proteins.of.interest, collapse="|")
-    df = as.data.frame(data[grepl(pattern, data$accession), retain.columns])
-    # sort sequences in alphabetic order
-    df <- df[order(df$sequence),]
-    # sort in the same order as proteins.of.interest vector
-    df <- df[order(match(df$accession, proteins.of.interest)),]
+  # check if protein accession column is non-empty
+  if (isEmpty(data$accession))
+  {
+    df <- t(data.frame(c("", "no accessions reported", rep("", length(retain.columns)-2))))
     colnames(df) <- new.column.names
+    rownames(df) <- c()
     return(df)
+  }
+
+  pattern = paste(proteins.of.interest, collapse="|")
+  df = as.data.frame(data[grepl(pattern, data$accession), retain.columns])
+  
+  # sort sequences in alphabetic order
+  df <- df[order(df$sequence),]
+  
+  # sort in the same order as proteins.of.interest vector
+  df <- df[order(match(df$accession, proteins.of.interest)),]
+  colnames(df) <- new.column.names
+  
+  # check if results are empty
+  if (dim(df)[1] == 0)
+  {
+    df <- t(data.frame(c("", "no matching accessions found", rep("", length(retain.columns)-2))))
+    colnames(df) <- new.column.names
+    rownames(df) <- c()
+    return(df)
+  }
+  
+  return(df)
 }
 
 # create a summary table of all modifications and their specificities
@@ -257,6 +311,16 @@ createModsSummary <- function(data)
   # extract relevant data
   data <- data[,c("sequence","modifications")]
   data <- data[!is.na(data$modifications),]
+  data <- data[data$modifications != c(""),]
+  
+  # check if any mods are reported
+  if (dim(data)[1] == 0)
+  {
+    stats <- t(data.frame(c("no mods reported","","")))
+    colnames(stats) <- c("modification","specificity","number")
+    rownames(stats) <- c()
+    return(stats)
+  }
   
   print(data$modifications)
   # split comma-separted mods into multiple columns
@@ -319,6 +383,26 @@ createModsSummary <- function(data)
   return(stats)
 }
 
+# (in)complete quantification plot
+# Not all peptides need to be quantified in all channels/samples. See for example knock-out or TAILS experiments.
+# The plot below summarises how many peptides were quantified in x smaples. 1 <= x <= number of samples
+plotQuantFrequency <- function(quants, pdf.file)
+{
+  countNonNA <- function(vector)
+  {
+    return(length(which(!is.na(vector))))
+  }
+  counts.non.na <- apply(quants, 1, countNonNA)
+  countOccurrenceInVector <- function(n)
+  {
+    return(length(which(counts.non.na == n)))
+  }
+  frequency <- unlist(lapply(dim(quants)[2]:1, countOccurrenceInVector))
+
+  pdf(file=pdf.file)
+  barplot(frequency, names.arg = as.character(dim(quants)[2]:1), xlab = "number of samples in which peptide was quantified", ylab = "peptide count")
+  dev.off()
+}
 
 
 
@@ -331,6 +415,17 @@ createModsSummary <- function(data)
 # read mzTab data
 peptide.data <- readMzTabPEP(input.file)
 
+# remove decoy and contaminant hits and split accession
+if (!isEmpty(peptide.data$accession))
+{
+  peptide.data <- peptide.data[which(substr(peptide.data$accession,1,4)!="dec_"),]
+  peptide.data <- peptide.data[which(substr(peptide.data$accession,1,4)!="CON_"),]
+
+  # Note that decoys and contaminants might not be of the form *|*|* and accessions might not have been split in readMzTabPEP().
+  # Hence we split the accessions here again after removing decoys and accessions.
+  peptide.data <- splitAccession(peptide.data)
+}
+
 # create mod summary statistics
 if(any(!is.na(peptide.data$modifications))) 
 {
@@ -340,17 +435,19 @@ if(any(!is.na(peptide.data$modifications)))
     stats <- data.frame()
 }
 
-# remove decoy and contaminant hits
-peptide.data <- peptide.data[which(substr(peptide.data$accession,1,4)!="dec_"),]
-peptide.data <- peptide.data[which(substr(peptide.data$accession,1,4)!="CON_"),]
-
-# total number of quantified peptides
+# total number of quantified and identified peptides
 n.peptides <- dim(peptide.data)[1]
+peptide.data.identified <- peptide.data[which(!is.na(peptide.data$sequence)),]
+n.peptides.identified <- dim(peptide.data.identified)[1]
+n.peptides.identified.modified.unique <- length(unique(peptide.data.identified$opt_global_modified_sequence))
+n.peptides.identified.stripped.unique <- length(unique(peptide.data.identified$sequence))
 
-print(peptide.data$sequence)
-peptide.data <- splitAccession(peptide.data)
-print(peptide.data$sequence)
+# plot frequency of peptide quants
+if (numberOfAbundances(peptide.data) >= 2) {
+  plotQuantFrequency(getPeptideQuants(peptide.data), "plot_QuantFrequency.pdf")
+}
 
+# extract peptides and proteins of interest
 interest.peptides.matches <- findPeptidesOfInterest(peptide.data)
 interest.proteins.matches <- findProteinsOfInterest(peptide.data)
 
@@ -371,7 +468,6 @@ sd.fc.23 <-0
 
 # Kendrick plot
 plotKendrick((peptide.data$mass_to_charge - 1.00784) * peptide.data$charge, "plot_Kendrick.pdf")
-
 
 # plot peptide abundance distributions
 if (abundanceExists(peptide.data,1)) {
@@ -421,8 +517,10 @@ if (abundanceExists(peptide.data,2) && abundanceExists(peptide.data,3)) {
 
 # plot correlation matrix of peptide abundances
 if (numberOfAbundances(peptide.data) >= 3) {
-    plotCorrelations(data = peptide.data, pdf.file = "plot_Correlations.pdf")
+  plotCorrelations(data = peptide.data, pdf.file = "plot_Correlations.pdf")
 }
 
 # plot boxplot of peptide abundances
-plotBoxplot(peptide.data, "plot_Boxplot.pdf")
+if (numberOfAbundances(peptide.data) >= 3) {
+  plotBoxplot(peptide.data, "plot_Boxplot.pdf")
+}
