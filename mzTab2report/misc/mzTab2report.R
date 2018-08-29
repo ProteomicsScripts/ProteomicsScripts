@@ -347,7 +347,9 @@ peptide.data <- peptide.data[which(substr(peptide.data$accession,1,4)!="CON_"),]
 # total number of quantified peptides
 n.peptides <- dim(peptide.data)[1]
 
+print(peptide.data$sequence)
 peptide.data <- splitAccession(peptide.data)
+print(peptide.data$sequence)
 
 interest.peptides.matches <- findPeptidesOfInterest(peptide.data)
 interest.proteins.matches <- findProteinsOfInterest(peptide.data)
