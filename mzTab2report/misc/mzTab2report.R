@@ -17,7 +17,7 @@ peptides.of.interest <- c("SSAAPPPPPR", "GISNEGQNASIK", "HVLTSIGEK", "DIPVPKPK",
 proteins.of.interest <- c("O15117")
 
 #input.file <- 'analysis.mzTab'
-input.file <- 'example_4.mzTab'
+input.file <- 'example_5.mzTab'
 
 # find start of the section
 startSection <- function(file, section.identifier) {
@@ -411,6 +411,24 @@ plotQuantFrequency <- function(quants, pdf.file)
   dev.off()
 }
 
+# (modified sequence, charge) pair multiplicity vs frequency plot
+# Each peptide feature (characterised by a (possibly) modified peptide sequence and a charge state) should ideally occur only once in the analysis.
+# In other words, peptides of multiplicity 1 should have a very high frequency. The plot below should show a significant spike on the left and can be used as QC of the analysis.
+plotMultiplicityFrequency <- function(data, pdf.file)
+{
+  data <- data[,c("opt_global_modified_sequence","charge")]
+  data <- data[order(data$"opt_global_modified_sequence"),]
+  data$sequence.charge <- paste(data$"opt_global_modified_sequence", as.character(data$charge), sep="_")
+  occurences <- as.data.frame(table(data$sequence.charge))
+  frequency.of.occurences <- as.data.frame(table(occurences$Freq))
+  colnames(frequency.of.occurences) <- c("multiplicity","frequency")
+  frequency.of.occurences$multiplicity <- as.numeric(as.character(frequency.of.occurences$multiplicity))
+  frequency.of.occurences$frequency <- as.numeric(as.character(frequency.of.occurences$frequency))
+
+  pdf(file=pdf.file)
+  plot(frequency.of.occurences$multiplicity, frequency.of.occurences$frequency, log="y", xlab="multiplicity of (modified sequence, charge) pairs", ylab="number of (modified sequence, charge) pairs")
+  dev.off()
+}
 
 
 
@@ -448,6 +466,12 @@ if (numberOfAbundances(peptide.data) >= 2) {
   plotQuantFrequency(getPeptideQuants(peptide.data), "plot_QuantFrequency.pdf")
 }
 
+# plot frequency of multiply quantified sequences
+if (!isEmpty(peptide.data$opt_global_modified_sequence) && !isEmpty(peptide.data$charge))
+{
+  plotMultiplicityFrequency(peptide.data, "plot_MultiplicityFrequency.pdf")
+}
+
 # extract peptides and proteins of interest
 interest.peptides.matches <- findPeptidesOfInterest(peptide.data)
 interest.proteins.matches <- findProteinsOfInterest(peptide.data)
@@ -459,13 +483,13 @@ median.abundance.1 <- 1
 median.abundance.2 <- 1
 median.abundance.3 <- 1
 
-median.fc.12 <-0
-median.fc.13 <-0
-median.fc.23 <-0
+median.fc.12 <- 0
+median.fc.13 <- 0
+median.fc.23 <- 0
 
-sd.fc.12 <-0
-sd.fc.13 <-0
-sd.fc.23 <-0
+sd.fc.12 <- 0
+sd.fc.13 <- 0
+sd.fc.23 <- 0
 
 # Kendrick plot
 plotKendrick((peptide.data$mass_to_charge - 1.00784) * peptide.data$charge, "plot_Kendrick.pdf")
