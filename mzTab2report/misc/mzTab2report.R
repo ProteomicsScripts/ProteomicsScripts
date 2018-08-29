@@ -17,7 +17,7 @@ peptides.of.interest <- c("SSAAPPPPPR", "GISNEGQNASIK", "HVLTSIGEK", "DIPVPKPK",
 proteins.of.interest <- c("O15117")
 
 #input.file <- 'analysis.mzTab'
-input.file <- 'example_2.mzTab'
+input.file <- 'example_4.mzTab'
 
 # find start of the section
 startSection <- function(file, section.identifier) {
@@ -244,63 +244,70 @@ plotBoxplot <- function(data, pdf.file) {
   dev.off()
 }
 
-findPeptidesOfInterest <- function(data, retain.columns=c("sequence", "accession", "charge", "retention_time", "mass_to_charge"), new.column.names=c("Sequence", "Accession", "Charge", "Retention Time", "m/z" )) {
+findPeptidesOfInterest <- function(data)
+{
+  retain.columns=c("sequence", "accession", "charge", "retention_time", "mass_to_charge")
+  new.column.names=c("Sequence", "Accession", "Charge", "Retention Time", "m/z" )
+  
   # check if sequence column is non-empty
   if (isEmpty(data$sequence))
   {
-    df <- t(data.frame(c("no sequences reported", rep("", length(retain.columns)-1))))
-    colnames(df) <- new.column.names
+    df <- t(data.frame(c("no sequences reported", rep("", 4))))
+    colnames(df) <- c("modified sequence", "accession", "charge", "retention time", "m/z" )
     rownames(df) <- c()
     return(df)
   }
   
   pattern = paste(peptides.of.interest, collapse="|")
-  df = as.data.frame(data[grepl(pattern, data$sequence), retain.columns])
-    
-  # sort in the same order as peptides.of.interest vector
-  df <- df[order(match(df$sequence, peptides.of.interest)),]
-  colnames(df) <- new.column.names
+  df <- as.data.frame(data[grepl(pattern, data$sequence),])
   
   # check if results are empty
   if (dim(df)[1] == 0)
   {
-    df <- t(data.frame(c("no matching sequences found", rep("", length(retain.columns)-1))))
-    colnames(df) <- new.column.names
+    df <- t(data.frame(c("no matching sequences found", rep("", 4))))
+    colnames(df) <- c("modified sequence", "accession", "charge", "retention time", "m/z" )
     rownames(df) <- c()
     return(df)
   }
   
+  # sort in the same order as peptides.of.interest vector
+  df <- df[order(match(df$sequence, peptides.of.interest)),]
+  
+  df <- df[,c("opt_global_modified_sequence", "accession", "charge", "retention_time", "mass_to_charge")]
+  colnames(df) <- c("modified sequence", "accession", "charge", "retention time", "m/z" )
+  
   return(df)
 }
 
-findProteinsOfInterest <- function(data, retain.columns=c("sequence", "accession", "charge", "retention_time", "mass_to_charge"), new.column.names=c("Sequence", "Accession", "Charge", "Retention Time", "m/z" )) {
-  # check if protein accession column is non-empty
+findProteinsOfInterest <- function(data) {
+    # check if protein accession column is non-empty
   if (isEmpty(data$accession))
   {
-    df <- t(data.frame(c("", "no accessions reported", rep("", length(retain.columns)-2))))
-    colnames(df) <- new.column.names
+    df <- t(data.frame(c("", "no accessions reported", rep("", 3))))
+    colnames(df) <- c("modified sequence", "accession", "charge", "retention time", "m/z" )
     rownames(df) <- c()
     return(df)
   }
 
   pattern = paste(proteins.of.interest, collapse="|")
-  df = as.data.frame(data[grepl(pattern, data$accession), retain.columns])
+  df <- as.data.frame(data[grepl(pattern, data$accession),])
+  
+  # check if results are empty
+  if (dim(df)[1] == 0)
+  {
+    df <- t(data.frame(c("", "no matching accessions found", rep("", 3))))
+    colnames(df) <- c("modified sequence", "accession", "charge", "retention time", "m/z" )
+    rownames(df) <- c()
+    return(df)
+  }
   
   # sort sequences in alphabetic order
   df <- df[order(df$sequence),]
   
   # sort in the same order as proteins.of.interest vector
   df <- df[order(match(df$accession, proteins.of.interest)),]
-  colnames(df) <- new.column.names
-  
-  # check if results are empty
-  if (dim(df)[1] == 0)
-  {
-    df <- t(data.frame(c("", "no matching accessions found", rep("", length(retain.columns)-2))))
-    colnames(df) <- new.column.names
-    rownames(df) <- c()
-    return(df)
-  }
+  df <- df[,c("opt_global_modified_sequence", "accession", "charge", "retention_time", "mass_to_charge")]
+  colnames(df) <- c("modified sequence", "accession", "charge", "retention time", "m/z" )
   
   return(df)
 }
