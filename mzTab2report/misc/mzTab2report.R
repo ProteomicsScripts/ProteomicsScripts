@@ -1,8 +1,6 @@
 ## This is an R script for the conversion of mzTab to a better readable tsv format
 ## To install dependencies, run in R:
-## install.packages("devtools")
-## library("devtools")
-## install_github("taiyun/corrplot")
+## install.packages("corrplot")
 
 library("corrplot")
 
@@ -17,7 +15,7 @@ peptides.of.interest <- c("SSAAPPPPPR", "GISNEGQNASIK", "HVLTSIGEK", "DIPVPKPK",
 proteins.of.interest <- c("O15117")
 
 #input.file <- 'analysis.mzTab'
-input.file <- 'example_5.mzTab'
+input.file <- 'example_3.mzTab'
 
 # find start of the section
 startSection <- function(file, section.identifier) {
@@ -216,18 +214,18 @@ plotCorrelations <- function(data, pdf.file) {
     rownames(corr) <- 1: study_variables.n
     cols <- colorRampPalette(c("#2166AC", "#3F8EC0", "#80B9D8", "#BCDAEA", "#E6EFF3", "#F9EAE1", "#FAC8AF", "#ED9576", "#D25749", "#B2182B"))(256)
     
-    # determine plotting method (for SILAC, TMT etc. numbers, for LFQ circles)
+    pdf(file=pdf.file)
     if (study_variables.n < 12)
     {
-      corr.plot.method = "number"
+      # use combined "number/circle" plotting method for SILAC, TMT and small LFQ analyses
+      corrplot(corr, cl.lim=c(min(corr),max(corr)), col = cols, is.corr=FALSE, method = "number")
+      #corrplot.mixed(corr, cl.lim=c(min(corr), max(corr)), cols=cols, is.corr=FALSE, lower="number", upper="circle")
     }
     else
     {
-      corr.plot.method = "circle"
+      # use "circle" plotting method for LFQ analyses
+      corrplot(corr, cl.lim=c(min(corr),max(corr)), col = cols, is.corr=FALSE, method = "circle")
     }
-    
-    pdf(file=pdf.file)
-    corrplot(corr, cl.lim=c(min(corr),max(corr)), col = cols, is.corr=FALSE, method = corr.plot.method)
     dev.off()
 }
 
