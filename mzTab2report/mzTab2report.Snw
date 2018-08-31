@@ -30,8 +30,14 @@ rm(list = ls())
 options(digits=10)
 FcCutoff <- 8    # fold change cutoff, i.e. infinite fc values are mapped to +/-FcCutoff
 
-peptides.of.interest <- c("SSAAPPPPPR", "GISNEGQNASIK", "HVLTSIGEK", "DIPVPKPK", "IGDYAGIK", "TASEFDSAIAQDK", "SAAGAFGPELSR", "ELGQSGVDTYLQTK", "GLILVGGYGTR", "GILFVGSGVSGGEEGAR", "SFANQPLEVVYSK", "LTILEELR", "NGFILDGFPR", "ELASGLSFPVGFK", "LSSEAPALFQFDLK")
-proteins.of.interest <- c("O15117")
+# Pierce spike-in peptides
+#peptides.of.interest <- c("SSAAPPPPPR", "GISNEGQNASIK", "HVLTSIGEK", "DIPVPKPK", "IGDYAGIK", "TASEFDSAIAQDK", "SAAGAFGPELSR", "ELGQSGVDTYLQTK", "GLILVGGYGTR", "GILFVGSGVSGGEEGAR", "SFANQPLEVVYSK", "LTILEELR", "NGFILDGFPR", "ELASGLSFPVGFK", "LSSEAPALFQFDLK")
+
+# Biognosys iRT spike-in peptides
+peptides.of.interest <- c("LGGNEQVTR", "GAGSSEPVTGLDAK", "VEATFGVDESNAK", "YILAGVENSK", "TPVISGGPYEYR", "TPVITGAPYEYR", "DGLDAASYYAPVR", "ADVTPADFSEWSK", "GTFIIDPGGVIR", "GTFIIDPAAVIR", "LFLQFGAQGSPFLK")
+
+# proteins of interest
+proteins.of.interest <- c("P0A853", "P37647")
 
 input.file <- 'analysis.mzTab'
 #input.file <- 'example_3.mzTab'
@@ -617,13 +623,15 @@ print(xtable(interest.proteins.matches), include.rownames=FALSE, table.placement
 
 \hspace{5pt}
 
+\begin{table}[hb]
 \begin{center}
-\textbf{modifications statistics}
-\end{center}
 <<echo=FALSE,results=tex>>=
 library(xtable)
 print(xtable(stats), include.rownames=FALSE, table.placement="H")
 @
+\caption{Statistics of modifications.}
+\end{center}
+\end{table}
 
 \hspace{5pt}
 
