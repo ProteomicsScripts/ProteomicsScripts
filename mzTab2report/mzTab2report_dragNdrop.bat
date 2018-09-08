@@ -49,7 +49,7 @@ rem The script path consists of drive (d) and path (p) of the zeroth argument (0
 SET SCRIPT_PATH=%~dp0
 
 REM Execute 'mzTab2report.bat' script with the given mzTab file.
-CALL %SCRIPT_PATH%\mzTab2report.bat %MZTABFILE%
+CALL %SCRIPT_PATH%mzTab2report.bat %MZTABFILE%
 
 
 :not_found
