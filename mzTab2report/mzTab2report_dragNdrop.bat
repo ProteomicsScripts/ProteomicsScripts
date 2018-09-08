@@ -2,16 +2,6 @@
 ECHO.
 ECHO This batch file is used to invoke the mzTab2report script by drag'n'dropping of
 ECHO a mzTab file onto this .bat file.
-ECHO Within the same txt folder, a QC report in Html/PDF format will be created.
-ECHO.
-ECHO First time installation of this script [for admins only]:
-ECHO The script expects a certain structure to be present.
-ECHO This .bat file expects a subfolder named '_internal'
-ECHO which holds:
-ECHO      'R-3.1.0'             Holds a complete R installation 
-ECHO                            (including all packages required to run the 
-ECHO                             PTXQC package)
-ECHO      'compute_QC_report.R' The R script that is invoked by this .bat
 
 
 REM A usage message with multiline (i.e. keep the empty line!)
@@ -41,7 +31,7 @@ if not exist %1 (
 ) 
 
 REM ~dp (drive,path); the final '\' is required!; manual quoting required as well
-set MZTABFILE="%~dp1\"
+set MZTABFILE=%1
 
 ECHO mzTab file is at '%MZTABFILE%'
 
