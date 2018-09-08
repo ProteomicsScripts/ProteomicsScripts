@@ -41,12 +41,15 @@ if not exist %1 (
 ) 
 
 REM ~dp (drive,path); the final '\' is required!; manual quoting required as well
-set mztabfile="%~dp1\"
+set MZTABFILE="%~dp1\"
 
-ECHO mzTab file is at '%mztabfile%'
+ECHO mzTab file is at '%MZTABFILE%'
 
-REM Execute mzTab2report bat script
-CALL mzTab2report.bat %mztabfile%
+rem The script path consists of drive (d) and path (p) of the zeroth argument (0) i.e. the script itselfs.
+SET SCRIPT_PATH=%~dp0
+
+REM Execute 'mzTab2report.bat' script with the given mzTab file.
+CALL %SCRIPT_PATH%\mzTab2report.bat %MZTABFILE%
 
 
 :not_found
