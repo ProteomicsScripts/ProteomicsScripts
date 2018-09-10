@@ -35,11 +35,8 @@ set MZTABFILE=%1
 
 ECHO mzTab file is at '%MZTABFILE%'
 
-rem The script path consists of drive (d) and path (p) of the zeroth argument (0) i.e. the script itselfs.
-SET SCRIPT_PATH=%~dp0
-
-REM Execute 'mzTab2report.bat' script with the given mzTab file.
-CALL %SCRIPT_PATH%mzTab2report.bat %MZTABFILE%
+REM Execute 'mzTab2report.bat' script (which we assume to be in the PATH) with the given mzTab file.
+CALL mzTab2report.bat %MZTABFILE%
 
 
 :not_found
