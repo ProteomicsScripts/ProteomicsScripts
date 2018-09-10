@@ -26,9 +26,9 @@ if %argC%==0 (
 
 REM Check upon first argument (the mzTab file)
 REM use bare %1 not "%1", it works fine, even with spaces
-if not exist %1 (
-  goto not_found
-) 
+REM if not exist %1 (
+REM   goto not_found
+REM ) 
 
 REM ~dp (drive,path); the final '\' is required!; manual quoting required as well
 set MZTABFILE=%1
@@ -39,9 +39,9 @@ REM Execute 'mzTab2report.bat' script (which we assume to be in the PATH) with t
 CALL mzTab2report.bat %MZTABFILE%
 
 
-:not_found
-echo Could not find the given (network) folder '%1'^^! Please contact your admin/bioinformatician^^!
-goto end
+REM :not_found
+REM echo Could not find the given (network) folder '%1'^^! Please contact your admin/bioinformatician^^!
+REM goto end
 
-:end
-pause
+REM :end
+REM pause
