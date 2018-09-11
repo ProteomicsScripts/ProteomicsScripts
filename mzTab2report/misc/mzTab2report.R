@@ -21,7 +21,7 @@ peptides.of.interest <- c("LGGNEQVTR", "GAGSSEPVTGLDAK", "VEATFGVDESNAK", "YILAG
 proteins.of.interest <- c("P0A853", "P37647")
 
 #input.file <- 'analysis.mzTab'
-input.file <- 'example_4.mzTab'
+input.file <- 'example_5.mzTab'
 
 # find start of the section
 startSection <- function(file, section.identifier) {
@@ -213,8 +213,8 @@ plotCorrelations <- function(data, pdf.file) {
     # (optional) z-score normalisation
     #study_variables.data <- scale(study_variables.data, center = TRUE, scale = TRUE)
 
-    corr = cor(study_variables.data[complete.cases(study_variables.data),])
-
+    corr = cor(study_variables.data[complete.cases(study_variables.data),], method="spearman")    # possible methods: "pearson", "spearman", "kendall"
+    
     # rename columns and rows
     colnames(corr) <- 1: study_variables.n
     rownames(corr) <- 1: study_variables.n
@@ -233,6 +233,8 @@ plotCorrelations <- function(data, pdf.file) {
       corrplot(corr, cl.lim=c(min(corr),max(corr)), col = cols, is.corr=FALSE, method = "circle")
     }
     dev.off()
+    
+    return(corr)
 }
 
 plotBoxplot <- function(data, pdf.file) {
@@ -545,8 +547,14 @@ if (abundanceExists(peptide.data,2) && abundanceExists(peptide.data,3)) {
 }
 
 # plot correlation matrix of peptide abundances
+corr.min <- 1
+corr.median <- 1
+corr.max <- 1
 if (numberOfAbundances(peptide.data) >= 3) {
-  plotCorrelations(data = peptide.data, pdf.file = "plot_Correlations.pdf")
+  corr <- plotCorrelations(data = peptide.data, pdf.file = "plot_Correlations.pdf")
+  corr.min <- min(corr)
+  corr.median <- median(corr)
+  corr.max <- max(corr)
 }
 
 # plot boxplot of peptide abundances
