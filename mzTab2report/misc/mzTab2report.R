@@ -213,7 +213,7 @@ plotCorrelations <- function(data, pdf.file) {
     # (optional) z-score normalisation
     #study_variables.data <- scale(study_variables.data, center = TRUE, scale = TRUE)
 
-    corr = cor(study_variables.data[complete.cases(study_variables.data),], method="spearman")    # possible methods: "pearson", "spearman", "kendall"
+    corr = cor(study_variables.data[complete.cases(study_variables.data),], method="pearson")    # possible methods: "pearson", "spearman", "kendall"
     
     # rename columns and rows
     colnames(corr) <- 1: study_variables.n
