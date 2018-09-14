@@ -751,7 +751,7 @@ print(xtable(stats), include.rownames=FALSE, table.placement="H")
 \begin{figure}[hb]
 \centering
 \includegraphics[width=10.0cm]{plot_Correlations.pdf}
-\caption{Pearson rank correlation of all peptide abundances. (min correlation = $\Sexpr{round(corr.min,digits=4)}$, median correlation = $\Sexpr{round(corr.median,digits=4)}$, max correlation = $\Sexpr{round(corr.max,digits=4)}$)}
+\caption{Pearson correlation of all peptide abundances. (min correlation = $\Sexpr{round(corr.min,digits=4)}$, median correlation = $\Sexpr{round(corr.median,digits=4)}$, max correlation = $\Sexpr{round(corr.max,digits=4)}$)}
 \end{figure}
 }
 {}
