@@ -10,6 +10,9 @@ rm(list = ls())
 # input data as mzTab
 input.file <- 'misc/example.mzTab'
 
+# output data as tsv
+output.file <- 'misc/example.tsv'
+
 # options and parameters
 options(digits=10)
 FcCutoff <- 8    # fold change cutoff, i.e. infinite fc values are mapped to +/-FcCutoff
@@ -458,6 +461,9 @@ peptide.data$intensity <- (peptide.data$"peptide_abundance_study_variable[1]" + 
 # make them unique i.e. if multiple quants for the same sequence exist, keep only the one with the highest intensity
 peptide.data.identified <- peptide.data[which(!is.na(peptide.data$sequence)),]
 peptide.data.unique <- makeSequencesUnique(peptide.data.identified)
+
+# write unqiue data as tsv
+write.table(peptide.data.unique, output.file, sep="\t", row.names=FALSE, col.names=TRUE, quote=FALSE)
 
 # get peptides of interest
 peptides.of.interest <- findPeptidesOfInterest(peptide.data)
