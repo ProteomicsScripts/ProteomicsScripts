@@ -96,7 +96,7 @@ checkEValueExists <- function(table) {
 indexBest <- function(sequence, data) {
   idx <- which(data$opt_global_modified_sequence==sequence)
   min <- min(as.numeric(as.character(data$`search_engine_score[1]`[idx])))
-  idx.m <- which(data[idx,]$`search_engine_score[1]`==min)
+  idx.m <- which(data[idx,]$`search_engine_score[1]`==min)[1]
   return(idx[idx.m])
 }
 
