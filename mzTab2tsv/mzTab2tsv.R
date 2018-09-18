@@ -19,8 +19,8 @@ output.file <- 'misc/example.tsv'
 options(digits=10)
 FcCutoff <- 8    # fold change cutoff, i.e. infinite fc values are mapped to +/-FcCutoff
 
-#make.unique.sequence = "sequence"                        # use the stripped sequence in makeSequencesUnique()
-make.unique.sequence = "opt_global_modified_sequence"     # use the modified sequence in makeSequencesUnique()
+# use the stripped or modified sequence in makeSequencesUnique()
+stripped = FALSE                        
 
 # Biognosys iRT spike-in peptides
 peptides.of.interest <- c("LGGNEQVTR", "GAGSSEPVTGLDAK", "VEATFGVDESNAK", "YILAGVENSK", "TPVISGGPYEYR", "TPVITGAPYEYR", "DGLDAASYYAPVR", "ADVTPADFSEWSK", "GTFIIDPGGVIR", "GTFIIDPAAVIR", "LFLQFGAQGSPFLK")
@@ -404,7 +404,14 @@ createModsSummary <- function(data)
 # returns index of the best quantification with this sequence
 # requires a 'sequence' and 'intensity' column in data frame 'data'
 indexMaxIntensity <- function(sequence, data) {
-  idx <- which(data$sequence==sequence)
+  if (stripped)
+  {
+    idx <- which(data$sequence==sequence)
+  }
+  else
+  {
+    idx <- which(data$opt_global_modified_sequence==sequence)
+  }
   max <- max(data$intensity[idx])
   idx.m <- which(data[idx,]$intensity==max)
   return(idx[idx.m])
@@ -412,7 +419,14 @@ indexMaxIntensity <- function(sequence, data) {
 
 # makes the sequences unique by picking the quants with maximum intensity
 makeSequencesUnique <- function(peptide.data) {
-  unique.sequences <- unique(peptide.data$make.unique.sequence)
+  if (stripped)
+  {
+    unique.sequences <- unique(peptide.data$sequence)
+  }
+  else
+  {
+    unique.sequences <- unique(peptide.data$opt_global_modified_sequence)
+  }
   idx <- unlist(lapply(unique.sequences, FUN=indexMaxIntensity, data = peptide.data))
   return(peptide.data[idx,])
 }
