@@ -9,13 +9,18 @@ rm(list = ls())
 
 # input data as mzTab
 input.file <- 'misc/example.mzTab'
+#input.file <- '/Users/lars/Dropbox/UrinaryBiomarkers/UK181-209_ALL.mzTab'
 
 # output data as tsv
 output.file <- 'misc/example.tsv'
+#output.file <- '/Users/lars/Dropbox/UrinaryBiomarkers/UK181-209_ALL.tsv'
 
 # options and parameters
 options(digits=10)
 FcCutoff <- 8    # fold change cutoff, i.e. infinite fc values are mapped to +/-FcCutoff
+
+#make.unique.sequence = "sequence"                        # use the stripped sequence in makeSequencesUnique()
+make.unique.sequence = "opt_global_modified_sequence"     # use the modified sequence in makeSequencesUnique()
 
 # Biognosys iRT spike-in peptides
 peptides.of.interest <- c("LGGNEQVTR", "GAGSSEPVTGLDAK", "VEATFGVDESNAK", "YILAGVENSK", "TPVISGGPYEYR", "TPVITGAPYEYR", "DGLDAASYYAPVR", "ADVTPADFSEWSK", "GTFIIDPGGVIR", "GTFIIDPAAVIR", "LFLQFGAQGSPFLK")
@@ -407,7 +412,7 @@ indexMaxIntensity <- function(sequence, data) {
 
 # makes the sequences unique by picking the quants with maximum intensity
 makeSequencesUnique <- function(peptide.data) {
-  unique.sequences <- unique(peptide.data$sequence)
+  unique.sequences <- unique(peptide.data$make.unique.sequence)
   idx <- unlist(lapply(unique.sequences, FUN=indexMaxIntensity, data = peptide.data))
   return(peptide.data[idx,])
 }
