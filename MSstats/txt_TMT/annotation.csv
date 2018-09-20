@@ -1,2 +1,9 @@
-"","Raw.file","Condition","BioReplicate","Run","IsotopeLabelType"
-"1","DT51","null",1,1,"null"
+Raw.file, Condition, BioReplicate, Experiment, IsotopeLabelType
+DT51, CTRL,1, fraction_1, TMT
+DT52, CTRL,1, fraction_2, TMT
+DT53, CTRL,1, fraction_3, TMT
+DT54, CTRL,1, fraction_4, TMT
+DT55, CTRL,1, fraction_5, TMT
+DT56, CTRL,1, fraction_6, TMT
+DT57, CTRL,1, fraction_7, TMT
+DT58, CTRL,1, fraction_8, TMT

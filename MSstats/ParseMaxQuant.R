@@ -1,29 +1,26 @@
-library("reshape2")  # this is a necessary dependency to execute MaxQtoMSstatsFormat.R
-source("MSstats/R/MaxQtoMSstatsFormat.R")
+# install BioConductor
+# source("http://bioconductor.org/biocLite.R")
 
+# install MSstats
+# biocLite("MSstats")
 
-# this closely follows the example in MSstats docu
-printMaxQtoMSstats <- function(foldername) {
-    # Read in MaxQuant files
-    proteinGroups <- read.table(sprintf("%s/proteinGroups.txt", foldername), sep="\t", header=TRUE)
+library(MSstats)
 
-    infile <- read.table(sprintf("%s/evidence.txt", foldername), sep="\t", header=TRUE)
+# Try to follow MaxQtoMSstatsFormat example in http://127.0.0.1:13881/library/MSstats/doc/MSstats.html
 
-    # Read in annotation including condition and biological replicates per run.
-    # Users should make this annotation file. It is not the output from MaxQuant.
-    annot <- read.table(sprintf("%s/annotation.csv", foldername), sep=",",  header=TRUE)
-    print(annot)
+# Read in MaxQuant files
+proteinGroups <- read.table("txt_TMT/proteinGroups.txt", sep="\t", header=TRUE)
+infile <- read.table("txt_TMT/evidence.txt", sep="\t", header=TRUE)
 
-    print(MaxQtoMSstatsFormat(evidence=infile, 
-                              annotation=annot, 
-                              proteinGroups=proteinGroups,
-                              useUniquePeptide=FALSE, 
-                              summaryforMultipleRows=max, 
-                              fewMeasurements="keep", 
-                              removeMpeptides=FALSE,
-                              removeOxidationMpeptides=FALSE,
-                              removeProtein_with1Peptide=FALSE))
+# Read in annotation including condition and biological replicates per run.
+# Users should make this annotation file. It is not the output from MaxQuant.
+annot <- read.csv("txt_TMT/annotation.csv", header=TRUE)
 
-}
+raw <- MaxQtoMSstatsFormat(evidence=infile, annotation=annot, proteinGroups=proteinGroups)
 
-printMaxQtoMSstats("./txt_TMT")
+# resulting error:
+# Error in MaxQtoMSstatsFormat(evidence = infile, annotation = annot, proteinGroups = proteinGroups) : 
+# ** Run is not provided in Annotation. Please check the annotation file.
+
+# The example in 4.3.1 here http://msstats.org/wp-content/uploads/2017/01/MSstats_v3.7.3_manual.pdf
+# does not list a run column.
