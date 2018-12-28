@@ -750,25 +750,15 @@ print(xtable(stats), include.rownames=FALSE, table.placement="H")
 
 \clearpage
 
-\begin{table}[hb]
-\begin{center}
 <<echo=FALSE,results=tex>>=
-table.peptides.of.interest <- xtable(interest.peptides.matches)
+table.peptides.of.interest <- xtable(interest.peptides.matches, caption = "Peptides of interest. Note that the script requires a vector of stripped peptides sequences, but in the above table we list the modified peptide sequences.")
 print(table.peptides.of.interest, include.rownames=FALSE, table.placement="H")
 @
-\caption{Peptides of interest. Note that the script requires a vector of {\it stripped} peptides sequences, but in the above table we list the {\it modified} peptide sequences.}
-\end{center}
-\end{table}
 
-\begin{table}[hb]
-\begin{center}
 <<echo=FALSE,results=tex>>=
-table.proteins.of.interest <- xtable(interest.proteins.matches)
+table.proteins.of.interest <- xtable(interest.proteins.matches, caption = "Proteins of interest.")
 print(table.proteins.of.interest, include.rownames=FALSE, table.placement="H")
 @
-\caption{Proteins of interest.}
-\end{center}
-\end{table}
 
 \newif\ifmodcolumnexists
 
