@@ -21,7 +21,9 @@
 ## To install dependencies, run in R:
 ## install.packages("corrplot")
 
-library("corrplot")
+library(corrplot)
+library(xtable)
+
 
 # clear entire workspace
 rm(list = ls())
@@ -613,7 +615,6 @@ identified (unique stripped) & \Sexpr{format(n.peptides.identified.stripped.uniq
 \begin{table}[hb]
 \begin{center}
 <<echo=FALSE,results=tex>>=
-library(xtable)
 table.peptides.of.interest <- xtable(interest.peptides.matches)
 print(table.peptides.of.interest, include.rownames=FALSE, table.placement="H")
 @
@@ -624,7 +625,6 @@ print(table.peptides.of.interest, include.rownames=FALSE, table.placement="H")
 \begin{table}[hb]
 \begin{center}
 <<echo=FALSE,results=tex>>=
-library(xtable)
 print(xtable(interest.proteins.matches), include.rownames=FALSE, table.placement="H")
 @
 \caption{Proteins of interest.}
@@ -636,7 +636,6 @@ print(xtable(interest.proteins.matches), include.rownames=FALSE, table.placement
 \begin{table}[hb]
 \begin{center}
 <<echo=FALSE,results=tex>>=
-library(xtable)
 print(xtable(stats), include.rownames=FALSE, table.placement="H")
 @
 \caption{Statistics of modifications.}
