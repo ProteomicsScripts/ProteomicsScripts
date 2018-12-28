@@ -24,7 +24,6 @@
 library(corrplot)
 library(xtable)
 
-
 # clear entire workspace
 rm(list = ls())
 
@@ -273,6 +272,16 @@ boxplot(study_variables.data, log="y", ylab="expression", xlab="samples", las=2)
 dev.off()
 }
 
+# limits amino acid sequences to n characters
+cutSequence <- function(s) {
+n <- 35
+short <- substr(s, 1, n)
+if (nchar(s) > nchar(short)) {
+short <- paste(short, "...", sep = "")
+}
+return(short)
+}
+
 findPeptidesOfInterest <- function(data)
 {
 retain.columns=c("sequence", "accession", "charge", "retention_time", "mass_to_charge")
@@ -302,6 +311,10 @@ return(df)
 # sort in the same order as peptides.of.interest vector
 df <- df[order(match(df$sequence, peptides.of.interest)),]
 
+# reduce length of modified sequence
+df$opt_global_modified_sequence <- unlist(lapply(df$opt_global_modified_sequence, cutSequence))
+
+# select and rename columns
 df <- df[,c("opt_global_modified_sequence", "accession", "charge", "retention_time", "mass_to_charge")]
 colnames(df) <- c("modified sequence", "accession", "charge", "retention time", "m/z" )
 
@@ -335,6 +348,11 @@ df <- df[order(df$sequence),]
 
 # sort in the same order as proteins.of.interest vector
 df <- df[order(match(df$accession, proteins.of.interest)),]
+
+# reduce length of modified sequence
+df$opt_global_modified_sequence <- unlist(lapply(df$opt_global_modified_sequence, cutSequence))
+
+# select and rename columns
 df <- df[,c("opt_global_modified_sequence", "accession", "charge", "retention_time", "mass_to_charge")]
 colnames(df) <- c("modified sequence", "accession", "charge", "retention time", "m/z" )
 

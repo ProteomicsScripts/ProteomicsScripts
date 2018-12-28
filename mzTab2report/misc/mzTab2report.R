@@ -209,35 +209,35 @@ getPeptideQuants <- function(data)
 }
 
 plotCorrelations <- function(data, pdf.file) {
-    # extract study variables
-    study_variables.n <- numberOfAbundances(data)
-    study_variables.data = getPeptideQuants(data)
-    
-    # (optional) z-score normalisation
-    #study_variables.data <- scale(study_variables.data, center = TRUE, scale = TRUE)
-
-    corr = cor(study_variables.data[complete.cases(study_variables.data),], method="pearson")    # possible methods: "pearson", "spearman", "kendall"
-    
-    # rename columns and rows
-    colnames(corr) <- 1: study_variables.n
-    rownames(corr) <- 1: study_variables.n
-    cols <- colorRampPalette(c("#2166AC", "#3F8EC0", "#80B9D8", "#BCDAEA", "#E6EFF3", "#F9EAE1", "#FAC8AF", "#ED9576", "#D25749", "#B2182B"))(256)
-    
-    pdf(file=pdf.file)
-    if (study_variables.n < 12)
-    {
-      # use combined "number/circle" plotting method for SILAC, TMT and small LFQ analyses
-      corrplot(corr, cl.lim=c(min(corr),max(corr)), col = cols, is.corr=FALSE, method = "number")
-      #corrplot.mixed(corr, cl.lim=c(min(corr), max(corr)), cols=cols, is.corr=FALSE, lower="number", upper="circle")
-    }
-    else
-    {
-      # use "circle" plotting method for LFQ analyses
-      corrplot(corr, cl.lim=c(min(corr),max(corr)), col = cols, is.corr=FALSE, method = "circle")
-    }
-    dev.off()
-    
-    return(corr)
+  # extract study variables
+  study_variables.n <- numberOfAbundances(data)
+  study_variables.data = getPeptideQuants(data)
+  
+  # (optional) z-score normalisation
+  #study_variables.data <- scale(study_variables.data, center = TRUE, scale = TRUE)
+  
+  corr = cor(study_variables.data[complete.cases(study_variables.data),], method="pearson")    # possible methods: "pearson", "spearman", "kendall"
+  
+  # rename columns and rows
+  colnames(corr) <- 1: study_variables.n
+  rownames(corr) <- 1: study_variables.n
+  cols <- colorRampPalette(c("#2166AC", "#3F8EC0", "#80B9D8", "#BCDAEA", "#E6EFF3", "#F9EAE1", "#FAC8AF", "#ED9576", "#D25749", "#B2182B"))(256)
+  
+  pdf(file=pdf.file)
+  if (study_variables.n < 12)
+  {
+    # use combined "number/circle" plotting method for SILAC, TMT and small LFQ analyses
+    corrplot(corr, cl.lim=c(min(corr),max(corr)), col = cols, is.corr=FALSE, method = "number")
+    #corrplot.mixed(corr, cl.lim=c(min(corr), max(corr)), cols=cols, is.corr=FALSE, lower="number", upper="circle")
+  }
+  else
+  {
+    # use "circle" plotting method for LFQ analyses
+    corrplot(corr, cl.lim=c(min(corr),max(corr)), col = cols, is.corr=FALSE, method = "circle")
+  }
+  dev.off()
+  
+  return(corr)
 }
 
 plotBoxplot <- function(data, pdf.file) {
@@ -247,10 +247,20 @@ plotBoxplot <- function(data, pdf.file) {
   
   # (optional) z-score normalisation
   #study_variables.data <- scale(study_variables.data, center = TRUE, scale = TRUE)
-
+  
   pdf(file=pdf.file, height = 6, width = 10)
   boxplot(study_variables.data, log="y", ylab="expression", xlab="samples", las=2)
   dev.off()
+}
+
+# limits amino acid sequences to n characters
+cutSequence <- function(s) {
+  n <- 35
+  short <- substr(s, 1, n)
+  if (nchar(s) > nchar(short)) {
+    short <- paste(short, "...", sep = "")
+  }
+  return(short)
 }
 
 findPeptidesOfInterest <- function(data)
@@ -282,6 +292,10 @@ findPeptidesOfInterest <- function(data)
   # sort in the same order as peptides.of.interest vector
   df <- df[order(match(df$sequence, peptides.of.interest)),]
   
+  # reduce length of modified sequence
+  df$opt_global_modified_sequence <- unlist(lapply(df$opt_global_modified_sequence, cutSequence))
+  
+  # select and rename columns
   df <- df[,c("opt_global_modified_sequence", "accession", "charge", "retention_time", "mass_to_charge")]
   colnames(df) <- c("modified sequence", "accession", "charge", "retention time", "m/z" )
   
@@ -289,7 +303,7 @@ findPeptidesOfInterest <- function(data)
 }
 
 findProteinsOfInterest <- function(data) {
-    # check if protein accession column is non-empty
+  # check if protein accession column is non-empty
   if (isEmpty(data$accession))
   {
     df <- t(data.frame(c("", "no accessions reported", rep("", 3))))
@@ -297,7 +311,7 @@ findProteinsOfInterest <- function(data) {
     rownames(df) <- c()
     return(df)
   }
-
+  
   pattern = paste(proteins.of.interest, collapse="|")
   df <- as.data.frame(data[grepl(pattern, data$accession),])
   
@@ -315,6 +329,11 @@ findProteinsOfInterest <- function(data) {
   
   # sort in the same order as proteins.of.interest vector
   df <- df[order(match(df$accession, proteins.of.interest)),]
+  
+  # reduce length of modified sequence
+  df$opt_global_modified_sequence <- unlist(lapply(df$opt_global_modified_sequence, cutSequence))
+  
+  # select and rename columns
   df <- df[,c("opt_global_modified_sequence", "accession", "charge", "retention_time", "mass_to_charge")]
   colnames(df) <- c("modified sequence", "accession", "charge", "retention time", "m/z" )
   
@@ -414,7 +433,7 @@ plotQuantFrequency <- function(quants, pdf.file)
     return(length(which(counts.non.na == n)))
   }
   frequency <- unlist(lapply(dim(quants)[2]:1, countOccurrenceInVector))
-
+  
   pdf(file=pdf.file)
   barplot(frequency, names.arg = as.character(dim(quants)[2]:1), xlab = "number of samples in which peptide was quantified", ylab = "peptide count")
   dev.off()
@@ -433,7 +452,7 @@ plotMultiplicityFrequency <- function(data, pdf.file)
   colnames(frequency.of.occurences) <- c("multiplicity","frequency")
   frequency.of.occurences$multiplicity <- as.numeric(as.character(frequency.of.occurences$multiplicity))
   frequency.of.occurences$frequency <- as.numeric(as.character(frequency.of.occurences$frequency))
-
+  
   pdf(file=pdf.file)
   plot(frequency.of.occurences$multiplicity, frequency.of.occurences$frequency, log="y", xlab="multiplicity of (modified sequence, charge) pairs", ylab="number of (modified sequence, charge) pairs")
   dev.off()
@@ -454,7 +473,7 @@ if (!isEmpty(peptide.data$accession))
 {
   peptide.data <- peptide.data[which(substr(peptide.data$accession,1,4)!="dec_"),]
   peptide.data <- peptide.data[which(substr(peptide.data$accession,1,4)!="CON_"),]
-
+  
   # Note that decoys and contaminants might not be of the form *|*|* and accessions might not have been split in readMzTabPEP().
   # Hence we split the accessions here again after removing decoys and accessions.
   peptide.data <- splitAccession(peptide.data)
