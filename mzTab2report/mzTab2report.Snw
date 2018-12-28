@@ -3,6 +3,7 @@
 \usepackage{subfig, fullpage, graphicx, amsmath}
 \usepackage{url}
 \usepackage{float}
+\usepackage{longtable}
 
 %\setlength{\voffset}{0pt}
 %\setlength{\topmargin}{0pt}
@@ -21,7 +22,8 @@
 ## To install dependencies, run in R:
 ## install.packages("corrplot")
 
-library("corrplot")
+library(corrplot)
+library(xtable)
 
 # clear entire workspace
 rm(list = ls())
@@ -34,10 +36,12 @@ FcCutoff <- 8    # fold change cutoff, i.e. infinite fc values are mapped to +/-
 #peptides.of.interest <- c("SSAAPPPPPR", "GISNEGQNASIK", "HVLTSIGEK", "DIPVPKPK", "IGDYAGIK", "TASEFDSAIAQDK", "SAAGAFGPELSR", "ELGQSGVDTYLQTK", "GLILVGGYGTR", "GILFVGSGVSGGEEGAR", "SFANQPLEVVYSK", "LTILEELR", "NGFILDGFPR", "ELASGLSFPVGFK", "LSSEAPALFQFDLK")
 
 # Biognosys iRT spike-in peptides
-peptides.of.interest <- c("LGGNEQVTR", "GAGSSEPVTGLDAK", "VEATFGVDESNAK", "YILAGVENSK", "TPVISGGPYEYR", "TPVITGAPYEYR", "DGLDAASYYAPVR", "ADVTPADFSEWSK", "GTFIIDPGGVIR", "GTFIIDPAAVIR", "LFLQFGAQGSPFLK")
+#peptides.of.interest <- c("LGGNEQVTR", "GAGSSEPVTGLDAK", "VEATFGVDESNAK", "YILAGVENSK", "TPVISGGPYEYR", "TPVITGAPYEYR", "DGLDAASYYAPVR", "ADVTPADFSEWSK", "GTFIIDPGGVIR", "GTFIIDPAAVIR", "LFLQFGAQGSPFLK")
+
+peptides.of.interest <- c("LSLMYAR", "EQCCYNCGKPGHLAR", "LSAIYGGTYMLNKPVDDIIMENGKVVGVK", "MVQEAEKYKAEDEKQR", "TVPFCSTFAAFFTR", "GNFGGSFAGSFGGAGGHAPGVAR", "LGWDPKPGEGHLDALLR")
 
 # proteins of interest
-proteins.of.interest <- c("P0A853", "P37647")
+proteins.of.interest <- c("O75643", "P06576", "P07910", "O43707", "P11021", "P14618", "P17844", "P29692", "P30101", "P31939", "P34932", "P42766", "P49327", "P50990", "P62258")
 
 input.file <- 'analysis.mzTab'
 #input.file <- 'example_5.mzTab'
@@ -269,6 +273,16 @@ boxplot(study_variables.data, log="y", ylab="expression", xlab="samples", las=2)
 dev.off()
 }
 
+# limits amino acid sequences to n characters
+cutSequence <- function(s) {
+n <- 25
+short <- substr(s, 1, n)
+if (nchar(s) > nchar(short)) {
+short <- paste(short, "...", sep = "")
+}
+return(short)
+}
+
 findPeptidesOfInterest <- function(data)
 {
 retain.columns=c("sequence", "accession", "charge", "retention_time", "mass_to_charge")
@@ -298,6 +312,10 @@ return(df)
 # sort in the same order as peptides.of.interest vector
 df <- df[order(match(df$sequence, peptides.of.interest)),]
 
+# reduce length of modified sequence
+df$opt_global_modified_sequence <- unlist(lapply(df$opt_global_modified_sequence, cutSequence))
+
+# select and rename columns
 df <- df[,c("opt_global_modified_sequence", "accession", "charge", "retention_time", "mass_to_charge")]
 colnames(df) <- c("modified sequence", "accession", "charge", "retention time", "m/z" )
 
@@ -331,6 +349,11 @@ df <- df[order(df$sequence),]
 
 # sort in the same order as proteins.of.interest vector
 df <- df[order(match(df$accession, proteins.of.interest)),]
+
+# reduce length of modified sequence
+df$opt_global_modified_sequence <- unlist(lapply(df$opt_global_modified_sequence, cutSequence))
+
+# select and rename columns
 df <- df[,c("opt_global_modified_sequence", "accession", "charge", "retention_time", "mass_to_charge")]
 colnames(df) <- c("modified sequence", "accession", "charge", "retention time", "m/z" )
 
@@ -608,33 +631,11 @@ identified (unique stripped) & \Sexpr{format(n.peptides.identified.stripped.uniq
 \end{center}
 \end{table}
 
-\begin{table}[hb]
-\begin{center}
-<<echo=FALSE,results=tex>>=
-library(xtable)
-table.peptides.of.interest <- xtable(interest.peptides.matches)
-print(table.peptides.of.interest, include.rownames=FALSE, table.placement="H")
-@
-\caption{Peptides of interest. Note that the script requires a vector of {\it stripped} peptides sequences, but in the above table we list the {\it modified} peptide sequences.}
-\end{center}
-\end{table}
-
-\begin{table}[hb]
-\begin{center}
-<<echo=FALSE,results=tex>>=
-library(xtable)
-print(xtable(interest.proteins.matches), include.rownames=FALSE, table.placement="H")
-@
-\caption{Proteins of interest.}
-\end{center}
-\end{table}
-
 \hspace{5pt}
 
 \begin{table}[hb]
 \begin{center}
 <<echo=FALSE,results=tex>>=
-library(xtable)
 print(xtable(stats), include.rownames=FALSE, table.placement="H")
 @
 \caption{Statistics of modifications.}
@@ -765,6 +766,18 @@ print(xtable(stats), include.rownames=FALSE, table.placement="H")
 \end{figure}
 }
 {}
+
+\clearpage
+
+<<echo=FALSE,results=tex>>=
+table.peptides.of.interest <- xtable(interest.peptides.matches, caption = "Peptides of interest. Please note that the script requires a vector of {\\it stripped} peptides sequences, but in the above table we list the {\\it modified} peptide sequences.")
+print(table.peptides.of.interest, include.rownames=FALSE, tabular.environment="longtable")
+@
+
+<<echo=FALSE,results=tex>>=
+table.proteins.of.interest <- xtable(interest.proteins.matches, caption = "Proteins of interest.")
+print(table.proteins.of.interest, include.rownames=FALSE, tabular.environment="longtable")
+@
 
 \newif\ifmodcolumnexists
 
