@@ -21,7 +21,7 @@ FcCutoff <- 8    # fold change cutoff, i.e. infinite fc values are mapped to +/-
 peptides.of.interest <- c("LSLMYAR", "EQCCYNCGKPGHLAR", "LSAIYGGTYMLNKPVDDIIMENGKVVGVK", "MVQEAEKYKAEDEKQR", "TVPFCSTFAAFFTR", "GNFGGSFAGSFGGAGGHAPGVAR", "LGWDPKPGEGHLDALLR")
 
 # proteins of interest
-proteins.of.interest <- c("O75643", "P06576", "P07910")
+proteins.of.interest <- c("O75643", "P06576", "P07910", "O43707", "P11021", "P14618", "P17844", "P29692", "P30101", "P31939", "P34932", "P42766", "P49327", "P50990", "P62258")
 
 #input.file <- 'analysis.mzTab'
 input.file <- 'example_5.mzTab'
@@ -255,7 +255,7 @@ plotBoxplot <- function(data, pdf.file) {
 
 # limits amino acid sequences to n characters
 cutSequence <- function(s) {
-  n <- 35
+  n <- 25
   short <- substr(s, 1, n)
   if (nchar(s) > nchar(short)) {
     short <- paste(short, "...", sep = "")

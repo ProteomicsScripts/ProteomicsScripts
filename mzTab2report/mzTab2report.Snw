@@ -3,6 +3,7 @@
 \usepackage{subfig, fullpage, graphicx, amsmath}
 \usepackage{url}
 \usepackage{float}
+\usepackage{longtable}
 
 %\setlength{\voffset}{0pt}
 %\setlength{\topmargin}{0pt}
@@ -40,7 +41,7 @@ FcCutoff <- 8    # fold change cutoff, i.e. infinite fc values are mapped to +/-
 peptides.of.interest <- c("LSLMYAR", "EQCCYNCGKPGHLAR", "LSAIYGGTYMLNKPVDDIIMENGKVVGVK", "MVQEAEKYKAEDEKQR", "TVPFCSTFAAFFTR", "GNFGGSFAGSFGGAGGHAPGVAR", "LGWDPKPGEGHLDALLR")
 
 # proteins of interest
-proteins.of.interest <- c("O75643", "P06576", "P07910")
+proteins.of.interest <- c("O75643", "P06576", "P07910", "O43707", "P11021", "P14618", "P17844", "P29692", "P30101", "P31939", "P34932", "P42766", "P49327", "P50990", "P62258")
 
 input.file <- 'analysis.mzTab'
 #input.file <- 'example_5.mzTab'
@@ -274,7 +275,7 @@ dev.off()
 
 # limits amino acid sequences to n characters
 cutSequence <- function(s) {
-n <- 35
+n <- 25
 short <- substr(s, 1, n)
 if (nchar(s) > nchar(short)) {
 short <- paste(short, "...", sep = "")
@@ -769,13 +770,13 @@ print(xtable(stats), include.rownames=FALSE, table.placement="H")
 \clearpage
 
 <<echo=FALSE,results=tex>>=
-table.peptides.of.interest <- xtable(interest.peptides.matches, caption = "Peptides of interest. Note that the script requires a vector of stripped peptides sequences, but in the above table we list the modified peptide sequences.")
-print(table.peptides.of.interest, include.rownames=FALSE, table.placement="H")
+table.peptides.of.interest <- xtable(interest.peptides.matches, caption = "Peptides of interest. Please note that the script requires a vector of {\\it stripped} peptides sequences, but in the above table we list the {\\it modified} peptide sequences.")
+print(table.peptides.of.interest, include.rownames=FALSE, tabular.environment="longtable")
 @
 
 <<echo=FALSE,results=tex>>=
 table.proteins.of.interest <- xtable(interest.proteins.matches, caption = "Proteins of interest.")
-print(table.proteins.of.interest, include.rownames=FALSE, table.placement="H")
+print(table.proteins.of.interest, include.rownames=FALSE, tabular.environment="longtable")
 @
 
 \newif\ifmodcolumnexists
