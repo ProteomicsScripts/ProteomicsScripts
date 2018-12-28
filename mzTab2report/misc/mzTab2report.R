@@ -2,7 +2,8 @@
 ## To install dependencies, run in R:
 ## install.packages("corrplot")
 
-library("corrplot")
+library(corrplot)
+library(xtable)
 
 # clear entire workspace
 rm(list = ls())
