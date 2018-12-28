@@ -612,25 +612,6 @@ identified (unique stripped) & \Sexpr{format(n.peptides.identified.stripped.uniq
 \end{center}
 \end{table}
 
-\begin{table}[hb]
-\begin{center}
-<<echo=FALSE,results=tex>>=
-table.peptides.of.interest <- xtable(interest.peptides.matches)
-print(table.peptides.of.interest, include.rownames=FALSE, table.placement="H")
-@
-\caption{Peptides of interest. Note that the script requires a vector of {\it stripped} peptides sequences, but in the above table we list the {\it modified} peptide sequences.}
-\end{center}
-\end{table}
-
-\begin{table}[hb]
-\begin{center}
-<<echo=FALSE,results=tex>>=
-print(xtable(interest.proteins.matches), include.rownames=FALSE, table.placement="H")
-@
-\caption{Proteins of interest.}
-\end{center}
-\end{table}
-
 \hspace{5pt}
 
 \begin{table}[hb]
@@ -766,6 +747,28 @@ print(xtable(stats), include.rownames=FALSE, table.placement="H")
 \end{figure}
 }
 {}
+
+\clearpage
+
+\begin{table}[hb]
+\begin{center}
+<<echo=FALSE,results=tex>>=
+table.peptides.of.interest <- xtable(interest.peptides.matches)
+print(table.peptides.of.interest, include.rownames=FALSE, table.placement="H")
+@
+\caption{Peptides of interest. Note that the script requires a vector of {\it stripped} peptides sequences, but in the above table we list the {\it modified} peptide sequences.}
+\end{center}
+\end{table}
+
+\begin{table}[hb]
+\begin{center}
+<<echo=FALSE,results=tex>>=
+table.proteins.of.interest <- xtable(interest.proteins.matches)
+print(table.proteins.of.interest, include.rownames=FALSE, table.placement="H")
+@
+\caption{Proteins of interest.}
+\end{center}
+\end{table}
 
 \newif\ifmodcolumnexists
 
