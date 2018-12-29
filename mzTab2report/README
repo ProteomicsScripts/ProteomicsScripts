@@ -7,7 +7,9 @@ mzTab2report example.mzTab
 
 +++ INSTALLATION +++
 
-(1) Install R [test](https://github.com/ProteomicsScripts/ProteomicsScripts/blob/master/mzTab2report/misc/mzTab2report.R#L2)
+(1) Install R
+    Please check the header of the script which R packages need to be installed.
+    https://github.com/ProteomicsScripts/ProteomicsScripts/blob/master/mzTab2report/misc/mzTab2report.R#L2
 (2) Install LaTeX, tested with MacTeX (macOS), TexLive (Ubuntu 16.04 LTS), MiKTeX (Windows)
 (3) Add the script folder to your $PATH variable
 (4) Test the installation with misc/example_*.mzTab
