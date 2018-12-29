@@ -1,6 +1,6 @@
 # ProteomicsScripts
 
-Feel free to ask questions in the chat room
+Please post any questions in our chat room
 
 https://gitter.im/ProteomicsScripts/Lobby
 
