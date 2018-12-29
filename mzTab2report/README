@@ -9,14 +9,9 @@ mzTab2report example.mzTab
 
 
 (1) Install R
-(2) Run: sudo apt-get -y install libcurl4-gnutls-dev libxml2-dev libssl-dev
-(3) In R: 
-    install.packages(devtools)
-    library(devtools)
-    install_github("corrplot", username = "MFreidank")
-(4) Install LaTeX, tested with MacTeX (macOS), TexLive (Ubuntu 16.04 LTS), MiKTeX (Windows)
-(5) Add the script folder to your $PATH variable
-(6) Test the installation with misc/example.mzTab
+(2) Install LaTeX, tested with MacTeX (macOS), TexLive (Ubuntu 16.04 LTS), MiKTeX (Windows)
+(3) Add the script folder to your $PATH variable
+(4) Test the installation with misc/example_*.mzTab
 
 
 +++ FILES +++
@@ -24,7 +19,7 @@ mzTab2report example.mzTab
 mzTab2report    -> main script (macOS)
 mzTab2report.sh    -> main script (Linux)
 mzTab2report.bat    -> main script (Windows)
-mzTab2report_dragNdrop.bat    -> drag-and-drop script i.e. by dragging an mzTab onto this bat script the mzTab2report.bat command line tool is executed (Windows)
+mzTab2report_DragDrop.bat    -> drag-and-drop script, i.e. by dragging an mzTab file onto this batch script the mzTab2report.bat command line tool is executed (Windows)
 mzTab2report.Snw    -> Sweave script containing both R and LaTeX code
 Sweave.sty    -> Sweave style sheet
 misc/example_*.mzTab    -> example input file
