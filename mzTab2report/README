@@ -7,7 +7,6 @@ mzTab2report example.mzTab
 
 +++ INSTALLATION +++
 
-
 (1) Install R
 (2) Install LaTeX, tested with MacTeX (macOS), TexLive (Ubuntu 16.04 LTS), MiKTeX (Windows)
 (3) Add the script folder to your $PATH variable
