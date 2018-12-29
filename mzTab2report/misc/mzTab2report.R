@@ -420,17 +420,18 @@ createModsSummary <- function(data)
 
 # (in)complete quantification plot
 # Not all peptides need to be quantified in all channels/samples. See for example knock-out or TAILS experiments.
-# The plot below summarises how many peptides were quantified in x smaples. 1 <= x <= number of samples
+# Not quantified can mean either NaN or exactly zero.
+# The plot below summarises how many peptides were quantified in x samples. 1 <= x <= number of samples
 plotQuantFrequency <- function(quants, pdf.file)
 {
-  countNonNA <- function(vector)
+  countQuantified <- function(vector)
   {
-    return(length(which(!is.na(vector))))
+    return(length(which(!is.na(vector) & vector > 0)))
   }
-  counts.non.na <- apply(quants, 1, countNonNA)
+  counts.quantified <- apply(quants, 1, countQuantified)
   countOccurrenceInVector <- function(n)
   {
-    return(length(which(counts.non.na == n)))
+    return(length(which(counts.quantified == n)))
   }
   frequency <- unlist(lapply(dim(quants)[2]:1, countOccurrenceInVector))
   
