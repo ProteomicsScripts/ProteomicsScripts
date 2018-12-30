@@ -279,19 +279,21 @@ plotBoxplot <- function(data, pdf.file) {
 
 plotPCA <- function(data, pdf.file) {
   # extract study variables
-  quants = getPeptideQuants(data)
+  quants <- getPeptideQuants(data)
   colnames(quants) <- as.character(1:(dim(quants)[2]))
   
   # remove rows with NaN values
   quants <- quants[complete.cases(quants),]
+  
+  # study variables in rows, dimensions i.e. peptide abundances in columns
   quants <- t(quants)
   
   # calculate principal components
   quants.pca <- prcomp(quants, center = TRUE, scale = TRUE)
   
-  pdf(file=pdf.file)
+  # plot first two components
   autoplot(quants.pca)
-  dev.off()
+  ggsave(pdf.file)
 }
 
 # limits amino acid sequences to n characters
