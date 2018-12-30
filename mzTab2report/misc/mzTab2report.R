@@ -26,6 +26,11 @@ options(digits=10)
 # fold change cutoff, i.e. infinite fc values are mapped to +/-FcCutoff
 FcCutoff <- 8
 
+# study variable labels
+# The PEP section of the mzTab file contains columns peptide_abundance_study_variable[*]. Each column can be labelled with a string such as "control" or "treated".
+# If the number of study variable columns is not equal to the length of the labels vector, then the labels vector is ignored.
+labels.of.study.variables <- rep(c("H", "BL", "fu48"), times = 18)
+
 # Biognosys iRT spike-in peptides
 #peptides.of.interest <- c("LGGNEQVTR", "GAGSSEPVTGLDAK", "VEATFGVDESNAK", "YILAGVENSK", "TPVISGGPYEYR", "TPVITGAPYEYR", "DGLDAASYYAPVR", "ADVTPADFSEWSK", "GTFIIDPGGVIR", "GTFIIDPAAVIR", "LFLQFGAQGSPFLK")
 
@@ -155,7 +160,7 @@ abundanceExists <- function(data, n)
 }
 
 # returns the number of quantification channels i.e. the number of "peptide_abundance_study_variable[*]" columns
-numberOfAbundances <- function(data)
+numberOfStudyVariables <- function(data)
 {
   columns <- colnames(data)
   return(length(which(grepl("peptide_abundance_study_variable", columns))))
@@ -234,7 +239,7 @@ getPeptideQuants <- function(data)
 
 plotCorrelations <- function(data, pdf.file) {
   # extract study variables
-  study_variables.n <- numberOfAbundances(data)
+  study_variables.n <- numberOfStudyVariables(data)
   study_variables.data = getPeptideQuants(data)
   
   # (optional) z-score normalisation
@@ -536,7 +541,7 @@ n.peptides.identified.modified.unique <- length(unique(peptide.data.identified$o
 n.peptides.identified.stripped.unique <- length(unique(peptide.data.identified$sequence))
 
 # plot frequency of peptide quants
-if (numberOfAbundances(peptide.data) >= 2) {
+if (numberOfStudyVariables(peptide.data) >= 2) {
   plotQuantFrequency(getPeptideQuants(peptide.data), "plot_QuantFrequency.pdf")
 }
 
@@ -618,7 +623,7 @@ if (abundanceExists(peptide.data,2) && abundanceExists(peptide.data,3)) {
 corr.min <- 1
 corr.median <- 1
 corr.max <- 1
-if (numberOfAbundances(peptide.data) >= 3) {
+if (numberOfStudyVariables(peptide.data) >= 3) {
   corr <- plotCorrelations(data = peptide.data, pdf.file = "plot_Correlations.pdf")
   corr.min <- min(corr)
   corr.median <- median(corr)
@@ -626,11 +631,11 @@ if (numberOfAbundances(peptide.data) >= 3) {
 }
 
 # plot boxplot of peptide abundances
-if (numberOfAbundances(peptide.data) >= 3) {
+if (numberOfStudyVariables(peptide.data) >= 3) {
   plotBoxplot(peptide.data, "plot_Boxplot.pdf")
 }
 
 # plot PCA of peptide abundances
-if (numberOfAbundances(peptide.data) >= 3) {
+if (numberOfStudyVariables(peptide.data) >= 3) {
   plotPCA(peptide.data, "plot_PCA.pdf")
 }
