@@ -1,6 +1,12 @@
-## This is an R script for the conversion of mzTab to a better readable tsv format
-## To install dependencies, run in R:
+## This R script generates a set of basic plots and tables which summarise the PEP section of mzTab files.
+## It is divided into three parts:
+## (1) definition of global options and parameters
+## (2) definition of functions
+## (3) main part i.e. generation of plots and tables
+##
+## To install dependencies, please run in R:
 ## install.packages("corrplot")
+## install.packages("xtable")
 
 library(corrplot)
 library(xtable)
@@ -8,16 +14,23 @@ library(xtable)
 # clear entire workspace
 rm(list = ls())
 
-# options and parameters
-options(digits=10)
-FcCutoff <- 8    # fold change cutoff, i.e. infinite fc values are mapped to +/-FcCutoff
+####
+## (1) definition of global options and parameters
+####
 
-# Pierce spike-in peptides
-#peptides.of.interest <- c("SSAAPPPPPR", "GISNEGQNASIK", "HVLTSIGEK", "DIPVPKPK", "IGDYAGIK", "TASEFDSAIAQDK", "SAAGAFGPELSR", "ELGQSGVDTYLQTK", "GLILVGGYGTR", "GILFVGSGVSGGEEGAR", "SFANQPLEVVYSK", "LTILEELR", "NGFILDGFPR", "ELASGLSFPVGFK", "LSSEAPALFQFDLK")
+# maximum number of digits
+options(digits=10)
+
+# fold change cutoff, i.e. infinite fc values are mapped to +/-FcCutoff
+FcCutoff <- 8
 
 # Biognosys iRT spike-in peptides
 #peptides.of.interest <- c("LGGNEQVTR", "GAGSSEPVTGLDAK", "VEATFGVDESNAK", "YILAGVENSK", "TPVISGGPYEYR", "TPVITGAPYEYR", "DGLDAASYYAPVR", "ADVTPADFSEWSK", "GTFIIDPGGVIR", "GTFIIDPAAVIR", "LFLQFGAQGSPFLK")
 
+# Pierce spike-in peptides
+#peptides.of.interest <- c("SSAAPPPPPR", "GISNEGQNASIK", "HVLTSIGEK", "DIPVPKPK", "IGDYAGIK", "TASEFDSAIAQDK", "SAAGAFGPELSR", "ELGQSGVDTYLQTK", "GLILVGGYGTR", "GILFVGSGVSGGEEGAR", "SFANQPLEVVYSK", "LTILEELR", "NGFILDGFPR", "ELASGLSFPVGFK", "LSSEAPALFQFDLK")
+
+# some random human peptides
 peptides.of.interest <- c("LSLMYAR", "EQCCYNCGKPGHLAR", "LSAIYGGTYMLNKPVDDIIMENGKVVGVK", "MVQEAEKYKAEDEKQR", "TVPFCSTFAAFFTR", "GNFGGSFAGSFGGAGGHAPGVAR", "LGWDPKPGEGHLDALLR")
 
 # proteins of interest
@@ -25,6 +38,15 @@ proteins.of.interest <- c("O75643", "P06576", "P07910", "O43707", "P11021", "P14
 
 #input.file <- 'analysis.mzTab'
 input.file <- 'example_5.mzTab'
+
+
+
+
+
+
+####
+## (2) definition of functions
+####
 
 # find start of the section
 startSection <- function(file, section.identifier) {
@@ -253,6 +275,16 @@ plotBoxplot <- function(data, pdf.file) {
   dev.off()
 }
 
+plotPCA <- function(data, pdf.file) {
+  # extract study variables
+  study_variables.data = getPeptideQuants(data)
+  colnames(study_variables.data) <- as.character(1:(dim(study_variables.data)[2]))
+  
+  pdf(file=pdf.file)
+  plot(study_variables.data$"1", study_variables.data$"2")
+  dev.off()
+}
+
 # limits amino acid sequences to n characters
 cutSequence <- function(s) {
   n <- 25
@@ -464,7 +496,9 @@ plotMultiplicityFrequency <- function(data, pdf.file)
 
 
 
-
+####
+## (3) main part
+####
 
 # read mzTab data
 peptide.data <- readMzTabPEP(input.file)
@@ -583,4 +617,9 @@ if (numberOfAbundances(peptide.data) >= 3) {
 # plot boxplot of peptide abundances
 if (numberOfAbundances(peptide.data) >= 3) {
   plotBoxplot(peptide.data, "plot_Boxplot.pdf")
+}
+
+# plot PCA of peptide abundances
+if (numberOfAbundances(peptide.data) >= 3) {
+  plotPCA(peptide.data, "plot_PCA.pdf")
 }
