@@ -5,11 +5,13 @@
 ## (3) main part i.e. generation of plots and tables
 ##
 ## To install dependencies, please run in R:
-## install.packages("corrplot")
-## install.packages("xtable")
+## install.packages("corrplot")     # for correlation of peptide intensities
+## install.packages("xtable")       # for peptides/proteins of interest tables
+## install.packages("ggfortify")    # for PCA plots
 
 library(corrplot)
 library(xtable)
+library(ggfortify)
 
 # clear entire workspace
 rm(list = ls())
@@ -277,11 +279,18 @@ plotBoxplot <- function(data, pdf.file) {
 
 plotPCA <- function(data, pdf.file) {
   # extract study variables
-  study_variables.data = getPeptideQuants(data)
-  colnames(study_variables.data) <- as.character(1:(dim(study_variables.data)[2]))
+  quants = getPeptideQuants(data)
+  colnames(quants) <- as.character(1:(dim(quants)[2]))
+  
+  # remove rows with NaN values
+  quants <- quants[complete.cases(quants),]
+  quants <- t(quants)
+  
+  # calculate principal components
+  quants.pca <- prcomp(quants, center = TRUE, scale = TRUE)
   
   pdf(file=pdf.file)
-  plot(study_variables.data$"1", study_variables.data$"2")
+  autoplot(quants.pca)
   dev.off()
 }
 
