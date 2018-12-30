@@ -153,7 +153,7 @@ splitAccession <- function(peptide.data) {
 }
 
 # check if a specific "peptide_abundance_study_variable[n]" column exists
-abundanceExists <- function(data, n)
+studyVariableExists <- function(data, n)
 {
   column <- paste("peptide_abundance_study_variable[",as.character(n),"]",sep="")
   return (column %in% colnames(data))
@@ -302,12 +302,12 @@ plotPCA <- function(data, pdf.file) {
     # The labels vector matches the mzTab data.
     df <- data.frame(quants)
     df$labels <- labels.of.study.variables
-    autoplot(quants.pca, data = df, colour = 'labels')
-  }
+    autoplot(quants.pca, data = df, colour = 'labels', label = TRUE)
+    }
   else
   {
     # The labels vector does not match the mzTab data.
-    autoplot(quants.pca)
+    autoplot(quants.pca, label = TRUE)
   }
   ggsave(pdf.file)
 }
@@ -585,21 +585,21 @@ sd.fc.23 <- 0
 plotKendrick((peptide.data$mass_to_charge - 1.00784) * peptide.data$charge, "plot_Kendrick.pdf")
 
 # plot peptide abundance distributions
-if (abundanceExists(peptide.data,1)) {
+if (studyVariableExists(peptide.data,1)) {
   median.abundance.1 <- median(peptide.data$"peptide_abundance_study_variable[1]", na.rm=TRUE)
   plotDistribution(log10(peptide.data$"peptide_abundance_study_variable[1]"), expression('log'[10]*' intensity'), "plot_DistributionIntensity_1.pdf")
 }
-if (abundanceExists(peptide.data,2)) {
+if (studyVariableExists(peptide.data,2)) {
   median.abundance.2 <- median(peptide.data$"peptide_abundance_study_variable[2]", na.rm=TRUE)
   plotDistribution(log10(peptide.data$"peptide_abundance_study_variable[2]"), expression('log'[10]*' intensity'), "plot_DistributionIntensity_2.pdf")
 }
-if (abundanceExists(peptide.data,3)) {
+if (studyVariableExists(peptide.data,3)) {
   median.abundance.3 <- median(peptide.data$"peptide_abundance_study_variable[3]", na.rm=TRUE)
   plotDistribution(log10(peptide.data$"peptide_abundance_study_variable[3]"), expression('log'[10]*' intensity'), "plot_DistributionIntensity_3.pdf")
 }
 
 # plot fold change distributions and scatter plots
-if (abundanceExists(peptide.data,1) && abundanceExists(peptide.data,2)) {
+if (studyVariableExists(peptide.data,1) && studyVariableExists(peptide.data,2)) {
   a <- peptide.data$"peptide_abundance_study_variable[1]"
   b <- peptide.data$"peptide_abundance_study_variable[2]"
   fc <- calculateFoldChange(a, b)
@@ -609,7 +609,7 @@ if (abundanceExists(peptide.data,1) && abundanceExists(peptide.data,2)) {
   plotFcLogIntensity(fc, intensity, "fold change", "plot_FoldChangeLogIntensity_12.pdf")
   plotDistribution(fc, "fold change", "plot_DistributionFoldChange_12.pdf")
 }
-if (abundanceExists(peptide.data,1) && abundanceExists(peptide.data,3)) {
+if (studyVariableExists(peptide.data,1) && studyVariableExists(peptide.data,3)) {
   a <- peptide.data$"peptide_abundance_study_variable[1]"
   b <- peptide.data$"peptide_abundance_study_variable[3]"
   fc <- calculateFoldChange(a, b)
@@ -619,7 +619,7 @@ if (abundanceExists(peptide.data,1) && abundanceExists(peptide.data,3)) {
   plotFcLogIntensity(fc, intensity, "fold change", "plot_FoldChangeLogIntensity_13.pdf")
   plotDistribution(fc, "fold change", "plot_DistributionFoldChange_13.pdf")
 }
-if (abundanceExists(peptide.data,2) && abundanceExists(peptide.data,3)) {
+if (studyVariableExists(peptide.data,2) && studyVariableExists(peptide.data,3)) {
   a <- peptide.data$"peptide_abundance_study_variable[2]"
   b <- peptide.data$"peptide_abundance_study_variable[3]"
   fc <- calculateFoldChange(a, b)
