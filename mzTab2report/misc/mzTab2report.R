@@ -1,23 +1,43 @@
-## This is an R script for the conversion of mzTab to a better readable tsv format
-## To install dependencies, run in R:
-## install.packages("corrplot")
+## This R script generates a set of basic plots and tables which summarise the PEP section of mzTab files.
+## It is divided into three parts:
+## (1) definition of global options and parameters
+## (2) definition of functions
+## (3) main part i.e. generation of plots and tables
+##
+## To install dependencies, please run in R:
+## install.packages("corrplot")     # for correlation of peptide intensities
+## install.packages("xtable")       # for peptides/proteins of interest tables
+## install.packages("ggfortify")    # for PCA plots
 
 library(corrplot)
 library(xtable)
+library(ggfortify)
 
 # clear entire workspace
 rm(list = ls())
 
-# options and parameters
-options(digits=10)
-FcCutoff <- 8    # fold change cutoff, i.e. infinite fc values are mapped to +/-FcCutoff
+####
+## (1) definition of global options and parameters
+####
 
-# Pierce spike-in peptides
-#peptides.of.interest <- c("SSAAPPPPPR", "GISNEGQNASIK", "HVLTSIGEK", "DIPVPKPK", "IGDYAGIK", "TASEFDSAIAQDK", "SAAGAFGPELSR", "ELGQSGVDTYLQTK", "GLILVGGYGTR", "GILFVGSGVSGGEEGAR", "SFANQPLEVVYSK", "LTILEELR", "NGFILDGFPR", "ELASGLSFPVGFK", "LSSEAPALFQFDLK")
+# maximum number of digits
+options(digits=10)
+
+# fold change cutoff, i.e. infinite fc values are mapped to +/-FcCutoff
+FcCutoff <- 8
+
+# study variable labels
+# The PEP section of the mzTab file contains columns peptide_abundance_study_variable[*]. Each column can be labelled with a string such as "control" or "treated".
+# If the number of study variable columns is not equal to the length of the labels vector, then the labels vector is ignored.
+labels.of.study.variables <- rep(c("H", "BL", "fu48"), times = 18)
 
 # Biognosys iRT spike-in peptides
 #peptides.of.interest <- c("LGGNEQVTR", "GAGSSEPVTGLDAK", "VEATFGVDESNAK", "YILAGVENSK", "TPVISGGPYEYR", "TPVITGAPYEYR", "DGLDAASYYAPVR", "ADVTPADFSEWSK", "GTFIIDPGGVIR", "GTFIIDPAAVIR", "LFLQFGAQGSPFLK")
 
+# Pierce spike-in peptides
+#peptides.of.interest <- c("SSAAPPPPPR", "GISNEGQNASIK", "HVLTSIGEK", "DIPVPKPK", "IGDYAGIK", "TASEFDSAIAQDK", "SAAGAFGPELSR", "ELGQSGVDTYLQTK", "GLILVGGYGTR", "GILFVGSGVSGGEEGAR", "SFANQPLEVVYSK", "LTILEELR", "NGFILDGFPR", "ELASGLSFPVGFK", "LSSEAPALFQFDLK")
+
+# some random human peptides
 peptides.of.interest <- c("LSLMYAR", "EQCCYNCGKPGHLAR", "LSAIYGGTYMLNKPVDDIIMENGKVVGVK", "MVQEAEKYKAEDEKQR", "TVPFCSTFAAFFTR", "GNFGGSFAGSFGGAGGHAPGVAR", "LGWDPKPGEGHLDALLR")
 
 # proteins of interest
@@ -25,6 +45,15 @@ proteins.of.interest <- c("O75643", "P06576", "P07910", "O43707", "P11021", "P14
 
 #input.file <- 'analysis.mzTab'
 input.file <- 'example_5.mzTab'
+
+
+
+
+
+
+####
+## (2) definition of functions
+####
 
 # find start of the section
 startSection <- function(file, section.identifier) {
@@ -124,14 +153,14 @@ splitAccession <- function(peptide.data) {
 }
 
 # check if a specific "peptide_abundance_study_variable[n]" column exists
-abundanceExists <- function(data, n)
+studyVariableExists <- function(data, n)
 {
   column <- paste("peptide_abundance_study_variable[",as.character(n),"]",sep="")
   return (column %in% colnames(data))
 }
 
 # returns the number of quantification channels i.e. the number of "peptide_abundance_study_variable[*]" columns
-numberOfAbundances <- function(data)
+numberOfStudyVariables <- function(data)
 {
   columns <- colnames(data)
   return(length(which(grepl("peptide_abundance_study_variable", columns))))
@@ -210,7 +239,7 @@ getPeptideQuants <- function(data)
 
 plotCorrelations <- function(data, pdf.file) {
   # extract study variables
-  study_variables.n <- numberOfAbundances(data)
+  study_variables.n <- numberOfStudyVariables(data)
   study_variables.data = getPeptideQuants(data)
   
   # (optional) z-score normalisation
@@ -251,6 +280,36 @@ plotBoxplot <- function(data, pdf.file) {
   pdf(file=pdf.file, height = 6, width = 10)
   boxplot(study_variables.data, log="y", ylab="expression", xlab="samples", las=2)
   dev.off()
+}
+
+plotPCA <- function(data, pdf.file) {
+  # extract study variables
+  quants <- getPeptideQuants(data)
+  colnames(quants) <- as.character(1:(dim(quants)[2]))
+  
+  # remove rows with NaN values
+  quants <- quants[complete.cases(quants),]
+  
+  # study variables in rows, dimensions i.e. peptide abundances in columns
+  quants <- t(quants)
+  
+  # calculate principal components
+  quants.pca <- prcomp(quants, center = TRUE, scale = TRUE)
+  
+  # plot first two principal components
+  if (dim(quants)[1] == length(labels.of.study.variables))
+  {
+    # The labels vector matches the mzTab data.
+    df <- data.frame(quants)
+    df$labels <- labels.of.study.variables
+    autoplot(quants.pca, data = df, colour = 'labels', label = TRUE)
+    }
+  else
+  {
+    # The labels vector does not match the mzTab data.
+    autoplot(quants.pca, label = TRUE)
+  }
+  ggsave(pdf.file)
 }
 
 # limits amino acid sequences to n characters
@@ -464,7 +523,9 @@ plotMultiplicityFrequency <- function(data, pdf.file)
 
 
 
-
+####
+## (3) main part
+####
 
 # read mzTab data
 peptide.data <- readMzTabPEP(input.file)
@@ -491,7 +552,7 @@ n.peptides.identified.modified.unique <- length(unique(peptide.data.identified$o
 n.peptides.identified.stripped.unique <- length(unique(peptide.data.identified$sequence))
 
 # plot frequency of peptide quants
-if (numberOfAbundances(peptide.data) >= 2) {
+if (numberOfStudyVariables(peptide.data) >= 2) {
   plotQuantFrequency(getPeptideQuants(peptide.data), "plot_QuantFrequency.pdf")
 }
 
@@ -524,21 +585,21 @@ sd.fc.23 <- 0
 plotKendrick((peptide.data$mass_to_charge - 1.00784) * peptide.data$charge, "plot_Kendrick.pdf")
 
 # plot peptide abundance distributions
-if (abundanceExists(peptide.data,1)) {
+if (studyVariableExists(peptide.data,1)) {
   median.abundance.1 <- median(peptide.data$"peptide_abundance_study_variable[1]", na.rm=TRUE)
   plotDistribution(log10(peptide.data$"peptide_abundance_study_variable[1]"), expression('log'[10]*' intensity'), "plot_DistributionIntensity_1.pdf")
 }
-if (abundanceExists(peptide.data,2)) {
+if (studyVariableExists(peptide.data,2)) {
   median.abundance.2 <- median(peptide.data$"peptide_abundance_study_variable[2]", na.rm=TRUE)
   plotDistribution(log10(peptide.data$"peptide_abundance_study_variable[2]"), expression('log'[10]*' intensity'), "plot_DistributionIntensity_2.pdf")
 }
-if (abundanceExists(peptide.data,3)) {
+if (studyVariableExists(peptide.data,3)) {
   median.abundance.3 <- median(peptide.data$"peptide_abundance_study_variable[3]", na.rm=TRUE)
   plotDistribution(log10(peptide.data$"peptide_abundance_study_variable[3]"), expression('log'[10]*' intensity'), "plot_DistributionIntensity_3.pdf")
 }
 
 # plot fold change distributions and scatter plots
-if (abundanceExists(peptide.data,1) && abundanceExists(peptide.data,2)) {
+if (studyVariableExists(peptide.data,1) && studyVariableExists(peptide.data,2)) {
   a <- peptide.data$"peptide_abundance_study_variable[1]"
   b <- peptide.data$"peptide_abundance_study_variable[2]"
   fc <- calculateFoldChange(a, b)
@@ -548,7 +609,7 @@ if (abundanceExists(peptide.data,1) && abundanceExists(peptide.data,2)) {
   plotFcLogIntensity(fc, intensity, "fold change", "plot_FoldChangeLogIntensity_12.pdf")
   plotDistribution(fc, "fold change", "plot_DistributionFoldChange_12.pdf")
 }
-if (abundanceExists(peptide.data,1) && abundanceExists(peptide.data,3)) {
+if (studyVariableExists(peptide.data,1) && studyVariableExists(peptide.data,3)) {
   a <- peptide.data$"peptide_abundance_study_variable[1]"
   b <- peptide.data$"peptide_abundance_study_variable[3]"
   fc <- calculateFoldChange(a, b)
@@ -558,7 +619,7 @@ if (abundanceExists(peptide.data,1) && abundanceExists(peptide.data,3)) {
   plotFcLogIntensity(fc, intensity, "fold change", "plot_FoldChangeLogIntensity_13.pdf")
   plotDistribution(fc, "fold change", "plot_DistributionFoldChange_13.pdf")
 }
-if (abundanceExists(peptide.data,2) && abundanceExists(peptide.data,3)) {
+if (studyVariableExists(peptide.data,2) && studyVariableExists(peptide.data,3)) {
   a <- peptide.data$"peptide_abundance_study_variable[2]"
   b <- peptide.data$"peptide_abundance_study_variable[3]"
   fc <- calculateFoldChange(a, b)
@@ -573,7 +634,7 @@ if (abundanceExists(peptide.data,2) && abundanceExists(peptide.data,3)) {
 corr.min <- 1
 corr.median <- 1
 corr.max <- 1
-if (numberOfAbundances(peptide.data) >= 3) {
+if (numberOfStudyVariables(peptide.data) >= 3) {
   corr <- plotCorrelations(data = peptide.data, pdf.file = "plot_Correlations.pdf")
   corr.min <- min(corr)
   corr.median <- median(corr)
@@ -581,6 +642,12 @@ if (numberOfAbundances(peptide.data) >= 3) {
 }
 
 # plot boxplot of peptide abundances
-if (numberOfAbundances(peptide.data) >= 3) {
+if (numberOfStudyVariables(peptide.data) >= 3) {
   plotBoxplot(peptide.data, "plot_Boxplot.pdf")
 }
+
+# plot PCA of peptide abundances
+if (numberOfStudyVariables(peptide.data) >= 3) {
+  plotPCA(peptide.data, "plot_PCA.pdf")
+}
+
