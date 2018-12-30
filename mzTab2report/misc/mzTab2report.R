@@ -296,8 +296,19 @@ plotPCA <- function(data, pdf.file) {
   # calculate principal components
   quants.pca <- prcomp(quants, center = TRUE, scale = TRUE)
   
-  # plot first two components
-  autoplot(quants.pca)
+  # plot first two principal components
+  if (dim(quants)[1] == length(labels.of.study.variables))
+  {
+    # The labels vector matches the mzTab data.
+    df <- data.frame(quants)
+    df$labels <- labels.of.study.variables
+    autoplot(quants.pca, data = df, colour = 'labels')
+  }
+  else
+  {
+    # The labels vector does not match the mzTab data.
+    autoplot(quants.pca)
+  }
   ggsave(pdf.file)
 }
 
@@ -639,3 +650,4 @@ if (numberOfStudyVariables(peptide.data) >= 3) {
 if (numberOfStudyVariables(peptide.data) >= 3) {
   plotPCA(peptide.data, "plot_PCA.pdf")
 }
+
