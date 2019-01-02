@@ -334,12 +334,29 @@ plotPCAscatter <- function(pca, pdf.file) {
   # number of principal components to be plotted
   n.pca <- 3
   
-  # one colour for each distinct label
+  # number of distinct label
   n.labels <- length(unique(labels.of.study.variables))
+  
+  # number of samples i.e. dots
+  n.samples <- length(pca$sdev)
+    
   colours <- rainbow(n.labels, s = 1, v = 1, start = 0, end = max(1, n.labels - 1)/n.labels, alpha = 1)[as.factor(labels.of.study.variables)]
   
+  colours2 <- rainbow(n.labels, s = 1, v = 1, start = 0, end = max(1, n.labels - 1)/n.labels, alpha = 0.2)[as.factor(labels.of.study.variables)]
+  
+  # customize upper panel
+  upper.panel.custom <- function(x, y){
+    points(x,y, pch = 19, col = colours2)
+    text(x, y, as.character(1:54))
+  }
+  
+  # customize lower panel
+  lower.panel.custom <- function(x, y){
+    points(x,y, pch = 19, col = colours)
+  }
+  
   pdf(file=pdf.file)
-  pairs(pca$x[,1:n.pca], col = colours, pch = 19, upper.panel = NULL)
+  pairs(pca$x[,1:n.pca], upper.panel = upper.panel.custom, lower.panel = lower.panel.custom)
   dev.off()
 }
 
