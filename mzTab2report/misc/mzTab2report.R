@@ -367,6 +367,33 @@ plotPCAscatter <- function(pca, pdf.file) {
   dev.off()
 }
 
+# plot the standard deviation of all principal components
+plotPCAcomponents <- function(pca, pdf.file) {
+  
+  pdf(file=pdf.file)
+  barplot(pca$sdev, names.arg=as.character(1:length(pca$sdev)), xlab="principal component", ylab="standard deviation")
+  dev.off()
+}
+
+# plot the coordinates of the nth eigenvector
+plotPCAeigenvector <- function(pca, n, pdf.file) {
+  
+  eigenvector <- pca$rotation[,n]
+  eigenvector <- abs(eigenvector)
+  
+  idx <- order(eigenvector, decreasing = TRUE)
+  eigenvector <- eigenvector[idx]
+  eigenvector <- eigenvector[1:10]
+  
+  min <- min(eigenvector)
+  max <- max(eigenvector)
+  
+  pdf(file=pdf.file)
+  plot(eigenvector[1:10], pch=19, col="darkgrey", ylab="eigenvector component", xlab="peptide")
+  dev.off()
+}
+
+
 # limits amino acid sequences to n characters
 cutSequence <- function(s) {
   n <- 25
@@ -709,4 +736,10 @@ if (numberOfStudyVariables(peptide.data) >= 3) {
 pca <- getPCA(peptide.data)
 
 plotPCAscatter(pca, "plot_PCA_scatter.pdf")
+
+plotPCAcomponents(pca, "plot_PCA_components.pdf")
+
+plotPCAeigenvector(pca, 1, "plot_PCA_eigenvector1st.pdf")
+plotPCAeigenvector(pca, 2, "plot_PCA_eigenvector2nd.pdf")
+plotPCAeigenvector(pca, 3, "plot_PCA_eigenvector3rd.pdf")
 
