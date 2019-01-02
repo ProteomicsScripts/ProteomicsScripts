@@ -339,20 +339,27 @@ plotPCAscatter <- function(pca, pdf.file) {
   
   # number of samples i.e. dots
   n.samples <- length(pca$sdev)
-    
-  colours <- rainbow(n.labels, s = 1, v = 1, start = 0, end = max(1, n.labels - 1)/n.labels, alpha = 1)[as.factor(labels.of.study.variables)]
   
-  colours2 <- rainbow(n.labels, s = 1, v = 1, start = 0, end = max(1, n.labels - 1)/n.labels, alpha = 0.2)[as.factor(labels.of.study.variables)]
+  # define colours
+  if (length(labels.of.study.variables) == n.samples) {
+    colours.strong <- rainbow(n.labels, s = 1, v = 1, start = 0, end = max(1, n.labels - 1)/n.labels, alpha = 1)[as.factor(labels.of.study.variables)]
+    colours.light <- rainbow(n.labels, s = 1, v = 1, start = 0, end = max(1, n.labels - 1)/n.labels, alpha = 0.2)[as.factor(labels.of.study.variables)]
+  }
+  else {
+    colours.strong <- "darkgrey"
+    colours.light <- "white"
+  }
   
   # customize upper panel
   upper.panel.custom <- function(x, y){
-    points(x,y, pch = 19, col = colours2)
+    points(x,y, pch = 19, col = colours.light)
     text(x, y, as.character(1:54))
   }
   
   # customize lower panel
   lower.panel.custom <- function(x, y){
-    points(x,y, pch = 19, col = colours)
+    points(x,y, pch = 19, col = colours.strong)
+    #text(x, y, labels.of.study.variables)
   }
   
   pdf(file=pdf.file)
