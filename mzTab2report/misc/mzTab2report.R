@@ -378,18 +378,20 @@ plotPCAcomponents <- function(pca, pdf.file) {
 # plot the coordinates of the nth eigenvector
 plotPCAeigenvector <- function(pca, n, pdf.file) {
   
+  # number of coordinates to plot
+  n.coordinates = 10
+  
   eigenvector <- pca$rotation[,n]
   eigenvector <- abs(eigenvector)
   
   idx <- order(eigenvector, decreasing = TRUE)
   eigenvector <- eigenvector[idx]
-  eigenvector <- eigenvector[1:10]
-  
-  min <- min(eigenvector)
-  max <- max(eigenvector)
+  eigenvector <- eigenvector[1:n.coordinates]
+  row.idx <- order(idx)[1:n.coordinates]
   
   pdf(file=pdf.file)
-  plot(eigenvector[1:10], pch=19, col="darkgrey", ylab="eigenvector component", xlab="peptide")
+  plot(eigenvector, xaxt = "n", pch=19, col="darkgrey", ylab="eigenvector component", xlab="peptide (row index in PEP section)", )
+  axis(1, at=1:n.coordinates, labels=row.idx)
   dev.off()
 }
 
@@ -728,10 +730,10 @@ if (numberOfStudyVariables(peptide.data) >= 3) {
   plotBoxplot(peptide.data, "plot_Boxplot.pdf")
 }
 
-# plot PCA of peptide abundances
-if (numberOfStudyVariables(peptide.data) >= 3) {
-  plotPCA(peptide.data, "plot_PCA.pdf")
-}
+# # plot PCA of peptide abundances
+# if (numberOfStudyVariables(peptide.data) >= 3) {
+#   plotPCA(peptide.data, "plot_PCA.pdf")
+# }
 
 pca <- getPCA(peptide.data)
 
@@ -742,4 +744,12 @@ plotPCAcomponents(pca, "plot_PCA_components.pdf")
 plotPCAeigenvector(pca, 1, "plot_PCA_eigenvector1st.pdf")
 plotPCAeigenvector(pca, 2, "plot_PCA_eigenvector2nd.pdf")
 plotPCAeigenvector(pca, 3, "plot_PCA_eigenvector3rd.pdf")
+
+# testing
+eigen <- pca$rotation[,1]
+eigen <- abs(eigen)
+idx <- order(eigen, decreasing = TRUE)
+row <- order(idx)[1:10]
+
+
 
