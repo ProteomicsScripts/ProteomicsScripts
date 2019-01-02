@@ -312,6 +312,22 @@ plotPCA <- function(data, pdf.file) {
   ggsave(pdf.file)
 }
 
+# calculate the principal component object
+getPCA <- function(data) {
+  
+  # extract study variables
+  quants <- getPeptideQuants(data)
+  colnames(quants) <- as.character(1:(dim(quants)[2]))
+  
+  # remove rows with NaN values
+  quants <- quants[complete.cases(quants),]
+  
+  # calculate principal components
+  pca <- prcomp(t(quants), center = TRUE, scale = TRUE)
+  
+  return(pca)
+}
+
 # limits amino acid sequences to n characters
 cutSequence <- function(s) {
   n <- 25
