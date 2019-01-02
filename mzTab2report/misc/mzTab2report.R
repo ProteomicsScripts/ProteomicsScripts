@@ -328,6 +328,21 @@ getPCA <- function(data) {
   return(pca)
 }
 
+# plot the scatter plot of the first n.pca principal components
+plotPCAscatter <- function(pca, pdf.file) {
+  
+  # number of principal components to be plotted
+  n.pca <- 3
+  
+  # one colour for each distinct label
+  n.labels <- length(unique(labels.of.study.variables))
+  colours <- rainbow(n.labels, s = 1, v = 1, start = 0, end = max(1, n.labels - 1)/n.labels, alpha = 1)[as.factor(labels.of.study.variables)]
+  
+  pdf(file=pdf.file)
+  pairs(pca$x[,1:n.pca], col = colours, pch = 19, upper.panel = NULL)
+  dev.off()
+}
+
 # limits amino acid sequences to n characters
 cutSequence <- function(s) {
   n <- 25
@@ -666,4 +681,8 @@ if (numberOfStudyVariables(peptide.data) >= 3) {
 if (numberOfStudyVariables(peptide.data) >= 3) {
   plotPCA(peptide.data, "plot_PCA.pdf")
 }
+
+pca <- getPCA(peptide.data)
+
+plotPCAscatter(pca, "plot_PCA_scatter.pdf")
 
