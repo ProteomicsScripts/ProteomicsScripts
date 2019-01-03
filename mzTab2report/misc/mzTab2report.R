@@ -11,7 +11,7 @@
 
 library(corrplot)
 library(xtable)
-library(ggfortify)
+#library(ggfortify)    # for plotPCA()
 
 # clear entire workspace
 rm(list = ls())
@@ -282,36 +282,6 @@ plotBoxplot <- function(data, pdf.file) {
   dev.off()
 }
 
-plotPCA <- function(data, pdf.file) {
-  # extract study variables
-  quants <- getPeptideQuants(data)
-  colnames(quants) <- as.character(1:(dim(quants)[2]))
-  
-  # remove rows with NaN values
-  quants <- quants[complete.cases(quants),]
-  
-  # study variables in rows, dimensions i.e. peptide abundances in columns
-  quants <- t(quants)
-  
-  # calculate principal components
-  quants.pca <- prcomp(quants, center = TRUE, scale = TRUE)
-  
-  # plot first two principal components
-  if (dim(quants)[1] == length(labels.of.study.variables))
-  {
-    # The labels vector matches the mzTab data.
-    df <- data.frame(quants)
-    df$labels <- labels.of.study.variables
-    autoplot(quants.pca, data = df, colour = 'labels', label = TRUE)
-    }
-  else
-  {
-    # The labels vector does not match the mzTab data.
-    autoplot(quants.pca, label = TRUE)
-  }
-  ggsave(pdf.file)
-}
-
 # calculate the principal component object
 getPCA <- function(data) {
   
@@ -375,6 +345,23 @@ plotPCAcomponents <- function(pca, pdf.file) {
   dev.off()
 }
 
+# Eigenvectors point in the direction of the principal componets in the high-dimensional peptide abundance space.
+# Important peptides (i.e. the ones with a large absolute eigenvector component) contribute most to this principal component.
+# The function returns these peptides i.e. their row index.
+getPCAeigenvector <- function(pca, n) {
+ 
+  # number of most important peptides to return
+  n.coordinates = 10
+  
+  eigenvector <- pca$rotation[,n]
+  eigenvector <- abs(eigenvector)    # Note the PCA is centred and scaled. Consequently, the eigenvector may have negative componets.
+  
+  idx <- order(eigenvector, decreasing = TRUE)    # Sort in decreasing order.
+  row.idx <- order(idx)[1:n.coordinates]
+  
+  return(row.idx)
+}
+
 # plot the coordinates of the nth eigenvector
 plotPCAeigenvector <- function(pca, n, pdf.file) {
   
@@ -390,11 +377,42 @@ plotPCAeigenvector <- function(pca, n, pdf.file) {
   row.idx <- order(idx)[1:n.coordinates]
   
   pdf(file=pdf.file)
-  plot(eigenvector, xaxt = "n", pch=19, col="darkgrey", ylab="eigenvector component", xlab="peptide (row index in PEP section)", )
+  plot(eigenvector, xaxt = "n", pch=19, col="darkgrey", ylab="eigenvector component", xlab="peptide (row index in PEP section)")
   axis(1, at=1:n.coordinates, labels=row.idx)
   dev.off()
 }
 
+# # plot PCA scatter plot of first two principal components
+# # based on ggplot
+# plotPCA <- function(data, pdf.file) {
+#   # extract study variables
+#   quants <- getPeptideQuants(data)
+#   colnames(quants) <- as.character(1:(dim(quants)[2]))
+#   
+#   # remove rows with NaN values
+#   quants <- quants[complete.cases(quants),]
+#   
+#   # study variables in rows, dimensions i.e. peptide abundances in columns
+#   quants <- t(quants)
+#   
+#   # calculate principal components
+#   quants.pca <- prcomp(quants, center = TRUE, scale = TRUE)
+#   
+#   # plot first two principal components
+#   if (dim(quants)[1] == length(labels.of.study.variables))
+#   {
+#     # The labels vector matches the mzTab data.
+#     df <- data.frame(quants)
+#     df$labels <- labels.of.study.variables
+#     autoplot(quants.pca, data = df, colour = 'labels', label = TRUE)
+#     }
+#   else
+#   {
+#     # The labels vector does not match the mzTab data.
+#     autoplot(quants.pca, label = TRUE)
+#   }
+#   ggsave(pdf.file)
+# }
 
 # limits amino acid sequences to n characters
 cutSequence <- function(s) {
@@ -408,8 +426,8 @@ cutSequence <- function(s) {
 
 findPeptidesOfInterest <- function(data)
 {
-  retain.columns=c("sequence", "accession", "charge", "retention_time", "mass_to_charge")
-  new.column.names=c("Sequence", "Accession", "Charge", "Retention Time", "m/z" )
+  retain.columns=c("opt_global_modified_sequence", "accession", "charge", "retention_time", "mass_to_charge")
+  new.column.names=c("modified sequence", "accession", "charge", "retention time", "m/z")
   
   # check if sequence column is non-empty
   if (isEmpty(data$sequence))
@@ -439,8 +457,8 @@ findPeptidesOfInterest <- function(data)
   df$opt_global_modified_sequence <- unlist(lapply(df$opt_global_modified_sequence, cutSequence))
   
   # select and rename columns
-  df <- df[,c("opt_global_modified_sequence", "accession", "charge", "retention_time", "mass_to_charge")]
-  colnames(df) <- c("modified sequence", "accession", "charge", "retention time", "m/z" )
+  df <- df[,retain.columns]
+  colnames(df) <- new.column.names
   
   return(df)
 }
@@ -745,11 +763,30 @@ plotPCAeigenvector(pca, 1, "plot_PCA_eigenvector1st.pdf")
 plotPCAeigenvector(pca, 2, "plot_PCA_eigenvector2nd.pdf")
 plotPCAeigenvector(pca, 3, "plot_PCA_eigenvector3rd.pdf")
 
-# testing
-eigen <- pca$rotation[,1]
-eigen <- abs(eigen)
-idx <- order(eigen, decreasing = TRUE)
-row <- order(idx)[1:10]
 
+# Note that getPCAeigenvector() returns the row indices with respect to the complete cases.
+# Since the complete cases appear first in the PEP section, the row indices are the same as for the entire peptide data.
+# But let's play it save.
+idx.complete <- which(complete.cases(getPeptideQuants(peptide.data)))
+
+idx.1 <- idx.complete[getPCAeigenvector(pca, 1)]
+idx.2 <- idx.complete[getPCAeigenvector(pca, 2)]
+idx.3 <- idx.complete[getPCAeigenvector(pca, 3)]
+
+retain.columns=c("opt_global_modified_sequence", "accession", "charge", "retention_time", "mass_to_charge")
+new.column.names=c("modified sequence", "accession", "charge", "retention time", "m/z")
+
+important.peptides.principal.component.1 <- peptide.data[idx.1, retain.columns]
+important.peptides.principal.component.2 <- peptide.data[idx.2, retain.columns]
+important.peptides.principal.component.3 <- peptide.data[idx.3, retain.columns]
+
+colnames(important.peptides.principal.component.1) <- new.column.names
+colnames(important.peptides.principal.component.2) <- new.column.names
+colnames(important.peptides.principal.component.3) <- new.column.names
+
+# reduce sequence length
+important.peptides.principal.component.1$'modified sequence' <- unlist(lapply(important.peptides.principal.component.1$'modified sequence', cutSequence))
+important.peptides.principal.component.2$'modified sequence' <- unlist(lapply(important.peptides.principal.component.2$'modified sequence', cutSequence))
+important.peptides.principal.component.3$'modified sequence' <- unlist(lapply(important.peptides.principal.component.3$'modified sequence', cutSequence))
 
 
