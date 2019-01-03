@@ -355,6 +355,11 @@ plotPCAscatter <- function(pca, pdf.file) {
   
   pdf(file=pdf.file)
   pairs(pca$x[,1:n.pca], upper.panel = upper.panel.custom, lower.panel = lower.panel.custom)
+  if (length(labels.of.study.variables) == n.samples) {
+    # legend only need if we colour the dots
+    par(xpd = TRUE)
+    legend(0, 1, as.factor(unique(labels.of.study.variables)), fill=colours.strong, bg="white")
+  }
   dev.off()
 }
 
