@@ -754,45 +754,47 @@ if (numberOfStudyVariables(peptide.data) >= 3) {
   plotBoxplot(peptide.data, "plot_Boxplot.pdf")
 }
 
-# # plot PCA of peptide abundances
-# if (numberOfStudyVariables(peptide.data) >= 3) {
-#   plotPCA(peptide.data, "plot_PCA.pdf")
-# }
-
-pca <- getPCA(peptide.data)
-
-plotPCAscatter(pca, "plot_PCA_scatter.pdf")
-
-plotPCAcomponents(pca, "plot_PCA_components.pdf")
-
-plotPCAeigenvector(pca, 1, "plot_PCA_eigenvector1st.pdf")
-plotPCAeigenvector(pca, 2, "plot_PCA_eigenvector2nd.pdf")
-plotPCAeigenvector(pca, 3, "plot_PCA_eigenvector3rd.pdf")
-
-
-# Note that getPCAeigenvector() returns the row indices with respect to the complete cases.
-# Since the complete cases appear first in the PEP section, the row indices are the same as for the entire peptide data.
-# But let's play it save.
-idx.complete <- which(complete.cases(getPeptideQuants(peptide.data)))
-
-idx.1 <- idx.complete[getPCAeigenvector(pca, 1)]
-idx.2 <- idx.complete[getPCAeigenvector(pca, 2)]
-idx.3 <- idx.complete[getPCAeigenvector(pca, 3)]
-
-retain.columns=c("opt_global_modified_sequence", "accession", "charge", "retention_time", "mass_to_charge")
-new.column.names=c("modified sequence", "accession", "charge", "retention time", "m/z")
-
-important.peptides.principal.component.1 <- peptide.data[idx.1, retain.columns]
-important.peptides.principal.component.2 <- peptide.data[idx.2, retain.columns]
-important.peptides.principal.component.3 <- peptide.data[idx.3, retain.columns]
-
-colnames(important.peptides.principal.component.1) <- new.column.names
-colnames(important.peptides.principal.component.2) <- new.column.names
-colnames(important.peptides.principal.component.3) <- new.column.names
-
-# reduce sequence length
-important.peptides.principal.component.1$'modified sequence' <- unlist(lapply(important.peptides.principal.component.1$'modified sequence', cutSequence))
-important.peptides.principal.component.2$'modified sequence' <- unlist(lapply(important.peptides.principal.component.2$'modified sequence', cutSequence))
-important.peptides.principal.component.3$'modified sequence' <- unlist(lapply(important.peptides.principal.component.3$'modified sequence', cutSequence))
-
-
+# start of Principal Component Analysis
+if (numberOfStudyVariables(peptide.data) >= 3) {
+  
+  ## simple ggplot2 version of PCA plot
+  #plotPCA(peptide.data, "plot_PCA.pdf")
+  
+  pca <- getPCA(peptide.data)
+  
+  plotPCAscatter(pca, "plot_PCA_scatter.pdf")
+  
+  plotPCAcomponents(pca, "plot_PCA_components.pdf")
+  
+  plotPCAeigenvector(pca, 1, "plot_PCA_eigenvector1st.pdf")
+  plotPCAeigenvector(pca, 2, "plot_PCA_eigenvector2nd.pdf")
+  plotPCAeigenvector(pca, 3, "plot_PCA_eigenvector3rd.pdf")
+  
+  
+  # Note that getPCAeigenvector() returns the row indices with respect to the complete cases.
+  # Since the complete cases appear first in the PEP section, the row indices are the same as for the entire peptide data.
+  # But let's play it save.
+  idx.complete <- which(complete.cases(getPeptideQuants(peptide.data)))
+  
+  idx.1 <- idx.complete[getPCAeigenvector(pca, 1)]
+  idx.2 <- idx.complete[getPCAeigenvector(pca, 2)]
+  idx.3 <- idx.complete[getPCAeigenvector(pca, 3)]
+  
+  retain.columns=c("opt_global_modified_sequence", "accession", "charge", "retention_time", "mass_to_charge")
+  new.column.names=c("modified sequence", "accession", "charge", "retention time", "m/z")
+  
+  important.peptides.principal.component.1 <- peptide.data[idx.1, retain.columns]
+  important.peptides.principal.component.2 <- peptide.data[idx.2, retain.columns]
+  important.peptides.principal.component.3 <- peptide.data[idx.3, retain.columns]
+  
+  colnames(important.peptides.principal.component.1) <- new.column.names
+  colnames(important.peptides.principal.component.2) <- new.column.names
+  colnames(important.peptides.principal.component.3) <- new.column.names
+  
+  # reduce sequence length
+  important.peptides.principal.component.1$'modified sequence' <- unlist(lapply(important.peptides.principal.component.1$'modified sequence', cutSequence))
+  important.peptides.principal.component.2$'modified sequence' <- unlist(lapply(important.peptides.principal.component.2$'modified sequence', cutSequence))
+  important.peptides.principal.component.3$'modified sequence' <- unlist(lapply(important.peptides.principal.component.3$'modified sequence', cutSequence))
+  
+}
+# end of Principal Component Analysis
