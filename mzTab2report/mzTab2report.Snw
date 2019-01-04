@@ -61,8 +61,7 @@ labels.of.study.variables <- rep(c("H", "BL", "fu48"), times = 18)
 peptides.of.interest <- c("LSLMYAR", "EQCCYNCGKPGHLAR", "LSAIYGGTYMLNKPVDDIIMENGKVVGVK", "MVQEAEKYKAEDEKQR", "TVPFCSTFAAFFTR", "GNFGGSFAGSFGGAGGHAPGVAR", "LGWDPKPGEGHLDALLR")
 
 # proteins of interest
-#proteins.of.interest <- c("O75643", "P06576", "P07910", "O43707", "P11021", "P14618", "P17844", "P29692", "P30101", "P31939", "P34932", "P42766", "P49327", "P50990", "P62258")
-proteins.of.interest <- c("O43707", "P11021")
+proteins.of.interest <- c("P46783", "P12270")
 
 input.file <- 'analysis.mzTab'
 #input.file <- 'example_5.mzTab'
@@ -935,7 +934,6 @@ print(xtable(stats), include.rownames=FALSE, table.placement="H")
 \caption{Kendrick nominal fractional mass plot}
 \end{figure}
 
-
 %
 % fold change scatter plots and distributions
 %
@@ -1003,7 +1001,7 @@ print(xtable(stats), include.rownames=FALSE, table.placement="H")
 \begin{figure}[hb]
 \centering
 \includegraphics[width=7.0cm]{plot_PCA_components.pdf}
-\caption{PCA components.}
+\caption{Standard deviation of all principal components.}
 \end{figure}
 }
 {}
@@ -1025,11 +1023,11 @@ print(xtable(stats), include.rownames=FALSE, table.placement="H")
 \begin{figure}[hb]
 \centering
 \includegraphics[width=10.0cm]{plot_PCA_eigenvector1st.pdf}
-\caption{PCA 1st eigenvector.}
+\caption{Most important contributions to the first principal component.}
 \end{figure}
 
 <<echo=FALSE,results=tex>>=
-table.important.peptides.principal.component.1 <- xtable(important.peptides.principal.component.1, caption = "PCA 1st eigenvector.")
+table.important.peptides.principal.component.1 <- xtable(important.peptides.principal.component.1, caption = "Most important contributions to the first principal component.")
 print(table.important.peptides.principal.component.1, include.rownames=FALSE, tabular.environment="longtable")
 @
 }
@@ -1042,11 +1040,11 @@ print(table.important.peptides.principal.component.1, include.rownames=FALSE, ta
 \begin{figure}[hb]
 \centering
 \includegraphics[width=10.0cm]{plot_PCA_eigenvector2nd.pdf}
-\caption{PCA 2nd eigenvector.}
+\caption{Most important contributions to the second principal component.}
 \end{figure}
 
 <<echo=FALSE,results=tex>>=
-table.important.peptides.principal.component.2 <- xtable(important.peptides.principal.component.2, caption = "PCA 2nd eigenvector.")
+table.important.peptides.principal.component.2 <- xtable(important.peptides.principal.component.2, caption = "Most important contributions to the second principal component.")
 print(table.important.peptides.principal.component.2, include.rownames=FALSE, tabular.environment="longtable")
 @
 }
@@ -1059,11 +1057,11 @@ print(table.important.peptides.principal.component.2, include.rownames=FALSE, ta
 \begin{figure}[hb]
 \centering
 \includegraphics[width=10.0cm]{plot_PCA_eigenvector3rd.pdf}
-\caption{PCA 3rd eigenvector.}
+\caption{Most important contributions to the third principal component.}
 \end{figure}
 
 <<echo=FALSE,results=tex>>=
-table.important.peptides.principal.component.3 <- xtable(important.peptides.principal.component.3, caption = "PCA 3rd eigenvector.")
+table.important.peptides.principal.component.3 <- xtable(important.peptides.principal.component.3, caption = "Most important contributions to the third principal component.")
 print(table.important.peptides.principal.component.3, include.rownames=FALSE, tabular.environment="longtable")
 @
 }

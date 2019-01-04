@@ -41,8 +41,7 @@ labels.of.study.variables <- rep(c("H", "BL", "fu48"), times = 18)
 peptides.of.interest <- c("LSLMYAR", "EQCCYNCGKPGHLAR", "LSAIYGGTYMLNKPVDDIIMENGKVVGVK", "MVQEAEKYKAEDEKQR", "TVPFCSTFAAFFTR", "GNFGGSFAGSFGGAGGHAPGVAR", "LGWDPKPGEGHLDALLR")
 
 # proteins of interest
-#proteins.of.interest <- c("O75643", "P06576", "P07910", "O43707", "P11021", "P14618", "P17844", "P29692", "P30101", "P31939", "P34932", "P42766", "P49327", "P50990", "P62258")
-proteins.of.interest <- c("O43707", "P11021")
+proteins.of.interest <- c("P46783", "P12270")
 
 #input.file <- 'analysis.mzTab'
 input.file <- 'example_5.mzTab'
