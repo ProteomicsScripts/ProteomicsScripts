@@ -7,11 +7,11 @@
 ## To install dependencies, please run in R:
 ## install.packages("corrplot")     # for correlation of peptide intensities
 ## install.packages("xtable")       # for peptides/proteins of interest tables
-## install.packages("ggfortify")    # for PCA plots
+## install.packages("ggfortify")    # for plotPCA(), But we can do PCA without additional packages, see plotPCAscatter() etc.
 
 library(corrplot)
 library(xtable)
-library(ggfortify)
+#library(ggfortify)    # for plotPCA()
 
 # clear entire workspace
 rm(list = ls())
@@ -41,10 +41,10 @@ labels.of.study.variables <- rep(c("H", "BL", "fu48"), times = 18)
 peptides.of.interest <- c("LSLMYAR", "EQCCYNCGKPGHLAR", "LSAIYGGTYMLNKPVDDIIMENGKVVGVK", "MVQEAEKYKAEDEKQR", "TVPFCSTFAAFFTR", "GNFGGSFAGSFGGAGGHAPGVAR", "LGWDPKPGEGHLDALLR")
 
 # proteins of interest
-proteins.of.interest <- c("O75643", "P06576", "P07910", "O43707", "P11021", "P14618", "P17844", "P29692", "P30101", "P31939", "P34932", "P42766", "P49327", "P50990", "P62258")
+proteins.of.interest <- c("P46783", "P12270")
 
 #input.file <- 'analysis.mzTab'
-input.file <- 'example_5.mzTab'
+input.file <- 'example_3.mzTab'
 
 
 
@@ -282,7 +282,9 @@ plotBoxplot <- function(data, pdf.file) {
   dev.off()
 }
 
-plotPCA <- function(data, pdf.file) {
+# calculate the principal component object
+getPCA <- function(data) {
+  
   # extract study variables
   quants <- getPeptideQuants(data)
   colnames(quants) <- as.character(1:(dim(quants)[2]))
@@ -290,30 +292,142 @@ plotPCA <- function(data, pdf.file) {
   # remove rows with NaN values
   quants <- quants[complete.cases(quants),]
   
-  # study variables in rows, dimensions i.e. peptide abundances in columns
-  quants <- t(quants)
-  
   # calculate principal components
-  quants.pca <- prcomp(quants, center = TRUE, scale = TRUE)
+  pca <- prcomp(t(quants), center = TRUE, scale = TRUE)
   
-  # plot first two principal components
-  if (dim(quants)[1] == length(labels.of.study.variables))
-  {
-    # The labels vector matches the mzTab data.
-    df <- data.frame(quants)
-    df$labels <- labels.of.study.variables
-    autoplot(quants.pca, data = df, colour = 'labels', label = TRUE)
-    }
-  else
-  {
-    # The labels vector does not match the mzTab data.
-    autoplot(quants.pca, label = TRUE)
-  }
-  ggsave(pdf.file)
+  return(pca)
 }
+
+# plot the scatter plot of the first n.pca principal components
+plotPCAscatter <- function(pca, pdf.file) {
+  
+  # number of principal components to be plotted
+  n.pca <- 3
+  
+  # number of distinct label
+  n.labels <- length(unique(labels.of.study.variables))
+  
+  # number of samples i.e. dots
+  n.samples <- length(pca$sdev)
+  
+  # define colours
+  if (length(labels.of.study.variables) == n.samples) {
+    colours.strong <- rainbow(n.labels, s = 1, v = 1, start = 0, end = max(1, n.labels - 1)/n.labels, alpha = 1)[as.factor(labels.of.study.variables)]
+    colours.light <- rainbow(n.labels, s = 1, v = 1, start = 0, end = max(1, n.labels - 1)/n.labels, alpha = 0.2)[as.factor(labels.of.study.variables)]
+  }
+  else {
+    colours.strong <- "darkgrey"
+    colours.light <- "white"
+  }
+  
+  # customize upper panel
+  upper.panel.custom <- function(x, y){
+    points(x,y, pch = 19, col = colours.light)
+    text(x, y, as.character(1:n.samples))
+  }
+  
+  # customize lower panel
+  lower.panel.custom <- function(x, y){
+    points(x,y, pch = 19, col = colours.strong)
+    #text(x, y, labels.of.study.variables)
+  }
+  
+  pdf(file=pdf.file)
+  pairs(pca$x[,1:n.pca], upper.panel = upper.panel.custom, lower.panel = lower.panel.custom)
+  if (length(labels.of.study.variables) == n.samples) {
+    # legend only need if we colour the dots
+    par(xpd = TRUE)
+    legend(0, 1, as.factor(unique(labels.of.study.variables)), fill=colours.strong, bg="white")
+  }
+  dev.off()
+}
+
+# plot the standard deviation of all principal components
+plotPCAcomponents <- function(pca, pdf.file) {
+  
+  pdf(file=pdf.file)
+  barplot(pca$sdev, names.arg=as.character(1:length(pca$sdev)), xlab="principal component", ylab="standard deviation")
+  dev.off()
+}
+
+# Eigenvectors point in the direction of the principal componets in the high-dimensional peptide abundance space.
+# Important peptides (i.e. the ones with a large absolute eigenvector component) contribute most to this principal component.
+# The function returns these peptides i.e. their row index.
+getPCAeigenvector <- function(pca, n) {
+ 
+  # number of most important peptides to return
+  n.coordinates = 10
+  
+  eigenvector <- pca$rotation[,n]
+  eigenvector <- abs(eigenvector)    # Note the PCA is centred and scaled. Consequently, the eigenvector may have negative componets.
+  
+  idx <- order(eigenvector, decreasing = TRUE)    # Sort in decreasing order.
+  row.idx <- order(idx)[1:n.coordinates]
+  
+  return(row.idx)
+}
+
+# plot the coordinates of the nth eigenvector
+plotPCAeigenvector <- function(pca, data, n, pdf.file) {
+  
+  # number of coordinates to plot
+  n.coordinates = 10
+  
+  eigenvector <- pca$rotation[,n]
+  eigenvector <- abs(eigenvector)
+  
+  idx <- order(eigenvector, decreasing = TRUE)
+  eigenvector <- eigenvector[idx]
+  eigenvector <- eigenvector[1:n.coordinates]
+
+  idx.complete <- which(complete.cases(getPeptideQuants(data)))
+  idx <- idx.complete[getPCAeigenvector(pca, n)]
+  row.idx <- rownames(data[idx,])
+  
+  pdf(file=pdf.file)
+  plot(eigenvector, xaxt = "n", pch=19, col="darkgrey", ylab="eigenvector component", xlab="peptide (row index in PEP section)")
+  axis(1, at=1:n.coordinates, labels=row.idx)
+  dev.off()
+}
+
+# # plot PCA scatter plot of first two principal components
+# # based on ggplot2
+# plotPCA <- function(data, pdf.file) {
+#   # extract study variables
+#   quants <- getPeptideQuants(data)
+#   colnames(quants) <- as.character(1:(dim(quants)[2]))
+#   
+#   # remove rows with NaN values
+#   quants <- quants[complete.cases(quants),]
+#   
+#   # study variables in rows, dimensions i.e. peptide abundances in columns
+#   quants <- t(quants)
+#   
+#   # calculate principal components
+#   quants.pca <- prcomp(quants, center = TRUE, scale = TRUE)
+#   
+#   # plot first two principal components
+#   if (dim(quants)[1] == length(labels.of.study.variables))
+#   {
+#     # The labels vector matches the mzTab data.
+#     df <- data.frame(quants)
+#     df$labels <- labels.of.study.variables
+#     autoplot(quants.pca, data = df, colour = 'labels', label = TRUE)
+#     }
+#   else
+#   {
+#     # The labels vector does not match the mzTab data.
+#     autoplot(quants.pca, label = TRUE)
+#   }
+#   ggsave(pdf.file)
+# }
 
 # limits amino acid sequences to n characters
 cutSequence <- function(s) {
+  if (is.na(s)) {
+    return(s)
+  }
+  
   n <- 25
   short <- substr(s, 1, n)
   if (nchar(s) > nchar(short)) {
@@ -324,8 +438,8 @@ cutSequence <- function(s) {
 
 findPeptidesOfInterest <- function(data)
 {
-  retain.columns=c("sequence", "accession", "charge", "retention_time", "mass_to_charge")
-  new.column.names=c("Sequence", "Accession", "Charge", "Retention Time", "m/z" )
+  retain.columns=c("opt_global_modified_sequence", "accession", "charge", "retention_time", "mass_to_charge")
+  new.column.names=c("modified sequence", "accession", "charge", "retention time", "m/z")
   
   # check if sequence column is non-empty
   if (isEmpty(data$sequence))
@@ -355,8 +469,8 @@ findPeptidesOfInterest <- function(data)
   df$opt_global_modified_sequence <- unlist(lapply(df$opt_global_modified_sequence, cutSequence))
   
   # select and rename columns
-  df <- df[,c("opt_global_modified_sequence", "accession", "charge", "retention_time", "mass_to_charge")]
-  colnames(df) <- c("modified sequence", "accession", "charge", "retention time", "m/z" )
+  df <- df[,retain.columns]
+  colnames(df) <- new.column.names
   
   return(df)
 }
@@ -646,8 +760,54 @@ if (numberOfStudyVariables(peptide.data) >= 3) {
   plotBoxplot(peptide.data, "plot_Boxplot.pdf")
 }
 
-# plot PCA of peptide abundances
+# start of Principal Component Analysis
+# (Even if we do not run the PCA, we generate these three non-empty tables in order to prevent LaTeX from crashing.)
+important.peptides.principal.component.1 <- data.frame(c(42))
+important.peptides.principal.component.2 <- data.frame(c(42))
+important.peptides.principal.component.3 <- data.frame(c(42))
 if (numberOfStudyVariables(peptide.data) >= 3) {
-  plotPCA(peptide.data, "plot_PCA.pdf")
-}
+  
+  ## simple ggplot2 version of PCA plot
+  #plotPCA(peptide.data, "plot_PCA.pdf")
+  
+  pca <- getPCA(peptide.data)
+  
+  plotPCAscatter(pca, "plot_PCA_scatter.pdf")
 
+  plotPCAcomponents(pca, "plot_PCA_components.pdf")
+
+  plotPCAeigenvector(pca, peptide.data, 1, "plot_PCA_eigenvector1st.pdf")
+  plotPCAeigenvector(pca, peptide.data, 2, "plot_PCA_eigenvector2nd.pdf")
+  plotPCAeigenvector(pca, peptide.data, 3, "plot_PCA_eigenvector3rd.pdf")
+
+
+  # Note that getPCAeigenvector() returns the row indices with respect to the complete cases.
+  # Since the complete cases appear first in the PEP section, the row indices are the same as for the entire peptide data.
+  # But let's play it save.
+  idx.complete <- which(complete.cases(getPeptideQuants(peptide.data)))
+
+  idx.1 <- idx.complete[getPCAeigenvector(pca, 1)]
+  idx.2 <- idx.complete[getPCAeigenvector(pca, 2)]
+  idx.3 <- idx.complete[getPCAeigenvector(pca, 3)]
+  
+  # add column with row index
+  peptide.data$'row index' <- rownames(peptide.data)
+
+  retain.columns=c("row index", "opt_global_modified_sequence", "accession", "charge", "retention_time", "mass_to_charge")
+  new.column.names=c("row index", "modified sequence", "accession", "charge", "retention time", "m/z")
+
+  important.peptides.principal.component.1 <- peptide.data[idx.1, retain.columns]
+  important.peptides.principal.component.2 <- peptide.data[idx.2, retain.columns]
+  important.peptides.principal.component.3 <- peptide.data[idx.3, retain.columns]
+
+  colnames(important.peptides.principal.component.1) <- new.column.names
+  colnames(important.peptides.principal.component.2) <- new.column.names
+  colnames(important.peptides.principal.component.3) <- new.column.names
+
+  # reduce sequence length
+  important.peptides.principal.component.1$'modified sequence' <- unlist(lapply(important.peptides.principal.component.1$'modified sequence', cutSequence))
+  important.peptides.principal.component.2$'modified sequence' <- unlist(lapply(important.peptides.principal.component.2$'modified sequence', cutSequence))
+  important.peptides.principal.component.3$'modified sequence' <- unlist(lapply(important.peptides.principal.component.3$'modified sequence', cutSequence))
+  
+}
+# end of Principal Component Analysis
