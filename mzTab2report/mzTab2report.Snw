@@ -343,7 +343,7 @@ plotPCAscatter <- function(pca, pdf.file) {
   # customize upper panel
   upper.panel.custom <- function(x, y){
     points(x,y, pch = 19, col = colours.light)
-    text(x, y, as.character(1:54))
+    text(x, y, as.character(1:n.samples))
   }
   
   # customize lower panel

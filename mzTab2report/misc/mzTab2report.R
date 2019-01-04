@@ -44,7 +44,7 @@ peptides.of.interest <- c("LSLMYAR", "EQCCYNCGKPGHLAR", "LSAIYGGTYMLNKPVDDIIMENG
 proteins.of.interest <- c("P46783", "P12270")
 
 #input.file <- 'analysis.mzTab'
-input.file <- 'example_5.mzTab'
+input.file <- 'example_3.mzTab'
 
 
 
@@ -323,7 +323,7 @@ plotPCAscatter <- function(pca, pdf.file) {
   # customize upper panel
   upper.panel.custom <- function(x, y){
     points(x,y, pch = 19, col = colours.light)
-    text(x, y, as.character(1:54))
+    text(x, y, as.character(1:n.samples))
   }
   
   # customize lower panel
