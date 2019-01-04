@@ -369,7 +369,7 @@ getPCAeigenvector <- function(pca, n) {
 }
 
 # plot the coordinates of the nth eigenvector
-plotPCAeigenvector <- function(pca, n, pdf.file) {
+plotPCAeigenvector <- function(pca, data, n, pdf.file) {
   
   # number of coordinates to plot
   n.coordinates = 10
@@ -380,7 +380,10 @@ plotPCAeigenvector <- function(pca, n, pdf.file) {
   idx <- order(eigenvector, decreasing = TRUE)
   eigenvector <- eigenvector[idx]
   eigenvector <- eigenvector[1:n.coordinates]
-  row.idx <- order(idx)[1:n.coordinates]
+
+  idx.complete <- which(complete.cases(getPeptideQuants(data)))
+  idx <- idx.complete[getPCAeigenvector(pca, n)]
+  row.idx <- rownames(data[idx,])
   
   pdf(file=pdf.file)
   plot(eigenvector, xaxt = "n", pch=19, col="darkgrey", ylab="eigenvector component", xlab="peptide (row index in PEP section)")
@@ -389,7 +392,7 @@ plotPCAeigenvector <- function(pca, n, pdf.file) {
 }
 
 # # plot PCA scatter plot of first two principal components
-# # based on ggplot
+# # based on ggplot2
 # plotPCA <- function(data, pdf.file) {
 #   # extract study variables
 #   quants <- getPeptideQuants(data)
@@ -774,9 +777,9 @@ if (numberOfStudyVariables(peptide.data) >= 3) {
 
   plotPCAcomponents(pca, "plot_PCA_components.pdf")
 
-  plotPCAeigenvector(pca, 1, "plot_PCA_eigenvector1st.pdf")
-  plotPCAeigenvector(pca, 2, "plot_PCA_eigenvector2nd.pdf")
-  plotPCAeigenvector(pca, 3, "plot_PCA_eigenvector3rd.pdf")
+  plotPCAeigenvector(pca, peptide.data, 1, "plot_PCA_eigenvector1st.pdf")
+  plotPCAeigenvector(pca, peptide.data, 2, "plot_PCA_eigenvector2nd.pdf")
+  plotPCAeigenvector(pca, peptide.data, 3, "plot_PCA_eigenvector3rd.pdf")
 
 
   # Note that getPCAeigenvector() returns the row indices with respect to the complete cases.
@@ -787,9 +790,12 @@ if (numberOfStudyVariables(peptide.data) >= 3) {
   idx.1 <- idx.complete[getPCAeigenvector(pca, 1)]
   idx.2 <- idx.complete[getPCAeigenvector(pca, 2)]
   idx.3 <- idx.complete[getPCAeigenvector(pca, 3)]
+  
+  # add column with row index
+  peptide.data$'row index' <- rownames(peptide.data)
 
-  retain.columns=c("opt_global_modified_sequence", "accession", "charge", "retention_time", "mass_to_charge")
-  new.column.names=c("modified sequence", "accession", "charge", "retention time", "m/z")
+  retain.columns=c("row index", "opt_global_modified_sequence", "accession", "charge", "retention_time", "mass_to_charge")
+  new.column.names=c("row index", "modified sequence", "accession", "charge", "retention time", "m/z")
 
   important.peptides.principal.component.1 <- peptide.data[idx.1, retain.columns]
   important.peptides.principal.component.2 <- peptide.data[idx.2, retain.columns]
