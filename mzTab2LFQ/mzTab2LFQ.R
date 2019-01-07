@@ -8,10 +8,15 @@
 ## install.packages("corrplot")     # for correlation of peptide intensities
 ## install.packages("xtable")       # for peptides/proteins of interest tables
 ## install.packages("ggfortify")    # for plotPCA(), But we can do PCA without additional packages, see plotPCAscatter() etc.
+##
+## source("https://bioconductor.org/biocLite.R")
+## biocLite("impute")               # for imputation
+
 
 library(corrplot)
 library(xtable)
 #library(ggfortify)    # for plotPCA()
+library(impute)
 
 # clear entire workspace
 rm(list = ls())
@@ -266,6 +271,43 @@ plotCorrelations <- function(data, pdf.file) {
   dev.off()
   
   return(corr)
+}
+
+# removes peptides with too many missing values, imputes missing values in the remaining ones
+# required input is a dataframe with columns "peptide_abundance_study_variable[*]"
+imputePeptideQuants <- function(data) {
+  
+  # maximum fraction of missing values per peptide (i.e. per row) to be imputed
+  max.missing <- 0.25
+  
+  # maximum number of missing peptide intensities 
+  n.max.missing <- floor(max.missing * numberOfStudyVariables(data))
+  
+  # remove peptides with too many missing values
+  quants <- getPeptideQuants(data)
+  count.na <- apply(quants, 1, function(x) sum(is.na(x)))
+  idx <- which(count.na <= n.max.missing)
+  data <- data[idx,]
+  quants <- quants[idx,]
+  
+  # impute missing values
+  if (exists(".Random.seed")) {
+    rm(.Random.seed)
+  }
+  quants.imputed <- impute.knn(as.matrix(quants))$data
+  
+  # insert imputed data back into original data frame
+  idx.quant.columns <- grepl("peptide_abundance_study_variable", colnames(data))
+  data[,idx.quant.columns] <- quants.imputed
+  
+  return(data)
+}
+
+# returns a normalised dataframe
+# required input is a dataframe with columns "peptide_abundance_study_variable[*]"
+normalisePeptideQuants <- function(data) {
+
+  return(data)
 }
 
 plotBoxplot <- function(data, pdf.file) {
@@ -759,6 +801,10 @@ if (numberOfStudyVariables(peptide.data) >= 3) {
   plotBoxplot(peptide.data, "plot_Boxplot.pdf")
 }
 
+# remove peptides with too many missing values
+# impute the remaining ones
+peptide.data <- imputePeptideQuants(peptide.data)
+
 # start of Principal Component Analysis
 # (Even if we do not run the PCA, we generate these three non-empty tables in order to prevent LaTeX from crashing.)
 important.peptides.principal.component.1 <- data.frame(c(42))
@@ -810,3 +856,11 @@ if (numberOfStudyVariables(peptide.data) >= 3) {
   
 }
 # end of Principal Component Analysis
+
+
+
+
+
+
+peptide.data.2 <- imputePeptideQuants(peptide.data)
+
