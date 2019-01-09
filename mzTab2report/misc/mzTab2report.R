@@ -22,6 +22,9 @@ rm(list = ls())
 ## (1) definition of global options and parameters
 ####
 
+#input.file <- 'analysis.mzTab'
+input.file <- 'example_5.mzTab'
+
 # maximum number of digits
 options(digits=10)
 
@@ -37,16 +40,13 @@ labels.of.study.variables <- rep(c("H", "BL", "fu48"), times = 18)
 #peptides.of.interest <- c("LGGNEQVTR", "GAGSSEPVTGLDAK", "VEATFGVDESNAK", "YILAGVENSK", "TPVISGGPYEYR", "TPVITGAPYEYR", "DGLDAASYYAPVR", "ADVTPADFSEWSK", "GTFIIDPGGVIR", "GTFIIDPAAVIR", "LFLQFGAQGSPFLK")
 
 # Pierce spike-in peptides
-#peptides.of.interest <- c("SSAAPPPPPR", "GISNEGQNASIK", "HVLTSIGEK", "DIPVPKPK", "IGDYAGIK", "TASEFDSAIAQDK", "SAAGAFGPELSR", "ELGQSGVDTYLQTK", "GLILVGGYGTR", "GILFVGSGVSGGEEGAR", "SFANQPLEVVYSK", "LTILEELR", "NGFILDGFPR", "ELASGLSFPVGFK", "LSSEAPALFQFDLK")
+peptides.of.interest <- c("SSAAPPPPPR", "GISNEGQNASIK", "HVLTSIGEK", "DIPVPKPK", "IGDYAGIK", "TASEFDSAIAQDK", "SAAGAFGPELSR", "ELGQSGVDTYLQTK", "GLILVGGYGTR", "GILFVGSGVSGGEEGAR", "SFANQPLEVVYSK", "LTILEELR", "NGFILDGFPR", "ELASGLSFPVGFK", "LSSEAPALFQFDLK")
 
 # some random human peptides
-peptides.of.interest <- c("LSLMYAR", "EQCCYNCGKPGHLAR", "LSAIYGGTYMLNKPVDDIIMENGKVVGVK", "MVQEAEKYKAEDEKQR", "TVPFCSTFAAFFTR", "GNFGGSFAGSFGGAGGHAPGVAR", "LGWDPKPGEGHLDALLR")
+#peptides.of.interest <- c("LSLMYAR", "EQCCYNCGKPGHLAR", "LSAIYGGTYMLNKPVDDIIMENGKVVGVK", "MVQEAEKYKAEDEKQR", "TVPFCSTFAAFFTR", "GNFGGSFAGSFGGAGGHAPGVAR", "LGWDPKPGEGHLDALLR")
 
 # proteins of interest
 proteins.of.interest <- c("P46783", "P12270")
-
-#input.file <- 'analysis.mzTab'
-input.file <- 'example_5.mzTab'
 
 
 
@@ -524,27 +524,81 @@ findProteinsOfInterest <- function(data) {
   return(df)
 }
 
-# plots the reported intensities of all peptides of interest
+# plots the reported peptide abundances of all peptides of interest
 plotPeptidesOfInterest <- function(data, pdf.file) {
+  
+  # check if sequence column is empty
+  if (isEmpty(data$sequence)) retun()
   
   # extract peptides of interest
   pattern = paste(peptides.of.interest, collapse="|")
-  peptides.of.interest <- as.data.frame(peptide.data[grepl(pattern, peptide.data$sequence),])
+  df <- as.data.frame(peptide.data[grepl(pattern, peptide.data$sequence),])
+  
+  # sort in the same order as peptides.of.interest vector
+  df <- df[order(match(df$sequence, peptides.of.interest)),]
+  
+  # abort plotting if no peptides of interest were found 
+  if (dim(df)[1] == 0) return()
   
   # extract quantifications and prepare for plotting
-  quants <- as.matrix(getPeptideQuants(peptides.of.interest))
+  quants <- as.matrix(getPeptideQuants(df))
   colnames(quants) <- as.character(1:dim(quants)[2])
   quants <- log10(quants)
-  quants <- quants[nrow(quants):1,]
+  if (nrow(quants) > 1) {
+    # If we have a single row, there is no need to reverse the order of rows. If we try, the matrix is (automatically) converted to a vector. :(
+    quants <- quants[nrow(quants):1,]
+  }
   quants <- t(quants)
   
   colours <-  colorRampPalette(c("#2166AC", "#3F8EC0", "#80B9D8", "#BCDAEA", "#E6EFF3", "#F9EAE1", "#FAC8AF", "#ED9576", "#D25749", "#B2182B"))(256)
   
-  pdf.scaling <- 1.8 
-  pdf(file=pdf.file, width=7*pdf.scaling, height=7*pdf.scaling*1.2*dim(quants)[2]/dim(quants)[1])
+  pdf(file=pdf.file)
   
   my.theme <- BuRdTheme()
-  my.theme$panel.background$col = 'lightgray'
+  my.theme$panel.background$col = 'black'
+  my.min <- min(quants, na.rm=TRUE)
+  my.max <- max(quants, na.rm=TRUE)
+  my.at <- seq(my.min, my.max, length.out=length(my.theme$regions$col)-1)
+  my.ckey <- list(at=my.at, col=my.theme$regions$col)
+  
+  p <- levelplot(quants, par.settings=my.theme, at=my.at, colorkey=my.ckey, xlab="samples", ylab="peptides (row index in PEP section)", scales = list(tck = c(0,0)))
+  print(p)
+  
+  dev.off()
+}
+
+# plots the reported peptide abundances of all proteins of interest
+plotProteinsOfInterest <- function(data, pdf.file) {
+  
+  # check if protein accession column is non-empty
+  if (isEmpty(data$accession)) retun()
+  
+  # extract proteins of interest
+  pattern = paste(proteins.of.interest, collapse="|")
+  df <- as.data.frame(data[grepl(pattern, data$accession),])
+  
+  # sort in the same order as proteins.of.interest vector
+  df <- df[order(match(df$accession, proteins.of.interest)),]
+  
+  # abort plotting if no peptides of interest were found 
+  if (dim(df)[1] == 0) return()
+  
+  # extract quantifications and prepare for plotting
+  quants <- as.matrix(getPeptideQuants(df))
+  colnames(quants) <- as.character(1:dim(quants)[2])
+  quants <- log10(quants)
+  if (nrow(quants) > 1) {
+    # If we have a single row, there is no need to reverse the order of rows. If we try, the matrix is (automatically) converted to a vector. :(
+    quants <- quants[nrow(quants):1,]
+  }
+  quants <- t(quants)
+  
+  colours <-  colorRampPalette(c("#2166AC", "#3F8EC0", "#80B9D8", "#BCDAEA", "#E6EFF3", "#F9EAE1", "#FAC8AF", "#ED9576", "#D25749", "#B2182B"))(256)
+  
+  pdf(file=pdf.file)
+  
+  my.theme <- BuRdTheme()
+  my.theme$panel.background$col = 'black'
   my.min <- min(quants, na.rm=TRUE)
   my.max <- max(quants, na.rm=TRUE)
   my.at <- seq(my.min, my.max, length.out=length(my.theme$regions$col)-1)
@@ -723,8 +777,9 @@ if (!isEmpty(peptide.data$opt_global_modified_sequence) && !isEmpty(peptide.data
 interest.peptides.matches <- findPeptidesOfInterest(peptide.data)
 interest.proteins.matches <- findProteinsOfInterest(peptide.data)
 
-# plot abundances of peptides of intrest
+# plot abundances of peptides and proteins of intrest
 plotPeptidesOfInterest(peptide.data, "plot_PeptidesOfInterest.pdf")
+plotProteinsOfInterest(peptide.data, "plot_ProteinsOfInterest.pdf")
 
 # pre-define variables which will be called from LaTeX
 # Needed even with IfFileExists()
