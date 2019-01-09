@@ -8,10 +8,12 @@
 ## install.packages("corrplot")     # for correlation of peptide intensities
 ## install.packages("xtable")       # for peptides/proteins of interest tables
 ## install.packages("ggfortify")    # for plotPCA(), But we can do PCA without additional packages, see plotPCAscatter() etc.
+## install.packages('rasterVis')
 
 library(corrplot)
 library(xtable)
 #library(ggfortify)    # for plotPCA()
+library(rasterVis)
 
 # clear entire workspace
 rm(list = ls())
@@ -44,7 +46,7 @@ peptides.of.interest <- c("LSLMYAR", "EQCCYNCGKPGHLAR", "LSAIYGGTYMLNKPVDDIIMENG
 proteins.of.interest <- c("P46783", "P12270")
 
 #input.file <- 'analysis.mzTab'
-input.file <- 'example_3.mzTab'
+input.file <- 'example_5.mzTab'
 
 
 
@@ -513,6 +515,38 @@ findProteinsOfInterest <- function(data) {
   return(df)
 }
 
+# plots the reported intensities of all peptides of interest
+plotPeptidesOfInterest <- function(data, pdf.file) {
+  
+  # extract peptides of interest
+  pattern = paste(peptides.of.interest, collapse="|")
+  peptides.of.interest <- as.data.frame(peptide.data[grepl(pattern, peptide.data$sequence),])
+  
+  # extract quantifications and prepare for plotting
+  quants <- as.matrix(getPeptideQuants(peptides.of.interest))
+  colnames(quants) <- as.character(1:dim(quants)[2])
+  quants <- log10(quants)
+  quants <- quants[nrow(quants):1,]
+  quants <- t(quants)
+  
+  colours <-  colorRampPalette(c("#2166AC", "#3F8EC0", "#80B9D8", "#BCDAEA", "#E6EFF3", "#F9EAE1", "#FAC8AF", "#ED9576", "#D25749", "#B2182B"))(256)
+  
+  pdf.scaling <- 1.8 
+  pdf(file=pdf.file, width=7*pdf.scaling, height=7*pdf.scaling*1.2*dim(quants)[2]/dim(quants)[1])
+  
+  my.theme <- BuRdTheme()
+  my.theme$panel.background$col = 'lightgray'
+  my.min <- min(quants, na.rm=TRUE)
+  my.max <- max(quants, na.rm=TRUE)
+  my.at <- seq(my.min, my.max, length.out=length(my.theme$regions$col)-1)
+  my.ckey <- list(at=my.at, col=my.theme$regions$col)
+  
+  p <- levelplot(quants, par.settings=my.theme, at=my.at, colorkey=my.ckey, xlab="samples", ylab="peptides (row index in PEP section)", scales = list(tck = c(0,0)))
+  print(p)
+  
+  dev.off()
+}
+
 # create a summary table of all modifications and their specificities
 # required input is a dataframe with a "sequence" and "modifications" column in mzTab standard
 createModsSummary <- function(data)
@@ -679,6 +713,9 @@ if (!isEmpty(peptide.data$opt_global_modified_sequence) && !isEmpty(peptide.data
 # extract peptides and proteins of interest
 interest.peptides.matches <- findPeptidesOfInterest(peptide.data)
 interest.proteins.matches <- findProteinsOfInterest(peptide.data)
+
+# plot abundances of peptides of intrest
+plotPeptidesOfInterest(peptide.data, "plot_PeptidesOfInterest.pdf")
 
 # pre-define variables which will be called from LaTeX
 # Needed even with IfFileExists()

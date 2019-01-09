@@ -278,7 +278,7 @@ plotCorrelations <- function(data, pdf.file) {
 imputePeptideQuants <- function(data) {
   
   # maximum fraction of missing values per peptide (i.e. per row) to be imputed
-  max.missing <- 0.25
+  max.missing <- 0.40
   
   # maximum number of missing peptide intensities 
   n.max.missing <- floor(max.missing * numberOfStudyVariables(data))
@@ -860,7 +860,14 @@ if (numberOfStudyVariables(peptide.data) >= 3) {
 
 
 
-
-
-peptide.data.2 <- imputePeptideQuants(peptide.data)
+# plot correlation matrix of peptide abundances
+corr.min.2 <- 1
+corr.median.2 <- 1
+corr.max.2 <- 1
+if (numberOfStudyVariables(peptide.data) >= 3) {
+  corr <- plotCorrelations(data = peptide.data, pdf.file = "plot_Correlations_2.pdf")
+  corr.min.2 <- min(corr)
+  corr.median.2 <- median(corr)
+  corr.max.2 <- max(corr)
+}
 
