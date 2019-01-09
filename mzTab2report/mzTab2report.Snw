@@ -28,10 +28,12 @@
 ## install.packages("corrplot")     # for correlation of peptide intensities
 ## install.packages("xtable")       # for peptides/proteins of interest tables
 ## install.packages("ggfortify")    # for plotPCA(), But we can do PCA without additional packages, see plotPCAscatter() etc.
+## install.packages('rasterVis')
 
 library(corrplot)
 library(xtable)
 #library(ggfortify)    # for plotPCA()
+library(rasterVis)
 
 # clear entire workspace
 rm(list = ls())
@@ -39,6 +41,9 @@ rm(list = ls())
 ####
 ## (1) definition of global options and parameters
 ####
+
+input.file <- 'analysis.mzTab'
+#input.file <- 'example_5.mzTab'
 
 # maximum number of digits
 options(digits=10)
@@ -55,16 +60,13 @@ labels.of.study.variables <- rep(c("H", "BL", "fu48"), times = 18)
 #peptides.of.interest <- c("LGGNEQVTR", "GAGSSEPVTGLDAK", "VEATFGVDESNAK", "YILAGVENSK", "TPVISGGPYEYR", "TPVITGAPYEYR", "DGLDAASYYAPVR", "ADVTPADFSEWSK", "GTFIIDPGGVIR", "GTFIIDPAAVIR", "LFLQFGAQGSPFLK")
 
 # Pierce spike-in peptides
-#peptides.of.interest <- c("SSAAPPPPPR", "GISNEGQNASIK", "HVLTSIGEK", "DIPVPKPK", "IGDYAGIK", "TASEFDSAIAQDK", "SAAGAFGPELSR", "ELGQSGVDTYLQTK", "GLILVGGYGTR", "GILFVGSGVSGGEEGAR", "SFANQPLEVVYSK", "LTILEELR", "NGFILDGFPR", "ELASGLSFPVGFK", "LSSEAPALFQFDLK")
+peptides.of.interest <- c("SSAAPPPPPR", "GISNEGQNASIK", "HVLTSIGEK", "DIPVPKPK", "IGDYAGIK", "TASEFDSAIAQDK", "SAAGAFGPELSR", "ELGQSGVDTYLQTK", "GLILVGGYGTR", "GILFVGSGVSGGEEGAR", "SFANQPLEVVYSK", "LTILEELR", "NGFILDGFPR", "ELASGLSFPVGFK", "LSSEAPALFQFDLK")
 
 # some random human peptides
-peptides.of.interest <- c("LSLMYAR", "EQCCYNCGKPGHLAR", "LSAIYGGTYMLNKPVDDIIMENGKVVGVK", "MVQEAEKYKAEDEKQR", "TVPFCSTFAAFFTR", "GNFGGSFAGSFGGAGGHAPGVAR", "LGWDPKPGEGHLDALLR")
+#peptides.of.interest <- c("LSLMYAR", "EQCCYNCGKPGHLAR", "LSAIYGGTYMLNKPVDDIIMENGKVVGVK", "MVQEAEKYKAEDEKQR", "TVPFCSTFAAFFTR", "GNFGGSFAGSFGGAGGHAPGVAR", "LGWDPKPGEGHLDALLR")
 
 # proteins of interest
 proteins.of.interest <- c("P46783", "P12270")
-
-input.file <- 'analysis.mzTab'
-#input.file <- 'example_5.mzTab'
 
 
 
@@ -458,9 +460,9 @@ cutSequence <- function(s) {
 
 findPeptidesOfInterest <- function(data)
 {
-  retain.columns=c("opt_global_modified_sequence", "accession", "charge", "retention_time", "mass_to_charge")
-  new.column.names=c("modified sequence", "accession", "charge", "retention time", "m/z")
-  
+  retain.columns=c("row index", "opt_global_modified_sequence", "accession", "charge", "retention_time", "mass_to_charge")
+  new.column.names=c("row index", "modified sequence", "accession", "charge", "retention time", "m/z")
+
   # check if sequence column is non-empty
   if (isEmpty(data$sequence))
   {
@@ -488,6 +490,9 @@ findPeptidesOfInterest <- function(data)
   # reduce length of modified sequence
   df$opt_global_modified_sequence <- unlist(lapply(df$opt_global_modified_sequence, cutSequence))
   
+  # add the row index in the PEP section
+  df$'row index' <- rownames(df)
+  
   # select and rename columns
   df <- df[,retain.columns]
   colnames(df) <- new.column.names
@@ -496,6 +501,9 @@ findPeptidesOfInterest <- function(data)
 }
 
 findProteinsOfInterest <- function(data) {
+  retain.columns=c("row index", "opt_global_modified_sequence", "accession", "charge", "retention_time", "mass_to_charge")
+  new.column.names=c("row index", "modified sequence", "accession", "charge", "retention time", "m/z")
+  
   # check if protein accession column is non-empty
   if (isEmpty(data$accession))
   {
@@ -526,11 +534,100 @@ findProteinsOfInterest <- function(data) {
   # reduce length of modified sequence
   df$opt_global_modified_sequence <- unlist(lapply(df$opt_global_modified_sequence, cutSequence))
   
+  # add the row index in the PEP section
+  df$'row index' <- rownames(df)
+  
   # select and rename columns
-  df <- df[,c("opt_global_modified_sequence", "accession", "charge", "retention_time", "mass_to_charge")]
-  colnames(df) <- c("modified sequence", "accession", "charge", "retention time", "m/z" )
+  df <- df[, retain.columns]
+  colnames(df) <- new.column.names
   
   return(df)
+}
+
+# plots the reported peptide abundances of all peptides of interest
+plotPeptidesOfInterest <- function(data, pdf.file) {
+  
+  # check if sequence column is empty
+  if (isEmpty(data$sequence)) return()
+  
+  # extract peptides of interest
+  pattern = paste(peptides.of.interest, collapse="|")
+  df <- as.data.frame(peptide.data[grepl(pattern, peptide.data$sequence),])
+  
+  # sort in the same order as peptides.of.interest vector
+  df <- df[order(match(df$sequence, peptides.of.interest)),]
+  
+  # abort plotting if no peptides of interest were found 
+  if (dim(df)[1] == 0) return()
+  
+  # extract quantifications and prepare for plotting
+  quants <- as.matrix(getPeptideQuants(df))
+  colnames(quants) <- as.character(1:dim(quants)[2])
+  quants <- log10(quants)
+  if (nrow(quants) > 1) {
+    # If we have a single row, there is no need to reverse the order of rows. If we try, the matrix is (automatically) converted to a vector. :(
+    quants <- quants[nrow(quants):1,]
+  }
+  quants <- t(quants)
+  
+  colours <-  colorRampPalette(c("#2166AC", "#3F8EC0", "#80B9D8", "#BCDAEA", "#E6EFF3", "#F9EAE1", "#FAC8AF", "#ED9576", "#D25749", "#B2182B"))(256)
+  
+  pdf(file=pdf.file)
+  
+  my.theme <- BuRdTheme()
+  my.theme$panel.background$col = 'black'
+  my.min <- min(quants, na.rm=TRUE)
+  my.max <- max(quants, na.rm=TRUE)
+  my.at <- seq(my.min, my.max, length.out=length(my.theme$regions$col)-1)
+  my.ckey <- list(at=my.at, col=my.theme$regions$col)
+  
+  p <- levelplot(quants, par.settings=my.theme, at=my.at, colorkey=my.ckey, xlab="samples", ylab="peptides (row index in PEP section)", scales = list(tck = c(0,0)))
+  print(p)
+  
+  dev.off()
+}
+
+# plots the reported peptide abundances of all proteins of interest
+plotProteinsOfInterest <- function(data, pdf.file) {
+  
+  # check if protein accession column is non-empty
+  if (isEmpty(data$accession)) return()
+  
+  # extract proteins of interest
+  pattern = paste(proteins.of.interest, collapse="|")
+  df <- as.data.frame(data[grepl(pattern, data$accession),])
+  
+  # sort in the same order as proteins.of.interest vector
+  df <- df[order(match(df$accession, proteins.of.interest)),]
+  
+  # abort plotting if no peptides of interest were found 
+  if (dim(df)[1] == 0) return()
+  
+  # extract quantifications and prepare for plotting
+  quants <- as.matrix(getPeptideQuants(df))
+  colnames(quants) <- as.character(1:dim(quants)[2])
+  quants <- log10(quants)
+  if (nrow(quants) > 1) {
+    # If we have a single row, there is no need to reverse the order of rows. If we try, the matrix is (automatically) converted to a vector. :(
+    quants <- quants[nrow(quants):1,]
+  }
+  quants <- t(quants)
+  
+  colours <-  colorRampPalette(c("#2166AC", "#3F8EC0", "#80B9D8", "#BCDAEA", "#E6EFF3", "#F9EAE1", "#FAC8AF", "#ED9576", "#D25749", "#B2182B"))(256)
+  
+  pdf(file=pdf.file)
+  
+  my.theme <- BuRdTheme()
+  my.theme$panel.background$col = 'black'
+  my.min <- min(quants, na.rm=TRUE)
+  my.max <- max(quants, na.rm=TRUE)
+  my.at <- seq(my.min, my.max, length.out=length(my.theme$regions$col)-1)
+  my.ckey <- list(at=my.at, col=my.theme$regions$col)
+  
+  p <- levelplot(quants, par.settings=my.theme, at=my.at, colorkey=my.ckey, xlab="samples", ylab="peptides (row index in PEP section)", scales = list(tck = c(0,0)))
+  print(p)
+  
+  dev.off()
 }
 
 # create a summary table of all modifications and their specificities
@@ -699,6 +796,10 @@ if (!isEmpty(peptide.data$opt_global_modified_sequence) && !isEmpty(peptide.data
 # extract peptides and proteins of interest
 interest.peptides.matches <- findPeptidesOfInterest(peptide.data)
 interest.proteins.matches <- findProteinsOfInterest(peptide.data)
+
+# plot abundances of peptides and proteins of intrest
+plotPeptidesOfInterest(peptide.data, "plot_PeptidesOfInterest.pdf")
+plotProteinsOfInterest(peptide.data, "plot_ProteinsOfInterest.pdf")
 
 # pre-define variables which will be called from LaTeX
 # Needed even with IfFileExists()
@@ -1069,10 +1170,30 @@ print(table.important.peptides.principal.component.3, include.rownames=FALSE, ta
 
 \clearpage
 
+\IfFileExists{plot_PeptidesOfInterest.pdf}
+{
+\begin{figure}[hb]
+\centering
+\includegraphics[width=15.0cm]{plot_PeptidesOfInterest.pdf}
+\caption{Logarithmic peptide abundances for all peptides of interest.}
+\end{figure}
+}
+{}
+
 <<echo=FALSE,results=tex>>=
 table.peptides.of.interest <- xtable(interest.peptides.matches, caption = "Peptides of interest. Please note that the script requires a vector of {\\it stripped} peptides sequences, but in the above table we list the {\\it modified} peptide sequences.")
 print(table.peptides.of.interest, include.rownames=FALSE, tabular.environment="longtable")
 @
+
+\IfFileExists{plot_ProteinsOfInterest.pdf}
+{
+\begin{figure}[hb]
+\centering
+\includegraphics[width=15.0cm]{plot_ProteinsOfInterest.pdf}
+\caption{Logarithmic peptide abundances for all proteins of interest.}
+\end{figure}
+}
+{}
 
 <<echo=FALSE,results=tex>>=
 table.proteins.of.interest <- xtable(interest.proteins.matches, caption = "Proteins of interest.")
