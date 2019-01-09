@@ -528,7 +528,7 @@ findProteinsOfInterest <- function(data) {
 plotPeptidesOfInterest <- function(data, pdf.file) {
   
   # check if sequence column is empty
-  if (isEmpty(data$sequence)) retun()
+  if (isEmpty(data$sequence)) return()
   
   # extract peptides of interest
   pattern = paste(peptides.of.interest, collapse="|")
@@ -571,7 +571,7 @@ plotPeptidesOfInterest <- function(data, pdf.file) {
 plotProteinsOfInterest <- function(data, pdf.file) {
   
   # check if protein accession column is non-empty
-  if (isEmpty(data$accession)) retun()
+  if (isEmpty(data$accession)) return()
   
   # extract proteins of interest
   pattern = paste(proteins.of.interest, collapse="|")

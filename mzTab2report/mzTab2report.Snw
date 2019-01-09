@@ -548,7 +548,7 @@ findProteinsOfInterest <- function(data) {
 plotPeptidesOfInterest <- function(data, pdf.file) {
   
   # check if sequence column is empty
-  if (isEmpty(data$sequence)) retun()
+  if (isEmpty(data$sequence)) return()
   
   # extract peptides of interest
   pattern = paste(peptides.of.interest, collapse="|")
@@ -591,7 +591,7 @@ plotPeptidesOfInterest <- function(data, pdf.file) {
 plotProteinsOfInterest <- function(data, pdf.file) {
   
   # check if protein accession column is non-empty
-  if (isEmpty(data$accession)) retun()
+  if (isEmpty(data$accession)) return()
   
   # extract proteins of interest
   pattern = paste(proteins.of.interest, collapse="|")
@@ -1177,13 +1177,13 @@ print(table.important.peptides.principal.component.3, include.rownames=FALSE, ta
 \includegraphics[width=15.0cm]{plot_PeptidesOfInterest.pdf}
 \caption{Logarithmic peptide abundances for all peptides of interest.}
 \end{figure}
+}
+{}
 
 <<echo=FALSE,results=tex>>=
 table.peptides.of.interest <- xtable(interest.peptides.matches, caption = "Peptides of interest. Please note that the script requires a vector of {\\it stripped} peptides sequences, but in the above table we list the {\\it modified} peptide sequences.")
 print(table.peptides.of.interest, include.rownames=FALSE, tabular.environment="longtable")
 @
-}
-{}
 
 \IfFileExists{plot_ProteinsOfInterest.pdf}
 {
@@ -1192,13 +1192,13 @@ print(table.peptides.of.interest, include.rownames=FALSE, tabular.environment="l
 \includegraphics[width=15.0cm]{plot_ProteinsOfInterest.pdf}
 \caption{Logarithmic peptide abundances for all proteins of interest.}
 \end{figure}
+}
+{}
 
 <<echo=FALSE,results=tex>>=
 table.proteins.of.interest <- xtable(interest.proteins.matches, caption = "Proteins of interest.")
 print(table.proteins.of.interest, include.rownames=FALSE, tabular.environment="longtable")
 @
-}
-{}
 
 \newif\ifmodcolumnexists
 
