@@ -440,9 +440,9 @@ cutSequence <- function(s) {
 
 findPeptidesOfInterest <- function(data)
 {
-  retain.columns=c("opt_global_modified_sequence", "accession", "charge", "retention_time", "mass_to_charge")
-  new.column.names=c("modified sequence", "accession", "charge", "retention time", "m/z")
-  
+  retain.columns=c("row index", "opt_global_modified_sequence", "accession", "charge", "retention_time", "mass_to_charge")
+  new.column.names=c("row index", "modified sequence", "accession", "charge", "retention time", "m/z")
+
   # check if sequence column is non-empty
   if (isEmpty(data$sequence))
   {
@@ -470,6 +470,9 @@ findPeptidesOfInterest <- function(data)
   # reduce length of modified sequence
   df$opt_global_modified_sequence <- unlist(lapply(df$opt_global_modified_sequence, cutSequence))
   
+  # add the row index in the PEP section
+  df$'row index' <- rownames(df)
+  
   # select and rename columns
   df <- df[,retain.columns]
   colnames(df) <- new.column.names
@@ -478,6 +481,9 @@ findPeptidesOfInterest <- function(data)
 }
 
 findProteinsOfInterest <- function(data) {
+  retain.columns=c("row index", "opt_global_modified_sequence", "accession", "charge", "retention_time", "mass_to_charge")
+  new.column.names=c("row index", "modified sequence", "accession", "charge", "retention time", "m/z")
+  
   # check if protein accession column is non-empty
   if (isEmpty(data$accession))
   {
@@ -508,9 +514,12 @@ findProteinsOfInterest <- function(data) {
   # reduce length of modified sequence
   df$opt_global_modified_sequence <- unlist(lapply(df$opt_global_modified_sequence, cutSequence))
   
+  # add the row index in the PEP section
+  df$'row index' <- rownames(df)
+  
   # select and rename columns
-  df <- df[,c("opt_global_modified_sequence", "accession", "charge", "retention_time", "mass_to_charge")]
-  colnames(df) <- c("modified sequence", "accession", "charge", "retention time", "m/z" )
+  df <- df[, retain.columns]
+  colnames(df) <- new.column.names
   
   return(df)
 }
