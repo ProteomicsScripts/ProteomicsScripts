@@ -555,7 +555,7 @@ plotPeptidesOfInterest <- function(data, pdf.file) {
   pdf(file=pdf.file)
   
   my.theme <- BuRdTheme()
-  my.theme$panel.background$col = 'black'
+  my.theme$panel.background$col = 'gray28'
   my.min <- min(quants, na.rm=TRUE)
   my.max <- max(quants, na.rm=TRUE)
   my.at <- seq(my.min, my.max, length.out=length(my.theme$regions$col)-1)
@@ -598,7 +598,7 @@ plotProteinsOfInterest <- function(data, pdf.file) {
   pdf(file=pdf.file)
   
   my.theme <- BuRdTheme()
-  my.theme$panel.background$col = 'black'
+  my.theme$panel.background$col = 'gray28'
   my.min <- min(quants, na.rm=TRUE)
   my.max <- max(quants, na.rm=TRUE)
   my.at <- seq(my.min, my.max, length.out=length(my.theme$regions$col)-1)
