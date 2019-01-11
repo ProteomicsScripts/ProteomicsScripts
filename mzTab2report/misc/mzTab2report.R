@@ -23,11 +23,13 @@ rm(list = ls())
 ####
 
 #input.file <- 'analysis.mzTab'
-#input.file <- 'example_5.mzTab'
-input.file <- 'BM3726.mzTab'
+input.file <- 'example_5.mzTab'
 
 # maximum number of digits
 options(digits=10)
+
+# switch off warnings
+options(warn=-1)
 
 # fold change cutoff, i.e. infinite fc values are mapped to +/-FcCutoff
 FcCutoff <- 8
@@ -171,6 +173,7 @@ numberOfStudyVariables <- function(data)
 
 # determine fold changes and map to finite numbers
 # fc = log2(abundances1/abundances2)
+# Should be NA-save, i.e. abundance vectors may contain NAs.
 calculateFoldChange <- function(abundances1, abundances2) {
   offset <- 1e-10       # avoids devisions by zero
   max.fc <- FcCutoff    # map knock-out fold changes to finite values 
@@ -190,8 +193,9 @@ calculateFoldChange <- function(abundances1, abundances2) {
 # plot fold change vs log intensity
 plotFcLogIntensity <- function(fc.vector, intensity.vector, fc.label, pdf.file) {
   pdf(file=pdf.file)
-  x <- fc.vector
-  y <- log10(intensity.vector)
+  idx <- complete.cases(fc.vector) & complete.cases(intensity.vector)
+  x <- fc.vector[idx]
+  y <- log10(intensity.vector[idx])
   df <- data.frame(x,y)
   x <- densCols(x,y, colramp=colorRampPalette(c("black", "white")))
   df$dens <- col2rgb(x)[1,] + 1L
@@ -274,14 +278,17 @@ plotCorrelations <- function(data, pdf.file) {
 
 plotBoxplot <- function(data, pdf.file) {
   # extract study variables
-  study_variables.data = getPeptideQuants(data)
-  colnames(study_variables.data) <- as.character(1:(dim(study_variables.data)[2]))
+  quants = getPeptideQuants(data)
+  colnames(quants) <- as.character(1:(dim(quants)[2]))
   
   # (optional) z-score normalisation
-  #study_variables.data <- scale(study_variables.data, center = TRUE, scale = TRUE)
+  #quants <- scale(quants, center = TRUE, scale = TRUE)
+  
+  # make values strictly positive
+  quants[quants < 0] <- NA
   
   pdf(file=pdf.file, height = 6, width = 10)
-  boxplot(study_variables.data, log="y", ylab="expression", xlab="samples", las=2)
+  boxplot(quants, log="y", ylab="expression", xlab="samples", las=2, na.rm=TRUE)
   dev.off()
 }
 
@@ -399,16 +406,16 @@ plotPCAeigenvector <- function(pca, data, n, pdf.file) {
 #   # extract study variables
 #   quants <- getPeptideQuants(data)
 #   colnames(quants) <- as.character(1:(dim(quants)[2]))
-#   
+# 
 #   # remove rows with NaN values
 #   quants <- quants[complete.cases(quants),]
-#   
+# 
 #   # study variables in rows, dimensions i.e. peptide abundances in columns
 #   quants <- t(quants)
-#   
+# 
 #   # calculate principal components
 #   quants.pca <- prcomp(quants, center = TRUE, scale = TRUE)
-#   
+# 
 #   # plot first two principal components
 #   if (dim(quants)[1] == length(labels.of.study.variables))
 #   {
@@ -820,102 +827,104 @@ if (studyVariableExists(peptide.data,3)) {
   plotDistribution(log10(abundances), expression('log'[10]*' intensity'), "plot_DistributionIntensity_3.pdf")
 }
 
-# # plot fold change distributions and scatter plots
-# if (studyVariableExists(peptide.data,1) && studyVariableExists(peptide.data,2)) {
-#   a <- peptide.data$"peptide_abundance_study_variable[1]"
-#   b <- peptide.data$"peptide_abundance_study_variable[2]"
-#   fc <- calculateFoldChange(a, b)
-#   intensity <- a + median(a/b, na.rm=TRUE)*b
-#   median.fc.12 <- median(fc, na.rm=TRUE)
-#   sd.fc.12 <- sd(fc, na.rm=TRUE)
-#   plotFcLogIntensity(fc, intensity, "fold change", "plot_FoldChangeLogIntensity_12.pdf")
-#   plotDistribution(fc, "fold change", "plot_DistributionFoldChange_12.pdf")
-# }
-# if (studyVariableExists(peptide.data,1) && studyVariableExists(peptide.data,3)) {
-#   a <- peptide.data$"peptide_abundance_study_variable[1]"
-#   b <- peptide.data$"peptide_abundance_study_variable[3]"
-#   fc <- calculateFoldChange(a, b)
-#   intensity <- a + median(a/b, na.rm=TRUE)*b
-#   median.fc.13 <- median(fc, na.rm=TRUE)
-#   sd.fc.13 <- sd(fc, na.rm=TRUE)
-#   plotFcLogIntensity(fc, intensity, "fold change", "plot_FoldChangeLogIntensity_13.pdf")
-#   plotDistribution(fc, "fold change", "plot_DistributionFoldChange_13.pdf")
-# }
-# if (studyVariableExists(peptide.data,2) && studyVariableExists(peptide.data,3)) {
-#   a <- peptide.data$"peptide_abundance_study_variable[2]"
-#   b <- peptide.data$"peptide_abundance_study_variable[3]"
-#   fc <- calculateFoldChange(a, b)
-#   intensity <- a + median(a/b, na.rm=TRUE)*b
-#   median.fc.23 <- median(fc, na.rm=TRUE)
-#   sd.fc.23 <- sd(fc, na.rm=TRUE)
-#   plotFcLogIntensity(fc, intensity, "fold change", "plot_FoldChangeLogIntensity_23.pdf")
-#   plotDistribution(fc, "fold change", "plot_DistributionFoldChange_23.pdf")
-# }
-# 
-# # plot correlation matrix of peptide abundances
-# corr.min <- 1
-# corr.median <- 1
-# corr.max <- 1
-# if (numberOfStudyVariables(peptide.data) >= 3) {
-#   corr <- plotCorrelations(data = peptide.data, pdf.file = "plot_Correlations.pdf")
-#   corr.min <- min(corr)
-#   corr.median <- median(corr)
-#   corr.max <- max(corr)
-# }
-# 
-# # plot boxplot of peptide abundances
-# if (numberOfStudyVariables(peptide.data) >= 3) {
-#   plotBoxplot(peptide.data, "plot_Boxplot.pdf")
-# }
-# 
-# # start of Principal Component Analysis
-# # (Even if we do not run the PCA, we generate these three non-empty tables in order to prevent LaTeX from crashing.)
-# important.peptides.principal.component.1 <- data.frame(c(42))
-# important.peptides.principal.component.2 <- data.frame(c(42))
-# important.peptides.principal.component.3 <- data.frame(c(42))
-# if (numberOfStudyVariables(peptide.data) >= 3) {
-#   
-#   ## simple ggplot2 version of PCA plot
-#   #plotPCA(peptide.data, "plot_PCA.pdf")
-#   
-#   pca <- getPCA(peptide.data)
-#   
-#   plotPCAscatter(pca, "plot_PCA_scatter.pdf")
-# 
-#   plotPCAcomponents(pca, "plot_PCA_components.pdf")
-# 
-#   plotPCAeigenvector(pca, peptide.data, 1, "plot_PCA_eigenvector1st.pdf")
-#   plotPCAeigenvector(pca, peptide.data, 2, "plot_PCA_eigenvector2nd.pdf")
-#   plotPCAeigenvector(pca, peptide.data, 3, "plot_PCA_eigenvector3rd.pdf")
-# 
-# 
-#   # Note that getPCAeigenvector() returns the row indices with respect to the complete cases.
-#   # Since the complete cases appear first in the PEP section, the row indices are the same as for the entire peptide data.
-#   # But let's play it save.
-#   idx.complete <- which(complete.cases(getPeptideQuants(peptide.data)))
-# 
-#   idx.1 <- idx.complete[getPCAeigenvector(pca, 1)]
-#   idx.2 <- idx.complete[getPCAeigenvector(pca, 2)]
-#   idx.3 <- idx.complete[getPCAeigenvector(pca, 3)]
-#   
-#   # add column with row index
-#   peptide.data$'row index' <- rownames(peptide.data)
-# 
-#   retain.columns=c("row index", "opt_global_modified_sequence", "accession", "charge", "retention_time", "mass_to_charge")
-#   new.column.names=c("row index", "modified sequence", "accession", "charge", "retention time", "m/z")
-# 
-#   important.peptides.principal.component.1 <- peptide.data[idx.1, retain.columns]
-#   important.peptides.principal.component.2 <- peptide.data[idx.2, retain.columns]
-#   important.peptides.principal.component.3 <- peptide.data[idx.3, retain.columns]
-# 
-#   colnames(important.peptides.principal.component.1) <- new.column.names
-#   colnames(important.peptides.principal.component.2) <- new.column.names
-#   colnames(important.peptides.principal.component.3) <- new.column.names
-# 
-#   # reduce sequence length
-#   important.peptides.principal.component.1$'modified sequence' <- unlist(lapply(important.peptides.principal.component.1$'modified sequence', cutSequence))
-#   important.peptides.principal.component.2$'modified sequence' <- unlist(lapply(important.peptides.principal.component.2$'modified sequence', cutSequence))
-#   important.peptides.principal.component.3$'modified sequence' <- unlist(lapply(important.peptides.principal.component.3$'modified sequence', cutSequence))
-#   
-# }
-# # end of Principal Component Analysis
+# plot fold change distributions and scatter plots
+if (studyVariableExists(peptide.data,1) && studyVariableExists(peptide.data,2)) {
+  a <- peptide.data$"peptide_abundance_study_variable[1]"
+  b <- peptide.data$"peptide_abundance_study_variable[2]"
+  fc <- calculateFoldChange(a, b)
+  intensity <- a + median(a/b, na.rm=TRUE)*b
+  median.fc.12 <- median(fc, na.rm=TRUE)
+  sd.fc.12 <- sd(fc, na.rm=TRUE)
+  plotFcLogIntensity(fc, intensity, "fold change", "plot_FoldChangeLogIntensity_12.pdf")
+  plotDistribution(fc, "fold change", "plot_DistributionFoldChange_12.pdf")
+}
+if (studyVariableExists(peptide.data,1) && studyVariableExists(peptide.data,3)) {
+  a <- peptide.data$"peptide_abundance_study_variable[1]"
+  b <- peptide.data$"peptide_abundance_study_variable[3]"
+  fc <- calculateFoldChange(a, b)
+  intensity <- a + median(a/b, na.rm=TRUE)*b
+  median.fc.13 <- median(fc, na.rm=TRUE)
+  sd.fc.13 <- sd(fc, na.rm=TRUE)
+  plotFcLogIntensity(fc, intensity, "fold change", "plot_FoldChangeLogIntensity_13.pdf")
+  plotDistribution(fc, "fold change", "plot_DistributionFoldChange_13.pdf")
+}
+if (studyVariableExists(peptide.data,2) && studyVariableExists(peptide.data,3)) {
+  a <- peptide.data$"peptide_abundance_study_variable[2]"
+  b <- peptide.data$"peptide_abundance_study_variable[3]"
+  fc <- calculateFoldChange(a, b)
+  intensity <- a + median(a/b, na.rm=TRUE)*b
+  median.fc.23 <- median(fc, na.rm=TRUE)
+  sd.fc.23 <- sd(fc, na.rm=TRUE)
+  plotFcLogIntensity(fc, intensity, "fold change", "plot_FoldChangeLogIntensity_23.pdf")
+  plotDistribution(fc, "fold change", "plot_DistributionFoldChange_23.pdf")
+}
+
+# plot correlation matrix of peptide abundances
+corr.min <- 1
+corr.median <- 1
+corr.max <- 1
+if (numberOfStudyVariables(peptide.data) >= 3) {
+  corr <- plotCorrelations(data = peptide.data, pdf.file = "plot_Correlations.pdf")
+  corr.min <- min(corr)
+  corr.median <- median(corr)
+  corr.max <- max(corr)
+}
+
+x <- getPeptideQuants(peptide.data)
+
+# plot boxplot of peptide abundances
+if (numberOfStudyVariables(peptide.data) >= 3) {
+  plotBoxplot(peptide.data, "plot_Boxplot.pdf")
+}
+
+# start of Principal Component Analysis
+# (Even if we do not run the PCA, we generate these three non-empty tables in order to prevent LaTeX from crashing.)
+important.peptides.principal.component.1 <- data.frame(c(42))
+important.peptides.principal.component.2 <- data.frame(c(42))
+important.peptides.principal.component.3 <- data.frame(c(42))
+if (numberOfStudyVariables(peptide.data) >= 3) {
+
+  ## simple ggplot2 version of PCA plot
+  #plotPCA(peptide.data, "plot_PCA.pdf")
+
+  pca <- getPCA(peptide.data)
+
+  plotPCAscatter(pca, "plot_PCA_scatter.pdf")
+
+  plotPCAcomponents(pca, "plot_PCA_components.pdf")
+
+  plotPCAeigenvector(pca, peptide.data, 1, "plot_PCA_eigenvector1st.pdf")
+  plotPCAeigenvector(pca, peptide.data, 2, "plot_PCA_eigenvector2nd.pdf")
+  plotPCAeigenvector(pca, peptide.data, 3, "plot_PCA_eigenvector3rd.pdf")
+
+
+  # Note that getPCAeigenvector() returns the row indices with respect to the complete cases.
+  # Since the complete cases appear first in the PEP section, the row indices are the same as for the entire peptide data.
+  # But let's play it save.
+  idx.complete <- which(complete.cases(getPeptideQuants(peptide.data)))
+
+  idx.1 <- idx.complete[getPCAeigenvector(pca, 1)]
+  idx.2 <- idx.complete[getPCAeigenvector(pca, 2)]
+  idx.3 <- idx.complete[getPCAeigenvector(pca, 3)]
+
+  # add column with row index
+  peptide.data$'row index' <- rownames(peptide.data)
+
+  retain.columns=c("row index", "opt_global_modified_sequence", "accession", "charge", "retention_time", "mass_to_charge")
+  new.column.names=c("row index", "modified sequence", "accession", "charge", "retention time", "m/z")
+
+  important.peptides.principal.component.1 <- peptide.data[idx.1, retain.columns]
+  important.peptides.principal.component.2 <- peptide.data[idx.2, retain.columns]
+  important.peptides.principal.component.3 <- peptide.data[idx.3, retain.columns]
+
+  colnames(important.peptides.principal.component.1) <- new.column.names
+  colnames(important.peptides.principal.component.2) <- new.column.names
+  colnames(important.peptides.principal.component.3) <- new.column.names
+
+  # reduce sequence length
+  important.peptides.principal.component.1$'modified sequence' <- unlist(lapply(important.peptides.principal.component.1$'modified sequence', cutSequence))
+  important.peptides.principal.component.2$'modified sequence' <- unlist(lapply(important.peptides.principal.component.2$'modified sequence', cutSequence))
+  important.peptides.principal.component.3$'modified sequence' <- unlist(lapply(important.peptides.principal.component.3$'modified sequence', cutSequence))
+
+}
+# end of Principal Component Analysis
