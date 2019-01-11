@@ -571,6 +571,7 @@ plotPeptidesOfInterest <- function(data, pdf.file) {
   # extract quantifications and prepare for plotting
   quants <- as.matrix(getPeptideQuants(df))
   colnames(quants) <- as.character(1:dim(quants)[2])
+  quants[quants <= 0] <- NA
   quants <- log10(quants)
   if (nrow(quants) > 1) {
     # If we have a single row, there is no need to reverse the order of rows. If we try, the matrix is (automatically) converted to a vector. :(
@@ -614,6 +615,7 @@ plotProteinsOfInterest <- function(data, pdf.file) {
   # extract quantifications and prepare for plotting
   quants <- as.matrix(getPeptideQuants(df))
   colnames(quants) <- as.character(1:dim(quants)[2])
+  quants[quants <= 0] <- NA
   quants <- log10(quants)
   if (nrow(quants) > 1) {
     # If we have a single row, there is no need to reverse the order of rows. If we try, the matrix is (automatically) converted to a vector. :(
