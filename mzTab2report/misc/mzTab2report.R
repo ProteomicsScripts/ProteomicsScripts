@@ -28,6 +28,9 @@ input.file <- 'example_5.mzTab'
 # maximum number of digits
 options(digits=10)
 
+# switch off warnings
+options(warn=-1)
+
 # fold change cutoff, i.e. infinite fc values are mapped to +/-FcCutoff
 FcCutoff <- 8
 
@@ -170,6 +173,7 @@ numberOfStudyVariables <- function(data)
 
 # determine fold changes and map to finite numbers
 # fc = log2(abundances1/abundances2)
+# Should be NA-save, i.e. abundance vectors may contain NAs.
 calculateFoldChange <- function(abundances1, abundances2) {
   offset <- 1e-10       # avoids devisions by zero
   max.fc <- FcCutoff    # map knock-out fold changes to finite values 
@@ -189,8 +193,9 @@ calculateFoldChange <- function(abundances1, abundances2) {
 # plot fold change vs log intensity
 plotFcLogIntensity <- function(fc.vector, intensity.vector, fc.label, pdf.file) {
   pdf(file=pdf.file)
-  x <- fc.vector
-  y <- log10(intensity.vector)
+  idx <- complete.cases(fc.vector) & complete.cases(intensity.vector)
+  x <- fc.vector[idx]
+  y <- log10(intensity.vector[idx])
   df <- data.frame(x,y)
   x <- densCols(x,y, colramp=colorRampPalette(c("black", "white")))
   df$dens <- col2rgb(x)[1,] + 1L
@@ -273,14 +278,17 @@ plotCorrelations <- function(data, pdf.file) {
 
 plotBoxplot <- function(data, pdf.file) {
   # extract study variables
-  study_variables.data = getPeptideQuants(data)
-  colnames(study_variables.data) <- as.character(1:(dim(study_variables.data)[2]))
+  quants = getPeptideQuants(data)
+  colnames(quants) <- as.character(1:(dim(quants)[2]))
   
   # (optional) z-score normalisation
-  #study_variables.data <- scale(study_variables.data, center = TRUE, scale = TRUE)
+  #quants <- scale(quants, center = TRUE, scale = TRUE)
+  
+  # make values strictly positive
+  quants[quants < 0] <- NA
   
   pdf(file=pdf.file, height = 6, width = 10)
-  boxplot(study_variables.data, log="y", ylab="expression", xlab="samples", las=2)
+  boxplot(quants, log="y", ylab="expression", xlab="samples", las=2, na.rm=TRUE)
   dev.off()
 }
 
@@ -398,16 +406,16 @@ plotPCAeigenvector <- function(pca, data, n, pdf.file) {
 #   # extract study variables
 #   quants <- getPeptideQuants(data)
 #   colnames(quants) <- as.character(1:(dim(quants)[2]))
-#   
+# 
 #   # remove rows with NaN values
 #   quants <- quants[complete.cases(quants),]
-#   
+# 
 #   # study variables in rows, dimensions i.e. peptide abundances in columns
 #   quants <- t(quants)
-#   
+# 
 #   # calculate principal components
 #   quants.pca <- prcomp(quants, center = TRUE, scale = TRUE)
-#   
+# 
 #   # plot first two principal components
 #   if (dim(quants)[1] == length(labels.of.study.variables))
 #   {
@@ -555,7 +563,7 @@ plotPeptidesOfInterest <- function(data, pdf.file) {
   pdf(file=pdf.file)
   
   my.theme <- BuRdTheme()
-  my.theme$panel.background$col = 'black'
+  my.theme$panel.background$col = 'gray20'
   my.min <- min(quants, na.rm=TRUE)
   my.max <- max(quants, na.rm=TRUE)
   my.at <- seq(my.min, my.max, length.out=length(my.theme$regions$col)-1)
@@ -598,7 +606,7 @@ plotProteinsOfInterest <- function(data, pdf.file) {
   pdf(file=pdf.file)
   
   my.theme <- BuRdTheme()
-  my.theme$panel.background$col = 'black'
+  my.theme$panel.background$col = 'gray20'
   my.min <- min(quants, na.rm=TRUE)
   my.max <- max(quants, na.rm=TRUE)
   my.at <- seq(my.min, my.max, length.out=length(my.theme$regions$col)-1)
@@ -801,16 +809,22 @@ plotKendrick((peptide.data$mass_to_charge - 1.00784) * peptide.data$charge, "plo
 
 # plot peptide abundance distributions
 if (studyVariableExists(peptide.data,1)) {
-  median.abundance.1 <- median(peptide.data$"peptide_abundance_study_variable[1]", na.rm=TRUE)
-  plotDistribution(log10(peptide.data$"peptide_abundance_study_variable[1]"), expression('log'[10]*' intensity'), "plot_DistributionIntensity_1.pdf")
+  abundances <- peptide.data$"peptide_abundance_study_variable[1]"
+  abundances <- abundances[complete.cases(abundances)]
+  median.abundance.1 <- median(abundances, na.rm=TRUE)
+  plotDistribution(log10(abundances), expression('log'[10]*' intensity'), "plot_DistributionIntensity_1.pdf")
 }
 if (studyVariableExists(peptide.data,2)) {
-  median.abundance.2 <- median(peptide.data$"peptide_abundance_study_variable[2]", na.rm=TRUE)
-  plotDistribution(log10(peptide.data$"peptide_abundance_study_variable[2]"), expression('log'[10]*' intensity'), "plot_DistributionIntensity_2.pdf")
+  abundances <- peptide.data$"peptide_abundance_study_variable[1]"
+  abundances <- abundances[complete.cases(abundances)]
+  median.abundance.2 <- median(abundances, na.rm=TRUE)
+  plotDistribution(log10(abundances), expression('log'[10]*' intensity'), "plot_DistributionIntensity_2.pdf")
 }
 if (studyVariableExists(peptide.data,3)) {
-  median.abundance.3 <- median(peptide.data$"peptide_abundance_study_variable[3]", na.rm=TRUE)
-  plotDistribution(log10(peptide.data$"peptide_abundance_study_variable[3]"), expression('log'[10]*' intensity'), "plot_DistributionIntensity_3.pdf")
+  abundances <- peptide.data$"peptide_abundance_study_variable[1]"
+  abundances <- abundances[complete.cases(abundances)]
+  median.abundance.3 <- median(abundances, na.rm=TRUE)
+  plotDistribution(log10(abundances), expression('log'[10]*' intensity'), "plot_DistributionIntensity_3.pdf")
 }
 
 # plot fold change distributions and scatter plots
@@ -856,6 +870,8 @@ if (numberOfStudyVariables(peptide.data) >= 3) {
   corr.max <- max(corr)
 }
 
+x <- getPeptideQuants(peptide.data)
+
 # plot boxplot of peptide abundances
 if (numberOfStudyVariables(peptide.data) >= 3) {
   plotBoxplot(peptide.data, "plot_Boxplot.pdf")
@@ -867,12 +883,12 @@ important.peptides.principal.component.1 <- data.frame(c(42))
 important.peptides.principal.component.2 <- data.frame(c(42))
 important.peptides.principal.component.3 <- data.frame(c(42))
 if (numberOfStudyVariables(peptide.data) >= 3) {
-  
+
   ## simple ggplot2 version of PCA plot
   #plotPCA(peptide.data, "plot_PCA.pdf")
-  
+
   pca <- getPCA(peptide.data)
-  
+
   plotPCAscatter(pca, "plot_PCA_scatter.pdf")
 
   plotPCAcomponents(pca, "plot_PCA_components.pdf")
@@ -890,7 +906,7 @@ if (numberOfStudyVariables(peptide.data) >= 3) {
   idx.1 <- idx.complete[getPCAeigenvector(pca, 1)]
   idx.2 <- idx.complete[getPCAeigenvector(pca, 2)]
   idx.3 <- idx.complete[getPCAeigenvector(pca, 3)]
-  
+
   # add column with row index
   peptide.data$'row index' <- rownames(peptide.data)
 
@@ -909,6 +925,6 @@ if (numberOfStudyVariables(peptide.data) >= 3) {
   important.peptides.principal.component.1$'modified sequence' <- unlist(lapply(important.peptides.principal.component.1$'modified sequence', cutSequence))
   important.peptides.principal.component.2$'modified sequence' <- unlist(lapply(important.peptides.principal.component.2$'modified sequence', cutSequence))
   important.peptides.principal.component.3$'modified sequence' <- unlist(lapply(important.peptides.principal.component.3$'modified sequence', cutSequence))
-  
+
 }
 # end of Principal Component Analysis
