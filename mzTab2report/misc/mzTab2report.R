@@ -472,6 +472,10 @@ findPeptidesOfInterest <- function(data)
     return(df)
   }
   
+  # sort in decreasing abundances
+  idx <- order(rowSums(getPeptideQuants(df)), decreasing = TRUE)
+  df <- df[idx,]
+  
   # sort in the same order as peptides.of.interest vector
   df <- df[order(match(df$sequence, peptides.of.interest)),]
   
@@ -513,8 +517,9 @@ findProteinsOfInterest <- function(data) {
     return(df)
   }
   
-  # sort sequences in alphabetic order
-  df <- df[order(df$sequence),]
+  # sort in decreasing abundances
+  idx <- order(rowSums(getPeptideQuants(df)), decreasing = TRUE)
+  df <- df[idx,]
   
   # sort in the same order as proteins.of.interest vector
   df <- df[order(match(df$accession, proteins.of.interest)),]
@@ -540,7 +545,11 @@ plotPeptidesOfInterest <- function(data, pdf.file) {
   
   # extract peptides of interest
   pattern = paste(peptides.of.interest, collapse="|")
-  df <- as.data.frame(peptide.data[grepl(pattern, peptide.data$sequence),])
+  df <- as.data.frame(data[grepl(pattern, data$sequence),])
+  
+  # sort in decreasing abundances
+  idx <- order(rowSums(getPeptideQuants(df)), decreasing = TRUE)
+  df <- df[idx,]
   
   # sort in the same order as peptides.of.interest vector
   df <- df[order(match(df$sequence, peptides.of.interest)),]
@@ -551,6 +560,7 @@ plotPeptidesOfInterest <- function(data, pdf.file) {
   # extract quantifications and prepare for plotting
   quants <- as.matrix(getPeptideQuants(df))
   colnames(quants) <- as.character(1:dim(quants)[2])
+  quants[quants <= 0] <- NA
   quants <- log10(quants)
   if (nrow(quants) > 1) {
     # If we have a single row, there is no need to reverse the order of rows. If we try, the matrix is (automatically) converted to a vector. :(
@@ -585,6 +595,10 @@ plotProteinsOfInterest <- function(data, pdf.file) {
   pattern = paste(proteins.of.interest, collapse="|")
   df <- as.data.frame(data[grepl(pattern, data$accession),])
   
+  # sort in decreasing abundances
+  idx <- order(rowSums(getPeptideQuants(df)), decreasing = TRUE)
+  df <- df[idx,]
+  
   # sort in the same order as proteins.of.interest vector
   df <- df[order(match(df$accession, proteins.of.interest)),]
   
@@ -594,6 +608,7 @@ plotProteinsOfInterest <- function(data, pdf.file) {
   # extract quantifications and prepare for plotting
   quants <- as.matrix(getPeptideQuants(df))
   colnames(quants) <- as.character(1:dim(quants)[2])
+  quants[quants <= 0] <- NA
   quants <- log10(quants)
   if (nrow(quants) > 1) {
     # If we have a single row, there is no need to reverse the order of rows. If we try, the matrix is (automatically) converted to a vector. :(
