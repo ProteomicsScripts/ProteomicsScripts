@@ -472,6 +472,10 @@ findPeptidesOfInterest <- function(data)
     return(df)
   }
   
+  # sort in decreasing abundances
+  idx <- order(rowSums(getPeptideQuants(df)), decreasing = TRUE)
+  df <- df[idx,]
+  
   # sort in the same order as peptides.of.interest vector
   df <- df[order(match(df$sequence, peptides.of.interest)),]
   
@@ -513,8 +517,9 @@ findProteinsOfInterest <- function(data) {
     return(df)
   }
   
-  # sort sequences in alphabetic order
-  df <- df[order(df$sequence),]
+  # sort in decreasing abundances
+  idx <- order(rowSums(getPeptideQuants(df)), decreasing = TRUE)
+  df <- df[idx,]
   
   # sort in the same order as proteins.of.interest vector
   df <- df[order(match(df$accession, proteins.of.interest)),]
@@ -540,7 +545,11 @@ plotPeptidesOfInterest <- function(data, pdf.file) {
   
   # extract peptides of interest
   pattern = paste(peptides.of.interest, collapse="|")
-  df <- as.data.frame(peptide.data[grepl(pattern, peptide.data$sequence),])
+  df <- as.data.frame(data[grepl(pattern, data$sequence),])
+  
+  # sort in decreasing abundances
+  idx <- order(rowSums(getPeptideQuants(df)), decreasing = TRUE)
+  df <- df[idx,]
   
   # sort in the same order as peptides.of.interest vector
   df <- df[order(match(df$sequence, peptides.of.interest)),]
@@ -585,6 +594,10 @@ plotProteinsOfInterest <- function(data, pdf.file) {
   # extract proteins of interest
   pattern = paste(proteins.of.interest, collapse="|")
   df <- as.data.frame(data[grepl(pattern, data$accession),])
+  
+  # sort in decreasing abundances
+  idx <- order(rowSums(getPeptideQuants(df)), decreasing = TRUE)
+  df <- df[idx,]
   
   # sort in the same order as proteins.of.interest vector
   df <- df[order(match(df$accession, proteins.of.interest)),]
