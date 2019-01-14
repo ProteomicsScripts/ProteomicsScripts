@@ -94,7 +94,7 @@ readMzTabPEP <- function(file) {
   return (peptide.data)
 }
 
-
+# Normalises peptide abundance data. Returns a matrix of normalized peptide intensities.  Requires the unnormalized peptide intensities (data), the vector indicating the groups which will be compared (groupvector) and the batchvector (batchvector) which indicates the batches. pdf.file indicates the filename to document the voom normalisation (which will not be employed in subsequent linear modelling). Please mind, that group indicators must be distributed across all levels (values) of the batch vector.
 normalisePeptideQuants <- function(data,groupvector,batchvector,pdf.file ="voomplot.pdf") {
 	nf = calcNormFactors(data)
 	model <- model.matrix(~groupvector)
