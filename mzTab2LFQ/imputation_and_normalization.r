@@ -94,6 +94,20 @@ readMzTabPEP <- function(file) {
   return (peptide.data)
 }
 
+
+normalisePeptideQuants <- function(data,groupvector,batchvector,pdf.file ="voomplot.pdf") {
+	nf = calcNormFactors(data)
+	model <- model.matrix(~groupvector)
+	fname = sprintf(pdf.file,todaysdate)
+	pdf(fname)
+	datavoom = voom(data,model,lib.size=colSums(data)*nf,plot=TRUE)$E
+	dev.off()
+	cb = ComBat(datavoom,batch=batchvector,mod=model)
+  return(cb)
+}
+
+
+
 peptide.data <- readMzTabPEP(input.file)
 ## write.table(peptide.data, output.file, sep="\t", row.names=FALSE, col.names=TRUE, quote=FALSE)
 
@@ -188,7 +202,6 @@ dev.off()
 
 
 
-
 pca = prcomp(scale(t(datavoom)),scale.=FALSE,center=FALSE)
 fname = sprintf("%s_pca_voom_whitelist_correction_factors.pdf",todaysdate)
 pdf(fname,width=12,height=12,pointsize=24)
@@ -223,6 +236,24 @@ pairs(pca$x[,1:5],upper.panel=f.upper,lower.panel=f.lower)
 pairs(pca$x[,1:5],col=c('red','steelblue1','olivedrab3')[as.factor(batch)],pch=19)
 dev.off()
 
+data = normalisePeptideQuants(x,group,batch,"test.pdf")
+
+pca = prcomp(scale(t(data)),scale.=FALSE,center=FALSE)
+fname = sprintf("%s_pca_voom_combat_data_whitelist_correction_factors.pdf",todaysdate)
+pdf(fname,width=12,height=12,pointsize=24)
+par(mfrow=c(1,1),mar=c(3,3,3,3))
+f.upper <- function(x,y)
+{
+    points(x,y,col=c('red','steelblue1','olivedrab3')[as.factor(group)],pch=19)
+    text(x,y,b2,cex=.3)
+}
+f.lower <- function(x,y)
+{
+    text(x,y,b2,cex=.3)
+}
+pairs(pca$x[,1:5],upper.panel=f.upper,lower.panel=f.lower)
+pairs(pca$x[,1:5],col=c('red','steelblue1','olivedrab3')[as.factor(batch)],pch=19)
+dev.off()
 
 
 ###################################################################
