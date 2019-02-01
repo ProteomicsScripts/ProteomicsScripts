@@ -230,12 +230,15 @@ plotFcLogIntensity <- function(fc.vector, intensity.vector, fc.label, pdf.file) 
 
 # plot distribution
 plotDistribution <- function(vector, label, pdf.file) {
+  breaks <- 80
+  
+  if (is.factor(vector))
+  {
+    vector <- as.numeric(as.character(vector))
+  }
+  
   pdf(file=pdf.file, height=4)
-  density <- density(vector, na.rm=TRUE, bw="nrd0")
-  plot(density$x, density$y, xlab=label, type="n", ylab="density", main="", yaxt='n')
-  lines(density$x, density$y, col="gray", lwd=2)
-  abline(v=0, col = "gray", lty=1)
-  abline(v=median(vector, na.rm=TRUE), col = "gray", lty=2)
+  hist(vector, xlab=label, ylab="density", freq=TRUE, main="", col="grey", yaxt='n', breaks=breaks)
   dev.off()
 }
 
