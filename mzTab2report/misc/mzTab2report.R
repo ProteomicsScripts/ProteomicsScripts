@@ -288,7 +288,7 @@ plotBoxplot <- function(data, pdf.file) {
   #quants <- scale(quants, center = TRUE, scale = TRUE)
   
   # make values strictly positive
-  quants[quants < 0] <- NA
+  quants[quants <= 0] <- NA
   
   pdf(file=pdf.file, height = 6, width = 10)
   boxplot(quants, log="y", ylab="expression", xlab="samples", las=2, na.rm=TRUE)
