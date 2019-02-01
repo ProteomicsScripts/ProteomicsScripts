@@ -693,6 +693,7 @@ createModsSummary <- function(data)
   Accession2Mod <- rep("",3000)
   Accession2Mod[1] <- "Acetyl"
   Accession2Mod[4] <- "Carbamidomethyl"
+  Accession2Mod[34] <- "Methyl"
   Accession2Mod[35] <- "Oxidation"
   Accession2Mod[36] <- "Dimethyl"
   Accession2Mod[39] <- "Methylthio"
