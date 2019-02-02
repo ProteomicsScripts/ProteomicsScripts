@@ -210,12 +210,15 @@ plotFcLogIntensity <- function(fc.vector, intensity.vector, fc.label, pdf.file) 
 
 # plot distribution
 plotDistribution <- function(vector, label, pdf.file) {
+  breaks <- 80
+  
+  if (is.factor(vector))
+  {
+    vector <- as.numeric(as.character(vector))
+  }
+  
   pdf(file=pdf.file, height=4)
-  density <- density(vector, na.rm=TRUE, bw="nrd0")
-  plot(density$x, density$y, xlab=label, type="n", ylab="density", main="", yaxt='n')
-  lines(density$x, density$y, col="gray", lwd=2)
-  abline(v=0, col = "gray", lty=1)
-  abline(v=median(vector, na.rm=TRUE), col = "gray", lty=2)
+  hist(vector, xlab=label, ylab="density", freq=TRUE, main="", col="grey", yaxt='n', breaks=breaks)
   dev.off()
 }
 
@@ -285,7 +288,7 @@ plotBoxplot <- function(data, pdf.file) {
   #quants <- scale(quants, center = TRUE, scale = TRUE)
   
   # make values strictly positive
-  quants[quants < 0] <- NA
+  quants[quants <= 0] <- NA
   
   pdf(file=pdf.file, height = 6, width = 10)
   boxplot(quants, log="y", ylab="expression", xlab="samples", las=2, na.rm=TRUE)
@@ -848,7 +851,7 @@ if (studyVariableExists(peptide.data,1) && studyVariableExists(peptide.data,2)) 
   a <- peptide.data$"peptide_abundance_study_variable[1]"
   b <- peptide.data$"peptide_abundance_study_variable[2]"
   fc <- calculateFoldChange(a, b)
-  intensity <- a + median(a/b, na.rm=TRUE)*b
+  intensity <- (a + b)/2
   median.fc.12 <- median(fc, na.rm=TRUE)
   sd.fc.12 <- sd(fc, na.rm=TRUE)
   plotFcLogIntensity(fc, intensity, "fold change", "plot_FoldChangeLogIntensity_12.pdf")
@@ -858,7 +861,7 @@ if (studyVariableExists(peptide.data,1) && studyVariableExists(peptide.data,3)) 
   a <- peptide.data$"peptide_abundance_study_variable[1]"
   b <- peptide.data$"peptide_abundance_study_variable[3]"
   fc <- calculateFoldChange(a, b)
-  intensity <- a + median(a/b, na.rm=TRUE)*b
+  intensity <- (a + b)/2
   median.fc.13 <- median(fc, na.rm=TRUE)
   sd.fc.13 <- sd(fc, na.rm=TRUE)
   plotFcLogIntensity(fc, intensity, "fold change", "plot_FoldChangeLogIntensity_13.pdf")
@@ -868,7 +871,7 @@ if (studyVariableExists(peptide.data,2) && studyVariableExists(peptide.data,3)) 
   a <- peptide.data$"peptide_abundance_study_variable[2]"
   b <- peptide.data$"peptide_abundance_study_variable[3]"
   fc <- calculateFoldChange(a, b)
-  intensity <- a + median(a/b, na.rm=TRUE)*b
+  intensity <- (a + b)/2
   median.fc.23 <- median(fc, na.rm=TRUE)
   sd.fc.23 <- sd(fc, na.rm=TRUE)
   plotFcLogIntensity(fc, intensity, "fold change", "plot_FoldChangeLogIntensity_23.pdf")
