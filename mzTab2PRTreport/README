@@ -1,0 +1,25 @@
++++ DESCRIPTION +++
+
+The script mzTab2PRTreport takes mzTab files as input and generates summary pdf reports from its PRT section.
+
+mzTab2PRTreport example.mzTab
+
+
++++ INSTALLATION +++
+
+(1) Install R
+(2) Install LaTeX, tested with MacTeX (macOS), TexLive (Ubuntu 16.04 LTS), MiKTeX (Windows)
+(3) Add the script folder to your $PATH variable
+(4) Test the installation with misc/example.mzTab
+
+
++++ FILES +++
+
+mzTab2PRTreport    -> main script (macOS)
+mzTab2PRTreport.sh    -> main script (Linux)
+mzTab2PRTreport.bat    -> main script (Windows)
+mzTab2PRTreport.Snw    -> Sweave script containing both R and LaTeX code
+Sweave.sty    -> Sweave style sheet
+misc/example.mzTab    -> example input file
+misc/example.pdf    -> example result file
+misc/mzTab2PRTreport.R    -> R code from mzTab2PRTreport.Snw
