@@ -889,8 +889,6 @@ if (numberOfStudyVariables(peptide.data) >= 3) {
   corr.max <- max(corr)
 }
 
-x <- getPeptideQuants(peptide.data)
-
 # plot boxplot of peptide abundances
 if (numberOfStudyVariables(peptide.data) >= 3) {
   plotBoxplot(peptide.data, "plot_Boxplot.pdf")

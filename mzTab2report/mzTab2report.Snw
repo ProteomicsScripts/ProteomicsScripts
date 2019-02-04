@@ -43,7 +43,7 @@ rm(list = ls())
 ####
 
 input.file <- 'analysis.mzTab'
-#input.file <- 'example_5.mzTab'
+#input.file <- 'example_6__SILACmultipleFractions.mzTab'
 
 # maximum number of digits
 options(digits=10)
@@ -908,8 +908,6 @@ if (numberOfStudyVariables(peptide.data) >= 3) {
   corr.median <- median(corr)
   corr.max <- max(corr)
 }
-
-x <- getPeptideQuants(peptide.data)
 
 # plot boxplot of peptide abundances
 if (numberOfStudyVariables(peptide.data) >= 3) {
