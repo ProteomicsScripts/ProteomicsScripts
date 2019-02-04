@@ -2,6 +2,9 @@
 
 \usepackage{subfig, fullpage, graphicx, amsmath}
 \usepackage{url}
+\usepackage{float}
+\usepackage{longtable}
+
 
 %\setlength{\voffset}{0pt}
 %\setlength{\topmargin}{0pt}
@@ -335,6 +338,17 @@ unmapped PSMs & \Sexpr{format(n.neither, big.mark=",")} & \Sexpr{format(n.neithe
 \hline
 \end{tabular}
 \caption{Number of PSMs. Two PSMs are considered {\em non-redundant} if they differ in amino acid sequence. They are considered {\em redundant}, if they differ merely in modifications. A PSM is considered {\em unique}, if its amino acid sequence can be mapped uniquely to a single protein. The sequence can appear in either target proteins, decoy proteins, both or neither of them.}
+\end{center}
+\end{table}
+
+\hspace{5pt}
+
+\begin{table}[hb]
+\begin{center}
+<<echo=FALSE,results=tex>>=
+print(xtable(stats), include.rownames=FALSE, table.placement="H")
+@
+\caption{Statistics of modifications.}
 \end{center}
 \end{table}
 
