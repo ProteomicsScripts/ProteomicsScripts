@@ -36,27 +36,22 @@ startSection <- function(file, section.identifier) {
   return (row)
 }
 
-# function describing how to collapse rows
-# In the case of string columns (e.g. accessions), the row entries are first made unique and then written to a comma-separated string.
-# In all other cases, the entry of the first row is returned.
-collapseRows <- function(x) {
-  if (is.character(x)) {
-    x <- paste(unique(x[!is.na(x)]), collapse=",")
-    if (x=="") {
-      return(NA)
-    }
-    else {
-      return (x)
-    }
-  }
-  else {
-    return (x[1])
-  }
+# get index in protein groups list containing protein x
+getIndex <- function(x, members) {
+  g <- gsub(x, "", members, fixed=TRUE)
+  d <- nchar(members)-nchar(g)
+  return (which(d>0)[1])
+}
+
+# returns first entry of a comma-separated list
+firstEntry <- function(x) {
+  list <- strsplit(as.character(x),",",fixed=TRUE)
+  return (unlist(lapply(list, '[[', 1)))
 }
 
 # count the occurences of character c in string s
-countOccurrences <- function(c,s) {
-  s2 <- gsub(c,"",s)
+countOccurrences <- function(char,s) {
+  s2 <- gsub(char,"",s)
   return (nchar(s) - nchar(s2))
 }
 
@@ -88,206 +83,55 @@ getGene <- function(string) {
   return (unlist(strsplit(string, "[|]"))[3])
 }
 
-# read the PSM section of an mzTab file
-readMzTabPSM <- function(file) {
+# read the PRT section of an mzTab file
+readMzTabPRT <-function(file) {
   
-  # find start of the PSM section
-  first.row <- startSection(file, "PSH")
+  # find start of the PRT section
+  first.row <- startSection(file, "PRH")
   
   # read entire mzTab
   data <- read.table(file, sep="\t", skip=first.row-1, fill=TRUE, header=TRUE, quote="", na.strings=c("null","NA"), stringsAsFactors=FALSE, check.names=FALSE)
   
-  # extract PSM data
-  psm.data <- data[which(data[,1]=="PSM"),]
-  psm.data$PSH <- NULL
+  # extract PRT data
+  protein.data <- data[which(data[,1]=="PRT"),]
+  protein.data$PRH <- NULL
   
   # In case the accession column is of the format *|*|*, we split this column into an accession and a gene column.
-  if (all(sapply(psm.data$accession, checkAccessionFormat))) {
-    psm.data$gene <- sapply(psm.data$accession, getGene)
-    psm.data$accession <- sapply(psm.data$accession, getAccession)
+  if (all(sapply(protein.data$accession, checkAccessionFormat))) {
+    protein.data$gene <- sapply(protein.data$accession, getGene)
+    protein.data$accession <- sapply(protein.data$accession, getAccession)
   }
   
-  # In the mzTab format, PSMs with multiple protein accessions are written to multiple rows.
-  # Here we collapse these rows and separate multiple accessions/genes by comma.
-  psm.data <- aggregate(psm.data, by=list(temp = psm.data$PSM_ID), FUN=collapseRows)
-  psm.data$temp <- NULL
+  # split into different types
+  proteins <- protein.data[which(protein.data$opt_global_protein_group_type=="single_protein"),]
+  protein.groups <- protein.data[which(protein.data$opt_global_protein_group_type=="protein_group"),]
+  indistinguishable.groups <- protein.data[which(protein.data$opt_global_protein_group_type=="indistinguishable_group"),]
   
-  return (psm.data)
-}
-
-# create a summary table of all modifications and their specificities
-# required input is a dataframe with a "sequence" and "modifications" column in mzTab standard
-createModsSummary <- function(data)
-{
-  # extract relevant data
-  data <- data[,c("sequence","modifications")]
-  data <- data[!is.na(data$modifications),]
-  data <- data[data$modifications != c(""),]
-  
-  # check if any mods are reported
-  if (dim(data)[1] == 0)
-  {
-    stats <- t(data.frame(c("no mods reported","","")))
-    colnames(stats) <- c("modification","specificity","number")
-    rownames(stats) <- c()
-    return(stats)
+  if ((dim(protein.groups)[1] > 0) && (dim(indistinguishable.groups)[1] > 0)) {
+    # match indistinguishable groups to protein groups
+    group.index <- as.vector(sapply(firstEntry(indistinguishable.groups.members), getIndex, members=protein.groups.members))
+    table <- data.frame(cbind(group.index, indistinguishable.groups.members))
+    
+    # merge information from the protein list
+    colnames(table) <- c("protein group","accessions")
+    table$accession <- firstEntry(table$accessions)
+    table <- merge(table, proteins, by="accession")
+    table$accession <- NULL
+    
+    # order table by protein.group
+    table$"protein group" <- as.integer(table$"protein group")
+    table <- table[order(table$"protein group"),]
+  }
+  else {
+    table <- proteins
+    colnames(table) <- gsub("accession","accessions", colnames(table))
   }
   
-  # split comma-separted mods into multiple columns
-  all.mods <- strsplit(data$modifications, split=",")
-  l <- sapply(all.mods, length)
-  idx <- rep(1:length(l), l)
-  data <- data[idx,]
-  data$modifications <- unlist(all.mods)
-  
-  # extract specificity
-  getSiteIndex <- function(mod)
-  {
-    return(unlist(strsplit(mod, split="-"))[1])
-  }
-  data$idx <- sapply(data$modifications, getSiteIndex)
-  getSiteAA <- function(idx, sequence)
-  {
-    if (idx == 0)
-    {
-      return("N-term")
-    }
-    else
-    {
-      return(substr(sequence, idx, idx))
-    }
-  }
-  data$specificity <- mapply(getSiteAA, idx = data$idx, sequence = data$sequence)
-  
-  # extract mod accession
-  getModAccession <- function(mod)
-  {
-    return(unlist(strsplit(mod, split=":"))[2])
-  }
-  data$accession <- sapply(data$modifications, getModAccession)
-  
-  # create summary statistics
-  stats <- aggregate(data$accession, by=list(data$accession, data$specificity), FUN=length)
-  colnames(stats) = c("mod","specificity","number")
-  stats <- stats[order(stats$number, decreasing = TRUE),]
-  
-  # replace mod accession by mod name
-  Accession2Mod <- rep("",3000)
-  Accession2Mod[1] <- "Acetyl"
-  Accession2Mod[4] <- "Carbamidomethyl"
-  Accession2Mod[34] <- "Methyl"
-  Accession2Mod[35] <- "Oxidation"
-  Accession2Mod[36] <- "Dimethyl"
-  Accession2Mod[39] <- "Methylthio"
-  Accession2Mod[188] <- "Label:13C(6)"
-  Accession2Mod[199] <- "Dimethyl:2H(4)"
-  Accession2Mod[259] <- "Label:13C(6)15N(2)"
-  Accession2Mod[267] <- "Label:13C(6)15N(4)"
-  Accession2Mod[284] <- "Methyl:2H(2)"
-  Accession2Mod[329] <- "Methyl:2H(3)13C(1)"
-  Accession2Mod[330] <- "Dimethyl:2H(6)13C(2)"
-  Accession2Mod[425] <- "Dioxidation"
-  Accession2Mod[510] <- "Dimethyl:2H(4)13C(2)"
-  Accession2Mod[737] <- "TMT6plex"
-  stats$mod <- Accession2Mod[as.numeric(stats$mod)]
-  
-  return(stats)
-}
-
-# check whether the column search_engine_score[n] exists
-checkSearchEngineScoreExists <- function(table, n) {
-column <- paste("search_engine_score[", as.character(n), "]", sep="")
-return (column %in% colnames(table))
-}
-
-# check whether the column opt_global_SpecEValue_score exists
-checkEValueExists <- function(table) {
-column <- "opt_global_SpecEValue_score"
-return (column %in% colnames(table))
-}
-
-# plot score distribution
-plotScoreDistribution <- function(scores, pdf.file, breaks)
-{
-  breaks = 80
-  
-  if (is.factor(scores))
-  {
-    scores <- as.numeric(as.character(scores))
-  }
-  
-  pdf(file=pdf.file, height=4)
-  hist(log10(scores), xlab=expression('log'[10]*' score'), ylab="frequency", freq=TRUE, main="", col="grey", breaks=breaks)
-  dev.off()
+  return (table)
 }
 
 
 
 
 
-psm.data <- readMzTabPSM(input.file)
-
-# create mod summary statistics
-stats <- createModsSummary(psm.data)
-
-n.total <- dim(psm.data)[1]
-n.unique <- length(which(psm.data$unique==1))
-n.nonredundant <- length(unique(psm.data$sequence))
-n.unique.nonredundant <- length(unique(psm.data[which(psm.data$unique==1),]$sequence))
-
-n.target <- length(which(psm.data$opt_global_target_decoy=="target"))
-n.decoy <- length(which(psm.data$opt_global_target_decoy=="decoy"))
-n.target.decoy <- length(which(psm.data$opt_global_target_decoy=="target+decoy"))
-n.neither <- length(which(psm.data$opt_global_target_decoy=="null"))
-n.target.nonredundant <- length(unique(psm.data[which(psm.data$opt_global_target_decoy=="target"),]$sequence))
-n.decoy.nonredundant <- length(unique(psm.data[which(psm.data$opt_global_target_decoy=="decoy"),]$sequence))
-n.target.decoy.nonredundant <- length(unique(psm.data[which(psm.data$opt_global_target_decoy=="target+decoy"),]$sequence))
-n.neither.nonredundant <- length(unique(psm.data[which(psm.data$opt_global_target_decoy=="null"),]$sequence))
-
-if (checkSearchEngineScoreExists(psm.data, 1))
-{
-  scores <- psm.data$`search_engine_score[1]`
-  
-  if (length(scores) > 0)
-  {
-    plotScoreDistribution(scores, "plot__search_engine_score.pdf", breaks)
-  }
-  
-  scores <- psm.data[which(psm.data$opt_global_target_decoy=="target"),]$`search_engine_score[1]`
-  
-  if (length(scores) > 0)
-  {
-    plotScoreDistribution(scores, "plot__search_engine_score__target.pdf", breaks)
-  }
-  
-  scores <- psm.data[which(psm.data$opt_global_target_decoy=="decoy"),]$`search_engine_score[1]`
-  
-  if (length(scores) > 0)
-  {
-    plotScoreDistribution(scores, "plot__search_engine_score__decoy.pdf", breaks)
-  }
-}
-
-if (checkEValueExists(psm.data))
-{
-  scores <- psm.data$`opt_global_SpecEValue_score`
-  
-  if (length(scores) > 0)
-  {
-    plotScoreDistribution(scores, "plot__e_value_score.pdf", breaks)
-  }
-  
-  scores <- psm.data[which(psm.data$opt_global_target_decoy=="target"),]$`opt_global_SpecEValue_score`
-  
-  if (length(scores) > 0)
-  {
-    plotScoreDistribution(scores, "plot__e_value_score__target.pdf", breaks)
-  }
-  
-  scores <- psm.data[which(psm.data$opt_global_target_decoy=="decoy"),]$`opt_global_SpecEValue_score`
-  
-  if (length(scores) > 0)
-  {
-    plotScoreDistribution(scores, "plot__e_value_score__decoy.pdf", breaks)
-  }
-}
+protein.data <- readMzTabPRT(input.file)
