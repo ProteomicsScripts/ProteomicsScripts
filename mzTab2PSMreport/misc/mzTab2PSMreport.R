@@ -5,10 +5,7 @@
 ## (3) main part i.e. generation of plots and tables
 ##
 ## To install dependencies, please run in R:
-## install.packages("corrplot")     # for correlation of peptide intensities
-## install.packages("xtable")       # for peptides/proteins of interest tables
-## install.packages("ggfortify")    # for plotPCA(), But we can do PCA without additional packages, see plotPCAscatter() etc.
-## install.packages('rasterVis')
+## install.packages("xtable")       # for mod summary table
 
 library(xtable)
 
