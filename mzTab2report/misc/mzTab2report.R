@@ -23,7 +23,7 @@ rm(list = ls())
 ####
 
 #input.file <- 'analysis.mzTab'
-input.file <- 'example_5.mzTab'
+input.file <- 'example_6__SILACmultipleFractions.mzTab'
 
 # maximum number of digits
 options(digits=10)
@@ -834,13 +834,13 @@ if (studyVariableExists(peptide.data,1)) {
   plotDistribution(log10(abundances), expression('log'[10]*' intensity'), "plot_DistributionIntensity_1.pdf")
 }
 if (studyVariableExists(peptide.data,2)) {
-  abundances <- peptide.data$"peptide_abundance_study_variable[1]"
+  abundances <- peptide.data$"peptide_abundance_study_variable[2]"
   abundances <- abundances[complete.cases(abundances)]
   median.abundance.2 <- median(abundances, na.rm=TRUE)
   plotDistribution(log10(abundances), expression('log'[10]*' intensity'), "plot_DistributionIntensity_2.pdf")
 }
 if (studyVariableExists(peptide.data,3)) {
-  abundances <- peptide.data$"peptide_abundance_study_variable[1]"
+  abundances <- peptide.data$"peptide_abundance_study_variable[3]"
   abundances <- abundances[complete.cases(abundances)]
   median.abundance.3 <- median(abundances, na.rm=TRUE)
   plotDistribution(log10(abundances), expression('log'[10]*' intensity'), "plot_DistributionIntensity_3.pdf")
@@ -888,8 +888,6 @@ if (numberOfStudyVariables(peptide.data) >= 3) {
   corr.median <- median(corr)
   corr.max <- max(corr)
 }
-
-x <- getPeptideQuants(peptide.data)
 
 # plot boxplot of peptide abundances
 if (numberOfStudyVariables(peptide.data) >= 3) {
