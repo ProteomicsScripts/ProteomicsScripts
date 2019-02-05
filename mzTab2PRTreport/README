@@ -15,8 +15,7 @@ mzTab2PRTreport example.mzTab
 
 +++ FILES +++
 
-mzTab2PRTreport    -> main script (macOS)
-mzTab2PRTreport.sh    -> main script (Linux)
+mzTab2PRTreport    -> main script (Linux, macOS)
 mzTab2PRTreport.bat    -> main script (Windows)
 mzTab2PRTreport.Snw    -> Sweave script containing both R and LaTeX code
 Sweave.sty    -> Sweave style sheet

@@ -15,8 +15,7 @@ mzTab2PSMreport example.mzTab
 
 +++ FILES +++
 
-mzTab2PSMreport    -> main script (macOS)
-mzTab2PSMreport.sh    -> main script (Linux)
+mzTab2PSMreport    -> main script (Linux, macOS)
 mzTab2PSMreport.bat    -> main script (Windows)
 mzTab2PSMreport.Snw    -> Sweave script containing both R and LaTeX code
 Sweave.sty    -> Sweave style sheet
