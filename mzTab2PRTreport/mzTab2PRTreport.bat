@@ -39,17 +39,17 @@ cp %FILE_ABSOLUTE% analysis.mzTab
 cp %SCRIPT_PATH%\Sweave.sty Sweave.sty
 
 REM  replace dummy FILE_NAME_DUMMY by file name %FILE_BASE%
-REM  XXX: mzTab2report.Snw now needs to be addressed via full path by joining SCRIPT_PATH with that filename (only in first occurrence!)
-(for /f "delims=" %%i in (%SCRIPT_PATH%\mzTab2report.Snw) do (
+REM  XXX: mzTab2PRTreport.Snw now needs to be addressed via full path by joining SCRIPT_PATH with that filename (only in first occurrence!)
+(for /f "delims=" %%i in (%SCRIPT_PATH%\mzTab2PRTreport.Snw) do (
     set "line=%%i"
     setlocal enabledelayedexpansion
     set "line=!line:FILE_NAME_DUMMY=%FILE_BASE%!"
     echo(!line!
     endlocal
-))>"mzTab2report_temp.Snw"
+))>"mzTab2PRTreport_temp.Snw"
 
 REM  Run the R code
-R -e "Sweave('mzTab2report_temp.Snw')"
+R -e "Sweave('mzTab2PRTreport_temp.Snw')"
 
 REM If sweave fails, exit with error code.
 if %errorlevel% neq 0 (
@@ -61,10 +61,10 @@ REM Small 5 sec pause.
 timeout /t 5 /NOBREAK
 
 REM  Run LaTeX code
-pdflatex mzTab2report_temp.tex
+pdflatex mzTab2PRTreport_temp.tex
 
 REM  Copy final report to the input folder
-MOVE mzTab2report_temp.pdf %FILE_PATH%\%FILE_BASE%.pdf
+MOVE mzTab2PRTreport_temp.pdf %FILE_PATH%\%FILE_BASE%.pdf
 
 REM  clean-up
 CD /d %SCRIPT_PATH%

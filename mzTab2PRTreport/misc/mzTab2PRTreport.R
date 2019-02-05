@@ -5,21 +5,29 @@
 ## (3) main part i.e. generation of plots and tables
 ##
 ## To install dependencies, please run in R:
-## install.packages("corrplot")     # for correlation of peptide intensities
 ## install.packages("xtable")       # for peptides/proteins of interest tables
-## install.packages("ggfortify")    # for plotPCA(), But we can do PCA without additional packages, see plotPCAscatter() etc.
-## install.packages('rasterVis')
 
 library(xtable)
 
 # clear entire workspace
 rm(list = ls())
 
-# options
-options(digits=10)
+####
+## (1) definition of global options and parameters
+####
 
 #input.file <- 'analysis.mzTab'
 input.file <- 'example.mzTab'
+
+# options
+options(digits=10)
+
+
+
+
+####
+## (2) definition of functions
+####
 
 # find start of the section
 startSection <- function(file, section.identifier) {
@@ -133,5 +141,11 @@ readMzTabPRT <-function(file) {
 
 
 
+####
+## (3) main part
+####
 
+# read mzTab data
 protein.data <- readMzTabPRT(input.file)
+
+n.total <- dim(protein.data)[1]

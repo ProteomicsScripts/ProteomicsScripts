@@ -43,21 +43,21 @@ cp $FILE_ABSOLUTE analysis.mzTab
 cp $SCRIPT_PATH/Sweave.sty $WORK_DIRECTORY
 
 # replace dummy by file name
-sed -e 's/FILE_NAME_DUMMY/'$FILE_NAME'/g' "$SCRIPT_PATH/mzTab2report.Snw" > mzTab2report_temp.Snw
+sed -e 's/FILE_NAME_DUMMY/'$FILE_NAME'/g' "$SCRIPT_PATH/mzTab2PRTreport.Snw" > mzTab2PRTreport_temp.Snw
 
 # Run the R code
-R -e "Sweave('mzTab2report_temp.Snw')"
+R -e "Sweave('mzTab2PRTreport_temp.Snw')"
 
 # Run LaTeX code
-pdflatex mzTab2report_temp.tex
+pdflatex mzTab2PRTreport_temp.tex
 
 # Copy final report to the input folder
-mv mzTab2report_temp.pdf $FILE_PATH/$FILE_NAME.pdf
+mv mzTab2PRTreport_temp.pdf $FILE_PATH/$FILE_NAME.pdf
 
 # clean-up
 rm analysis*
 rm plot*
-rm mzTab2report_temp*
+rm mzTab2PRTreport_temp*
 rm Sweave*
 
 rmdir "$WORK_DIRECTORY"
