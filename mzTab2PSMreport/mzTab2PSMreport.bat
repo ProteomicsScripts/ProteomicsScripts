@@ -1,14 +1,14 @@
 @ECHO OFF
 
-rem Script to create a report from mzTab file
+REM Script to create a report from mzTab file
 
-rem script directory
-rem The script path consists of drive (d) and path (p) of the zeroth argument (0) i.e. the script itselfs.
+REM script directory
+REM The script path consists of drive (d) and path (p) of the zeroth argument (0) i.e. the script itselfs.
 SET SCRIPT_PATH=%~dp0
 
 IF "%1"=="" (
   ECHO Please specify a file.
-  rem Exit the script without closing the terminal
+  REM Exit the script without closing the terminal
   EXIT /B
 )
 
@@ -19,25 +19,27 @@ IF NOT EXIST %1 (
 
 SET CURRENT_PATH=%CD%
 SET FILE=%1
-rem The absolute path consists of drive (d), path (p), name (n) and extension (x) of the first argument (1).
+REM The absolute path consists of drive (d), path (p), name (n) and extension (x) of the first argument (1).
 SET FILE_ABSOLUTE=%~dpnx1
-rem The file path consists of drive (d) and path (p) of the first argument (1).
+REM The file path consists of drive (d) and path (p) of the first argument (1).
 SET FILE_PATH=%~dp1
-rem The base name consists only of the name (n) of the first argument (1).
+REM The base name consists only of the name (n) of the first argument (1).
 SET FILE_BASE=%~n1
 
 ECHO Generating report from mzTab file %FILE_BASE%.
 
-rem Unique directory to avoid name clashes in `analysis.mzTab` etc. when 
-rem running multiple processes at once.
+REM Unique directory to avoid name clashes in `analysis.mzTab` etc. when 
+REM running multiple processes at once.
 SET WORK_DIRECTORY=%SCRIPT_PATH%\%FILE_BASE%
 mkdir %WORK_DIRECTORY%
 CD /d %WORK_DIRECTORY%
 
-rem copy mzTab
+REM copy mzTab
 cp %FILE_ABSOLUTE% analysis.mzTab
+cp %SCRIPT_PATH%\Sweave.sty Sweave.sty
 
-rem  replace dummy FILE_NAME_DUMMY by file name %FILE_BASE%
+REM  replace dummy FILE_NAME_DUMMY by file name %FILE_BASE%
+REM  XXX: mzTab2PSMreport.Snw now needs to be addressed via full path by joining SCRIPT_PATH with that filename (only in first occurrence!)
 (for /f "delims=" %%i in (%SCRIPT_PATH%\mzTab2PSMreport.Snw) do (
     set "line=%%i"
     setlocal enabledelayedexpansion
@@ -46,22 +48,27 @@ rem  replace dummy FILE_NAME_DUMMY by file name %FILE_BASE%
     endlocal
 ))>"mzTab2PSMreport_temp.Snw"
 
-rem  Run the R code
+REM  Run the R code
 R -e "Sweave('mzTab2PSMreport_temp.Snw')"
 
-rem Small 5 sec pause.
+REM If sweave fails, exit with error code.
+if %errorlevel% neq 0 (
+    ECHO "Sweave encountered an error! Exiting."
+    exit \b %errorlevel%
+)
+
+REM Small 5 sec pause.
 timeout /t 5 /NOBREAK
 
-rem  Run LaTeX code
+REM  Run LaTeX code
 pdflatex mzTab2PSMreport_temp.tex
 
-rem  Copy final report to the input folder
+REM  Copy final report to the input folder
 MOVE mzTab2PSMreport_temp.pdf %FILE_PATH%\%FILE_BASE%.pdf
 
-rem  clean-up
-DEL analysis*
-DEL plot*
-DEL mzTab2PSMreport_temp*
+REM  clean-up
+CD /d %SCRIPT_PATH%
+RMDIR /Q /S %WORK_DIRECTORY%
 
-rem  Jump back to original folder
+REM  Jump back to original folder
 CD /d %CURRENT_PATH%
