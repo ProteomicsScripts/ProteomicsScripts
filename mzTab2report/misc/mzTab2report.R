@@ -945,3 +945,42 @@ if (numberOfStudyVariables(peptide.data) >= 3) {
 
 }
 # end of Principal Component Analysis
+
+
+
+
+
+
+
+
+
+
+
+
+
+# find indices of quant columns
+columns <- colnames(peptide.data)
+idx <- which(grepl("peptide_abundance_study_variable", columns))
+
+# add column of average peptide abundance
+peptide.data$intensity <- apply(peptide.data[,idx], 1, mean)
+
+# returns index of the best quantification with this modified sequence
+indexMaxIntensity <- function(sequence) {
+  idx <- which(peptide.data$opt_global_modified_sequence==sequence)
+  max <- max(peptide.data$intensity[idx])
+  idx.m <- which(peptide.data[idx,]$intensity==max)
+  return(idx[idx.m])
+}
+
+# makes the sequences unique by picking the quants with maximum intensity
+makeModifiedSequencesUnique <- function(peptide.data) {
+  unique.sequences <- unique(peptide.data$opt_global_modified_sequence)
+  idx <- unlist(lapply(unique.sequences, FUN=indexMaxIntensity))
+  return(peptide.data[idx,])
+}
+
+peptide.data <- makeModifiedSequencesUnique(peptide.data)
+
+
+
