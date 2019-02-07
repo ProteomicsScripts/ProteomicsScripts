@@ -247,7 +247,42 @@ getPeptideQuants <- function(data)
   return(data[,idx])
 }
 
-plotCorrelations <- function(data, pdf.file) {
+# returns an average peptide intensity over all study variables
+getAverageIntensity <- function(data)
+{
+  intensity <- apply(getPeptideQuants(data), 1, mean)
+  return(intensity)
+}
+
+# makes the (modified sequence, charge) combination unique by picking the quants with maximum intensity
+makeModifiedSequenceChargeUnique <- function(data)
+{
+  # returns index of the best quantification with this modified sequence, charge combination 
+  indexMaxIntensity <- function(sequence.charge, df)
+  {
+    idx <- which(df$sequence.charge==sequence.charge)
+    max <- max(df$intensity[idx])
+    idx.m <- which(df[idx,]$intensity==max)
+    return(idx[idx.m])
+  }
+  
+  # add columns of average peptide abundance and of modified sequence and charge (which we will make unique)
+  data$intensity <- getAverageIntensity(data)
+  data$sequence.charge <- paste(data$"opt_global_modified_sequence", as.character(data$charge), sep="_")
+  
+  # make (modified sequence, charge) unique and find the quants with highest intensity
+  unique.sequence.charge <- unique(data$sequence.charge)
+  idx <- unlist(lapply(unique.sequence.charge, FUN=indexMaxIntensity, df=data))
+  
+  # clean up
+  data$intensity <- NULL
+  data$sequence.charge <- NULL
+  
+  return(data[idx,])
+}
+
+plotCorrelations <- function(data, pdf.file)
+{
   # extract study variables
   study_variables.n <- numberOfStudyVariables(data)
   study_variables.data = getPeptideQuants(data)
@@ -952,35 +987,5 @@ if (numberOfStudyVariables(peptide.data) >= 3) {
 
 
 
-
-
-
-
-
-
-# find indices of quant columns
-columns <- colnames(peptide.data)
-idx <- which(grepl("peptide_abundance_study_variable", columns))
-
-# add column of average peptide abundance
-peptide.data$intensity <- apply(peptide.data[,idx], 1, mean)
-
-# returns index of the best quantification with this modified sequence
-indexMaxIntensity <- function(sequence) {
-  idx <- which(peptide.data$opt_global_modified_sequence==sequence)
-  max <- max(peptide.data$intensity[idx])
-  idx.m <- which(peptide.data[idx,]$intensity==max)
-  return(idx[idx.m])
-}
-
-# makes the sequences unique by picking the quants with maximum intensity
-makeModifiedSequencesUnique <- function(peptide.data) {
-  unique.sequences <- unique(peptide.data$opt_global_modified_sequence)
-  idx <- unlist(lapply(unique.sequences, FUN=indexMaxIntensity))
-  return(peptide.data[idx,])
-}
-
-peptide.data <- makeModifiedSequencesUnique(peptide.data)
-
-
+data <- makeModifiedSequenceChargeUnique(peptide.data)
 
