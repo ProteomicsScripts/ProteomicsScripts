@@ -796,9 +796,22 @@ plotFrequencyOfFrequencies <- function(vector, pdf.file, xlab="frequency", ylab=
 plotMultiplicityFrequency <- function(data, pdf.file)
 {
   modified.sequence.charge <- paste(data$"opt_global_modified_sequence", as.character(data$charge), sep="_")
-  plotFrequencyOfFrequencies(modified.sequence.charge, pdf.file, "multiplicity of (modified sequence, charge) pairs", "number of (modified sequence, charge) pairs", "y")
+  plotFrequencyOfFrequencies(modified.sequence.charge, pdf.file, "multiplicity of (modified sequence, charge) pairs", "occurrences", "y")
 }
 
+# quantified peptides per protein vs frequency plot
+plotPeptidesPerProtein <- function(data, pdf.file)
+{
+  if ("accession" %in% colnames(data))
+  {
+    accessions <- data$accession
+    accessions <- accessions[complete.cases(accessions)]
+    if (length(accessions)>0)
+    {
+      plotFrequencyOfFrequencies(data$accession, "plot_PeptidesPerProteinFrequency.pdf", "number of quantified peptides per protein", "occurrences", "xy")
+    }
+  }
+}
 
 
 
@@ -1027,48 +1040,4 @@ plotFcLogIntensity(data$fc[idx], data$intensity[idx], "fold change", "plot_FoldC
 idx <- which(data$accession == 'Q00610')
 plotFcLogIntensity(data$fc[idx], data$intensity[idx], "fold change", "plot_FoldChangeLogIntensity_Q00610.pdf")
 
-#h <- hist(frequency.table$frequency, plot=FALSE)
-#plot(h$mids, h$counts, log="y", type='b', xlab="quantified peptides per protein", ylab="occurences", main="")
-
-
-
-# (modified sequence, charge) pair multiplicity vs frequency plot
-# Each peptide feature (characterised by a (possibly) modified peptide sequence and a charge state) should ideally occur only once in the analysis.
-# In other words, peptides of multiplicity 1 should have a very high frequency. The plot below should show a significant spike on the left and can be used as QC of the analysis.
-# plotMultiplicityFrequency <- function(data, pdf.file)
-# {
-#   data <- data[,c("opt_global_modified_sequence","charge")]
-#   data <- data[order(data$"opt_global_modified_sequence"),]
-#   data$sequence.charge <- paste(data$"opt_global_modified_sequence", as.character(data$charge), sep="_")
-#   occurences <- as.data.frame(table(data$sequence.charge))
-#   frequency.of.occurences <- as.data.frame(table(occurences$Freq))
-#   colnames(frequency.of.occurences) <- c("multiplicity","frequency")
-#   frequency.of.occurences$multiplicity <- as.numeric(as.character(frequency.of.occurences$multiplicity))
-#   frequency.of.occurences$frequency <- as.numeric(as.character(frequency.of.occurences$frequency))
-#   
-#   pdf(file=pdf.file)
-#   plot(frequency.of.occurences$multiplicity, frequency.of.occurences$frequency, log="y", xlab="multiplicity of (modified sequence, charge) pairs", ylab="number of (modified sequence, charge) pairs", type="b")
-#   dev.off()
-# }
-
-accessions <- data$accession
-occurences <- as.data.frame(table(accessions))
-frequency.of.occurences <- as.data.frame(table(occurences$Freq))
-colnames(frequency.of.occurences) <- c("peptides.per.protein","frequency")
-frequency.of.occurences$peptides.per.protein <- as.numeric(as.character(frequency.of.occurences$peptides.per.protein))
-frequency.of.occurences$frequency <- as.numeric(as.character(frequency.of.occurences$frequency))
-
-# plot the 
-plotPeptidesPerProteinFrequency <- function(accessions, pdf.file)
-{
-  frequency <- data.frame(table(accessions))$Freq
-  histogram <- hist(frequency, plot=FALSE)
-  
-  pdf(file=pdf.file)
-  #plot(h$mids, h$counts, log="y", type='b', xlab="quantified peptides per protein", ylab="occurences", main="")
-  plot(frequency.of.occurences$peptides.per.protein, frequency.of.occurences$frequency, log="xy", xlab="quantified peptides per protein", ylab="occurences", main="")
-  dev.off()
-}
-
-plotPeptidesPerProteinFrequency(data$accession, "plot_PeptidesPerProteinFrequency.pdf")
 
