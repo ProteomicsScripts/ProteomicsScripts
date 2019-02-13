@@ -25,7 +25,11 @@ rm(list = ls())
 ####
 
 #input.file <- 'analysis.mzTab'
-input.file <- 'example_5.mzTab'
+#input.file <- 'example_1.mzTab'
+input.file <- 'example_2.mzTab'
+#input.file <- 'example_3.mzTab'
+#input.file <- 'example_4.mzTab'
+#input.file <- 'example_5.mzTab'
 #input.file <- 'example_6__SILACmultipleFractions.mzTab'
 
 # maximum number of digits
@@ -918,7 +922,10 @@ if (!isEmpty(peptide.data$opt_global_modified_sequence) && !isEmpty(peptide.data
 }
 
 # plot frequency of peptides per protein
-plotPeptidesPerProtein(makeModifiedSequenceChargeUnique(peptide.data), "plot_PeptidesPerProteinFrequency.pdf")
+if (!isEmpty(peptide.data$accession) && !isEmpty(peptide.data$sequence) && !isEmpty(peptide.data$opt_global_modified_sequence) && !isEmpty(peptide.data$charge))
+{
+  plotPeptidesPerProtein(makeModifiedSequenceChargeUnique(peptide.data), "plot_PeptidesPerProteinFrequency.pdf")
+}
 
 # extract peptides and proteins of interest
 interest.peptides.matches <- findPeptidesOfInterest(peptide.data)
@@ -1068,70 +1075,43 @@ if (numberOfStudyVariables(peptide.data) >= 3) {
 
 
 # plot fc vs log intensity for all proteins of interest
-for (p in 1:length(proteins.of.interest))
+if (!isEmpty(peptide.data$accession) && !isEmpty(peptide.data$unique) && !isEmpty(peptide.data$opt_global_modified_sequence) && !isEmpty(peptide.data$charge))
 {
-  pdf.file <- paste("plot_ProteinsOfInterest_", as.character(p), ".pdf", sep="")
-  plotFcLogIntensitySingleProtein(peptide.data, proteins.of.interest[p], 1, 2, pdf.file)
+  for (p in 1:length(proteins.of.interest))
+  {
+    if ((length(which(peptide.data$accession == proteins.of.interest[p])) > 0) && (numberOfStudyVariables(peptide.data) > 1))
+    {
+      pdf.file <- paste("plot_ProteinsOfInterest_", as.character(p), ".pdf", sep="")
+      plotFcLogIntensitySingleProtein(peptide.data, proteins.of.interest[p], 1, 2, pdf.file)
+    }
+  }
 }
 
+# plot fc vs log intensity for the proteins with the most quantified peptides
+if (!isEmpty(peptide.data$accession) && !isEmpty(peptide.data$unique) && !isEmpty(peptide.data$opt_global_modified_sequence) && !isEmpty(peptide.data$charge))
+{
+  # remove duplicate, low-intensity peptide quantifications
+  data <- makeModifiedSequenceChargeUnique(peptide.data)
 
-# # plot fc vs log intensity for the proteins with the most quantified peptides
-# # remove duplicate, low-intensity peptide quantifications
-# data <- makeModifiedSequenceChargeUnique(peptide.data)
-# 
-# # count number of peptides per protein
-# frequency.table <- data.frame(table(data$accession))
-# colnames(frequency.table) <- c("accession","frequency")
-# data <- merge(data, frequency.table, by="accession")
-# 
-# # order by frequency, intensity and accession
-# data <- data[order(data$accession),]
-# #data <- data[order(data$intensity, decreasing=TRUE),]
-# data <- data[order(data$frequency, decreasing=TRUE),]
-# 
-# accessions <- unique(data$accession)
-# 
-# # plot fc vs log intensity for best quantified proteins
-# for (p in 1:9)
-# {
-#   pdf.file <- paste("plot_BestProteins_", as.character(p), ".pdf", sep="")
-#   plotFcLogIntensitySingleProtein(peptide.data, accessions[p], 1, 2, pdf.file)
-# }
+  # count number of peptides per protein
+  frequency.table <- data.frame(table(data$accession))
+  colnames(frequency.table) <- c("accession","frequency")
+  data <- merge(data, frequency.table, by="accession")
 
+  # order by frequency and accession
+  data <- data[order(data$accession),]
+  data <- data[order(data$frequency, decreasing=TRUE),]
 
+  accessions <- unique(data$accession)
 
-
-# plotFcLogIntensitySingleProtein <- function(data, protein, sample.1, sample.2, pdf.file)
-# {
-  data <- peptide.data
-  protein <- proteins.of.interest[1]
-  sample.1 <- 1
-  sample.2 <- 2
-  pdf.file <- "plot_Tescht.pdf"
-  
-  idx <- which(data$accession == protein)
-  data <- data[idx,]
-  
-  # make (modified sequence, charge) pair unique i.e. use best quants only
-  data <- makeModifiedSequenceChargeUnique(data)
-  
-  # calculate fc and average intensity
-  column.1 <- paste("peptide_abundance_study_variable[", as.character(sample.1), "]", sep="")
-  column.2 <- paste("peptide_abundance_study_variable[", as.character(sample.2), "]", sep="")
-  data$fc <- calculateFoldChange(data[[column.1]], data[[column.2]])
-  data$intensity <- getAverageIntensity(data)
-  idx <- complete.cases(data[,c("fc","intensity")])
-  data <- data[idx,]
-  
-  # define colours
-  colours <- c("grey", "red")
-  
-  pdf(file=pdf.file)
-  plot(data$fc, data$intensity, pch=20, col=colours[data$unique+1], xlab=paste("fold change (sample ", sample.1, " vs ", sample.2, ")", sep=""), ylab="intensity", log="y", main=protein)
-  abline(v=0, col = "gray", lty=1)
-  abline(v=median(data$fc, na.rm=TRUE), col = "gray", lty=2)
-  legend("topright", legend=c("unique", "not unique"), fill=c("red", "grey"), box.lty=0)
-  dev.off()
-#}
-
+  # plot fc vs log intensity for the nine best quantified proteins
+  for (p in 1:9)
+  {
+    if ((length(which(peptide.data$accession == accessions[p])) > 0) && (numberOfStudyVariables(peptide.data) > 1))
+    {
+      pdf.file <- paste("plot_BestProteins_", as.character(p), ".pdf", sep="")
+      plotFcLogIntensitySingleProtein(peptide.data, accessions[p], 1, 2, pdf.file)
+    }
+  }
+}
 
