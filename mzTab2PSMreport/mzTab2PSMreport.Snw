@@ -324,17 +324,17 @@ if (checkEValueExists(psm.data))
 
 \begin{table}[hb]
 \begin{center}
-\begin{tabular}{| r | r | r |}
+\begin{tabular}{| r | r r | r r |}
 \hline
- & total & non-redundant\\
+ & \multicolumn{2}{c|}{total} & \multicolumn{2}{c|}{non-redundant}\\
 \hline
-PSMs & \Sexpr{format(n.total, big.mark=",")} & \Sexpr{format(n.nonredundant, big.mark=",")}\\
-unique PSMs & \Sexpr{format(n.unique, big.mark=",")} & \Sexpr{format(n.unique.nonredundant, big.mark=",")}\\
+PSMs & \Sexpr{format(n.total, big.mark=",")} & 100\% & \Sexpr{format(n.nonredundant, big.mark=",")} & 100\%\\
+unique PSMs & \Sexpr{format(n.unique, big.mark=",")} & $\Sexpr{round(100*n.unique/n.total,digits=2)}$\%& \Sexpr{format(n.unique.nonredundant, big.mark=",")} & $\Sexpr{round(100*n.unique.nonredundant/n.nonredundant,digits=2)}$\%\\
 \hline
-target PSMs & \Sexpr{format(n.target, big.mark=",")} & \Sexpr{format(n.target.nonredundant, big.mark=",")}\\
-decoy PSMs & \Sexpr{format(n.decoy, big.mark=",")} & \Sexpr{format(n.decoy.nonredundant, big.mark=",")}\\
-target + decoy PSMs & \Sexpr{format(n.target.decoy, big.mark=",")} & \Sexpr{format(n.target.decoy.nonredundant, big.mark=",")}\\
-unmapped PSMs & \Sexpr{format(n.neither, big.mark=",")} & \Sexpr{format(n.neither.nonredundant, big.mark=",")}\\
+target PSMs & \Sexpr{format(n.target, big.mark=",")} & $\Sexpr{round(100*n.target/n.total,digits=2)}$\% & \Sexpr{format(n.target.nonredundant, big.mark=",")} & $\Sexpr{round(100*n.target.nonredundant/n.nonredundant,digits=2)}$\%\\
+decoy PSMs & \Sexpr{format(n.decoy, big.mark=",")} & $\Sexpr{round(100*n.decoy/n.total,digits=2)}$\% & \Sexpr{format(n.decoy.nonredundant, big.mark=",")} & $\Sexpr{round(100*n.decoy.nonredundant/n.nonredundant,digits=2)}$\%\\
+target + decoy PSMs & \Sexpr{format(n.target.decoy, big.mark=",")} & $\Sexpr{round(100*n.target.decoy/n.total,digits=2)}$\% & \Sexpr{format(n.target.decoy.nonredundant, big.mark=",")} & $\Sexpr{round(100*n.target.decoy.nonredundant/n.nonredundant,digits=2)}$\%\\
+unmapped PSMs & \Sexpr{format(n.neither, big.mark=",")} & $\Sexpr{round(100*n.neither/n.total,digits=2)}$\% & \Sexpr{format(n.neither.nonredundant, big.mark=",")} & $\Sexpr{round(100*n.neither.nonredundant/n.nonredundant,digits=2)}$\%\\
 \hline
 \end{tabular}
 \caption{Number of PSMs. Two PSMs are considered {\em non-redundant} if they differ in amino acid sequence. They are considered {\em redundant}, if they differ merely in modifications. A PSM is considered {\em unique}, if its amino acid sequence can be mapped uniquely to a single protein. The sequence can appear in either target proteins, decoy proteins, both or neither of them.}
