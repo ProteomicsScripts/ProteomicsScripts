@@ -193,6 +193,16 @@ calculateFoldChange <- function(abundances1, abundances2) {
   return (fc)
 }
 
+# returns a unique colour for each string
+uniqueColors <- function(string.vector)
+{
+  unique <- unique(string.vector)
+  palette <- rainbow(length(unique))
+  names(palette) <- unique
+  
+  return(palette[string.vector])
+}
+
 # plot fold change vs log intensity
 plotFcLogIntensity <- function(fc.vector, intensity.vector, fc.label, pdf.file)
 {
@@ -209,6 +219,31 @@ plotFcLogIntensity <- function(fc.vector, intensity.vector, fc.label, pdf.file)
   plot(y~x, data=df[order(df$dens),], pch=20, col=col, xlab=fc.label, ylab=expression('log'[10]*' intensity'))
   abline(v=0, col = "gray", lty=1)
   abline(v=median(fc.vector, na.rm=TRUE), col = "gray", lty=2)
+  dev.off()
+}
+
+# plot peptide fold change vs log intensity for a single specific protein
+# (same peptide sequence -> same colour)
+plotFcLogIntensitySingleProtein <- function(data, protein, sample.1, sample.2, pdf.file)
+{
+  idx <- which(data$accession == protein)
+  data <- data[idx,]
+  
+  # make (modified sequence, charge) pair unique i.e. use best quants only
+  data <- makeModifiedSequenceChargeUnique(data)
+  
+  # calculate fc and average intensity
+  column.1 <- paste("peptide_abundance_study_variable[", as.character(sample.1), "]", sep="")
+  column.2 <- paste("peptide_abundance_study_variable[", as.character(sample.2), "]", sep="")
+  data$fc <- calculateFoldChange(data$'peptide_abundance_study_variable[1]', data$'peptide_abundance_study_variable[2]')
+  data$intensity <- getAverageIntensity(data)
+  idx <- complete.cases(data[,c("fc","intensity")])
+  data <- data[idx,]
+  
+  pdf(file=pdf.file)
+  plot(data$fc, data$intensity, pch=20, col=uniqueColors(data$sequence), xlab=paste("fold change (sample ", sample.1, " vs ", sample.2, ")", sep=""), ylab="intensity", log="y")
+  abline(v=0, col = "gray", lty=1)
+  abline(v=median(data$fc, na.rm=TRUE), col = "gray", lty=2)
   dev.off()
 }
 
@@ -675,18 +710,18 @@ plotProteinsOfInterest <- function(data, pdf.file) {
   
   dev.off()
   
-  # plot quantifications for each individual protein
-  for (p in 1:length(proteins.of.interest))
-  {
-    pdf.file.temp <- paste(substr(pdf.file, 1, (nchar(pdf.file)-4)), "_", as.character(p), ".pdf", sep="")
-    
-    idx <- which(data$accession == proteins.of.interest[p])
-    quants <- getPeptideQuants(data[idx,])
-    
-    pdf(file=pdf.file.temp)
-    plot(1:dim(quants)[2], rep(max(quants), dim(quants)[2]), main=proteins.of.interest[p])
-    dev.off()
-  }
+  # # plot quantifications for each individual protein
+  # for (p in 1:length(proteins.of.interest))
+  # {
+  #   pdf.file.temp <- paste(substr(pdf.file, 1, (nchar(pdf.file)-4)), "_", as.character(p), ".pdf", sep="")
+  #   
+  #   idx <- which(data$accession == proteins.of.interest[p])
+  #   quants <- getPeptideQuants(data[idx,])
+  #   
+  #   pdf(file=pdf.file.temp)
+  #   plot(1:dim(quants)[2], rep(max(quants), dim(quants)[2]), main=proteins.of.interest[p])
+  #   dev.off()
+  # }
 }
 
 # create a summary table of all modifications and their specificities
@@ -861,193 +896,203 @@ n.peptides.identified <- dim(peptide.data.identified)[1]
 n.peptides.identified.modified.unique <- length(unique(peptide.data.identified$opt_global_modified_sequence))
 n.peptides.identified.stripped.unique <- length(unique(peptide.data.identified$sequence))
 
-# # plot frequency of peptide quants
-# if (numberOfStudyVariables(peptide.data) >= 2) {
-#   plotQuantFrequency(getPeptideQuants(peptide.data), "plot_QuantFrequency.pdf")
-# }
-# 
-# # plot frequency of multiply quantified sequences
-# if (!isEmpty(peptide.data$opt_global_modified_sequence) && !isEmpty(peptide.data$charge))
+# plot frequency of peptide quants
+if (numberOfStudyVariables(peptide.data) >= 2) {
+  plotQuantFrequency(getPeptideQuants(peptide.data), "plot_QuantFrequency.pdf")
+}
+
+# plot frequency of multiply quantified sequences
+if (!isEmpty(peptide.data$opt_global_modified_sequence) && !isEmpty(peptide.data$charge))
+{
+  plotMultiplicityFrequency(peptide.data, "plot_MultiplicityFrequency.pdf")
+}
+
+# plot frequency of peptides per protein
+plotPeptidesPerProtein(makeModifiedSequenceChargeUnique(peptide.data), "plot_PeptidesPerProteinFrequency.pdf")
+
+# extract peptides and proteins of interest
+interest.peptides.matches <- findPeptidesOfInterest(peptide.data)
+interest.proteins.matches <- findProteinsOfInterest(peptide.data)
+
+# plot abundances of peptides and proteins of intrest
+plotPeptidesOfInterest(peptide.data, "plot_PeptidesOfInterest.pdf")
+plotProteinsOfInterest(peptide.data, "plot_ProteinsOfInterest.pdf")
+
+# pre-define variables which will be called from LaTeX
+# Needed even with IfFileExists()
+
+median.abundance.1 <- 1
+median.abundance.2 <- 1
+median.abundance.3 <- 1
+
+median.fc.12 <- 0
+median.fc.13 <- 0
+median.fc.23 <- 0
+
+sd.fc.12 <- 0
+sd.fc.13 <- 0
+sd.fc.23 <- 0
+
+# Kendrick plot
+plotKendrick((peptide.data$mass_to_charge - 1.00784) * peptide.data$charge, "plot_Kendrick.pdf")
+
+# plot peptide abundance distributions
+if (studyVariableExists(peptide.data,1)) {
+  abundances <- peptide.data$"peptide_abundance_study_variable[1]"
+  abundances <- abundances[complete.cases(abundances)]
+  median.abundance.1 <- median(abundances, na.rm=TRUE)
+  plotDistribution(log10(abundances), expression('log'[10]*' intensity'), "plot_DistributionIntensity_1.pdf")
+}
+if (studyVariableExists(peptide.data,2)) {
+  abundances <- peptide.data$"peptide_abundance_study_variable[2]"
+  abundances <- abundances[complete.cases(abundances)]
+  median.abundance.2 <- median(abundances, na.rm=TRUE)
+  plotDistribution(log10(abundances), expression('log'[10]*' intensity'), "plot_DistributionIntensity_2.pdf")
+}
+if (studyVariableExists(peptide.data,3)) {
+  abundances <- peptide.data$"peptide_abundance_study_variable[3]"
+  abundances <- abundances[complete.cases(abundances)]
+  median.abundance.3 <- median(abundances, na.rm=TRUE)
+  plotDistribution(log10(abundances), expression('log'[10]*' intensity'), "plot_DistributionIntensity_3.pdf")
+}
+
+# plot fold change distributions and scatter plots
+if (studyVariableExists(peptide.data,1) && studyVariableExists(peptide.data,2)) {
+  a <- peptide.data$"peptide_abundance_study_variable[1]"
+  b <- peptide.data$"peptide_abundance_study_variable[2]"
+  fc <- calculateFoldChange(a, b)
+  intensity <- (a + b)/2
+  median.fc.12 <- median(fc, na.rm=TRUE)
+  sd.fc.12 <- sd(fc, na.rm=TRUE)
+  plotFcLogIntensity(fc, intensity, "fold change", "plot_FoldChangeLogIntensity_12.pdf")
+  plotDistribution(fc, "fold change", "plot_DistributionFoldChange_12.pdf")
+}
+if (studyVariableExists(peptide.data,1) && studyVariableExists(peptide.data,3)) {
+  a <- peptide.data$"peptide_abundance_study_variable[1]"
+  b <- peptide.data$"peptide_abundance_study_variable[3]"
+  fc <- calculateFoldChange(a, b)
+  intensity <- (a + b)/2
+  median.fc.13 <- median(fc, na.rm=TRUE)
+  sd.fc.13 <- sd(fc, na.rm=TRUE)
+  plotFcLogIntensity(fc, intensity, "fold change", "plot_FoldChangeLogIntensity_13.pdf")
+  plotDistribution(fc, "fold change", "plot_DistributionFoldChange_13.pdf")
+}
+if (studyVariableExists(peptide.data,2) && studyVariableExists(peptide.data,3)) {
+  a <- peptide.data$"peptide_abundance_study_variable[2]"
+  b <- peptide.data$"peptide_abundance_study_variable[3]"
+  fc <- calculateFoldChange(a, b)
+  intensity <- (a + b)/2
+  median.fc.23 <- median(fc, na.rm=TRUE)
+  sd.fc.23 <- sd(fc, na.rm=TRUE)
+  plotFcLogIntensity(fc, intensity, "fold change", "plot_FoldChangeLogIntensity_23.pdf")
+  plotDistribution(fc, "fold change", "plot_DistributionFoldChange_23.pdf")
+}
+
+# plot correlation matrix of peptide abundances
+corr.min <- 1
+corr.median <- 1
+corr.max <- 1
+if (numberOfStudyVariables(peptide.data) >= 3) {
+  corr <- plotCorrelations(data = peptide.data, pdf.file = "plot_Correlations.pdf")
+  corr.min <- min(corr)
+  corr.median <- median(corr)
+  corr.max <- max(corr)
+}
+
+# plot boxplot of peptide abundances
+if (numberOfStudyVariables(peptide.data) >= 3) {
+  plotBoxplot(peptide.data, "plot_Boxplot.pdf")
+}
+
+# start of Principal Component Analysis
+# (Even if we do not run the PCA, we generate these three non-empty tables in order to prevent LaTeX from crashing.)
+important.peptides.principal.component.1 <- data.frame(c(42))
+important.peptides.principal.component.2 <- data.frame(c(42))
+important.peptides.principal.component.3 <- data.frame(c(42))
+if (numberOfStudyVariables(peptide.data) >= 3) {
+
+  ## simple ggplot2 version of PCA plot
+  #plotPCA(peptide.data, "plot_PCA.pdf")
+
+  pca <- getPCA(peptide.data)
+
+  plotPCAscatter(pca, "plot_PCA_scatter.pdf")
+
+  plotPCAcomponents(pca, "plot_PCA_components.pdf")
+
+  plotPCAeigenvector(pca, peptide.data, 1, "plot_PCA_eigenvector1st.pdf")
+  plotPCAeigenvector(pca, peptide.data, 2, "plot_PCA_eigenvector2nd.pdf")
+  plotPCAeigenvector(pca, peptide.data, 3, "plot_PCA_eigenvector3rd.pdf")
+
+
+  # Note that getPCAeigenvector() returns the row indices with respect to the complete cases.
+  # Since the complete cases appear first in the PEP section, the row indices are the same as for the entire peptide data.
+  # But let's play it save.
+  idx.complete <- which(complete.cases(getPeptideQuants(peptide.data)))
+
+  idx.1 <- idx.complete[getPCAeigenvector(pca, 1)]
+  idx.2 <- idx.complete[getPCAeigenvector(pca, 2)]
+  idx.3 <- idx.complete[getPCAeigenvector(pca, 3)]
+
+  # add column with row index
+  peptide.data$'row index' <- rownames(peptide.data)
+
+  retain.columns=c("row index", "opt_global_modified_sequence", "accession", "charge", "retention_time", "mass_to_charge")
+  new.column.names=c("row index", "modified sequence", "accession", "charge", "retention time", "m/z")
+
+  important.peptides.principal.component.1 <- peptide.data[idx.1, retain.columns]
+  important.peptides.principal.component.2 <- peptide.data[idx.2, retain.columns]
+  important.peptides.principal.component.3 <- peptide.data[idx.3, retain.columns]
+
+  colnames(important.peptides.principal.component.1) <- new.column.names
+  colnames(important.peptides.principal.component.2) <- new.column.names
+  colnames(important.peptides.principal.component.3) <- new.column.names
+
+  # reduce sequence length
+  important.peptides.principal.component.1$'modified sequence' <- unlist(lapply(important.peptides.principal.component.1$'modified sequence', cutSequence))
+  important.peptides.principal.component.2$'modified sequence' <- unlist(lapply(important.peptides.principal.component.2$'modified sequence', cutSequence))
+  important.peptides.principal.component.3$'modified sequence' <- unlist(lapply(important.peptides.principal.component.3$'modified sequence', cutSequence))
+
+}
+# end of Principal Component Analysis
+
+
+
+# # plot fc vs log intensity for all proteins of interest
+# for (p in 1:length(proteins.of.interest))
 # {
-#   plotMultiplicityFrequency(peptide.data, "plot_MultiplicityFrequency.pdf")
+#   pdf.file <- paste("plot_ProteinsOfInterest_", as.character(p), ".pdf", sep="")
+#   plotFcLogIntensitySingleProtein(peptide.data, proteins.of.interest[p], 1, 2, pdf.file)
 # }
-# 
-# # plot frequency of peptides per protein
-# plotPeptidesPerProtein(makeModifiedSequenceChargeUnique(peptide.data), "plot_PeptidesPerProteinFrequency.pdf")
-# 
-# # extract peptides and proteins of interest
-# interest.peptides.matches <- findPeptidesOfInterest(peptide.data)
-# interest.proteins.matches <- findProteinsOfInterest(peptide.data)
-# 
-# # plot abundances of peptides and proteins of intrest
-# plotPeptidesOfInterest(peptide.data, "plot_PeptidesOfInterest.pdf")
-# plotProteinsOfInterest(peptide.data, "plot_ProteinsOfInterest.pdf")
-# 
-# # pre-define variables which will be called from LaTeX
-# # Needed even with IfFileExists()
-# 
-# median.abundance.1 <- 1
-# median.abundance.2 <- 1
-# median.abundance.3 <- 1
-# 
-# median.fc.12 <- 0
-# median.fc.13 <- 0
-# median.fc.23 <- 0
-# 
-# sd.fc.12 <- 0
-# sd.fc.13 <- 0
-# sd.fc.23 <- 0
-# 
-# # Kendrick plot
-# plotKendrick((peptide.data$mass_to_charge - 1.00784) * peptide.data$charge, "plot_Kendrick.pdf")
-# 
-# # plot peptide abundance distributions
-# if (studyVariableExists(peptide.data,1)) {
-#   abundances <- peptide.data$"peptide_abundance_study_variable[1]"
-#   abundances <- abundances[complete.cases(abundances)]
-#   median.abundance.1 <- median(abundances, na.rm=TRUE)
-#   plotDistribution(log10(abundances), expression('log'[10]*' intensity'), "plot_DistributionIntensity_1.pdf")
-# }
-# if (studyVariableExists(peptide.data,2)) {
-#   abundances <- peptide.data$"peptide_abundance_study_variable[2]"
-#   abundances <- abundances[complete.cases(abundances)]
-#   median.abundance.2 <- median(abundances, na.rm=TRUE)
-#   plotDistribution(log10(abundances), expression('log'[10]*' intensity'), "plot_DistributionIntensity_2.pdf")
-# }
-# if (studyVariableExists(peptide.data,3)) {
-#   abundances <- peptide.data$"peptide_abundance_study_variable[3]"
-#   abundances <- abundances[complete.cases(abundances)]
-#   median.abundance.3 <- median(abundances, na.rm=TRUE)
-#   plotDistribution(log10(abundances), expression('log'[10]*' intensity'), "plot_DistributionIntensity_3.pdf")
-# }
-# 
-# # plot fold change distributions and scatter plots
-# if (studyVariableExists(peptide.data,1) && studyVariableExists(peptide.data,2)) {
-#   a <- peptide.data$"peptide_abundance_study_variable[1]"
-#   b <- peptide.data$"peptide_abundance_study_variable[2]"
-#   fc <- calculateFoldChange(a, b)
-#   intensity <- (a + b)/2
-#   median.fc.12 <- median(fc, na.rm=TRUE)
-#   sd.fc.12 <- sd(fc, na.rm=TRUE)
-#   plotFcLogIntensity(fc, intensity, "fold change", "plot_FoldChangeLogIntensity_12.pdf")
-#   plotDistribution(fc, "fold change", "plot_DistributionFoldChange_12.pdf")
-# }
-# if (studyVariableExists(peptide.data,1) && studyVariableExists(peptide.data,3)) {
-#   a <- peptide.data$"peptide_abundance_study_variable[1]"
-#   b <- peptide.data$"peptide_abundance_study_variable[3]"
-#   fc <- calculateFoldChange(a, b)
-#   intensity <- (a + b)/2
-#   median.fc.13 <- median(fc, na.rm=TRUE)
-#   sd.fc.13 <- sd(fc, na.rm=TRUE)
-#   plotFcLogIntensity(fc, intensity, "fold change", "plot_FoldChangeLogIntensity_13.pdf")
-#   plotDistribution(fc, "fold change", "plot_DistributionFoldChange_13.pdf")
-# }
-# if (studyVariableExists(peptide.data,2) && studyVariableExists(peptide.data,3)) {
-#   a <- peptide.data$"peptide_abundance_study_variable[2]"
-#   b <- peptide.data$"peptide_abundance_study_variable[3]"
-#   fc <- calculateFoldChange(a, b)
-#   intensity <- (a + b)/2
-#   median.fc.23 <- median(fc, na.rm=TRUE)
-#   sd.fc.23 <- sd(fc, na.rm=TRUE)
-#   plotFcLogIntensity(fc, intensity, "fold change", "plot_FoldChangeLogIntensity_23.pdf")
-#   plotDistribution(fc, "fold change", "plot_DistributionFoldChange_23.pdf")
-# }
-# 
-# # plot correlation matrix of peptide abundances
-# corr.min <- 1
-# corr.median <- 1
-# corr.max <- 1
-# if (numberOfStudyVariables(peptide.data) >= 3) {
-#   corr <- plotCorrelations(data = peptide.data, pdf.file = "plot_Correlations.pdf")
-#   corr.min <- min(corr)
-#   corr.median <- median(corr)
-#   corr.max <- max(corr)
-# }
-# 
-# # plot boxplot of peptide abundances
-# if (numberOfStudyVariables(peptide.data) >= 3) {
-#   plotBoxplot(peptide.data, "plot_Boxplot.pdf")
-# }
-# 
-# # start of Principal Component Analysis
-# # (Even if we do not run the PCA, we generate these three non-empty tables in order to prevent LaTeX from crashing.)
-# important.peptides.principal.component.1 <- data.frame(c(42))
-# important.peptides.principal.component.2 <- data.frame(c(42))
-# important.peptides.principal.component.3 <- data.frame(c(42))
-# if (numberOfStudyVariables(peptide.data) >= 3) {
-# 
-#   ## simple ggplot2 version of PCA plot
-#   #plotPCA(peptide.data, "plot_PCA.pdf")
-# 
-#   pca <- getPCA(peptide.data)
-# 
-#   plotPCAscatter(pca, "plot_PCA_scatter.pdf")
-# 
-#   plotPCAcomponents(pca, "plot_PCA_components.pdf")
-# 
-#   plotPCAeigenvector(pca, peptide.data, 1, "plot_PCA_eigenvector1st.pdf")
-#   plotPCAeigenvector(pca, peptide.data, 2, "plot_PCA_eigenvector2nd.pdf")
-#   plotPCAeigenvector(pca, peptide.data, 3, "plot_PCA_eigenvector3rd.pdf")
-# 
-# 
-#   # Note that getPCAeigenvector() returns the row indices with respect to the complete cases.
-#   # Since the complete cases appear first in the PEP section, the row indices are the same as for the entire peptide data.
-#   # But let's play it save.
-#   idx.complete <- which(complete.cases(getPeptideQuants(peptide.data)))
-# 
-#   idx.1 <- idx.complete[getPCAeigenvector(pca, 1)]
-#   idx.2 <- idx.complete[getPCAeigenvector(pca, 2)]
-#   idx.3 <- idx.complete[getPCAeigenvector(pca, 3)]
-# 
-#   # add column with row index
-#   peptide.data$'row index' <- rownames(peptide.data)
-# 
-#   retain.columns=c("row index", "opt_global_modified_sequence", "accession", "charge", "retention_time", "mass_to_charge")
-#   new.column.names=c("row index", "modified sequence", "accession", "charge", "retention time", "m/z")
-# 
-#   important.peptides.principal.component.1 <- peptide.data[idx.1, retain.columns]
-#   important.peptides.principal.component.2 <- peptide.data[idx.2, retain.columns]
-#   important.peptides.principal.component.3 <- peptide.data[idx.3, retain.columns]
-# 
-#   colnames(important.peptides.principal.component.1) <- new.column.names
-#   colnames(important.peptides.principal.component.2) <- new.column.names
-#   colnames(important.peptides.principal.component.3) <- new.column.names
-# 
-#   # reduce sequence length
-#   important.peptides.principal.component.1$'modified sequence' <- unlist(lapply(important.peptides.principal.component.1$'modified sequence', cutSequence))
-#   important.peptides.principal.component.2$'modified sequence' <- unlist(lapply(important.peptides.principal.component.2$'modified sequence', cutSequence))
-#   important.peptides.principal.component.3$'modified sequence' <- unlist(lapply(important.peptides.principal.component.3$'modified sequence', cutSequence))
-# 
-# }
-# # end of Principal Component Analysis
+
+
+data <- makeModifiedSequenceChargeUnique(peptide.data)
+
+#data$fc <- calculateFoldChange(data$'peptide_abundance_study_variable[1]', data$'peptide_abundance_study_variable[2]')
+#data$intensity <- getAverageIntensity(data)
+
+# count number of peptides per protein
+frequency.table <- data.frame(table(data$accession))
+colnames(frequency.table) <- c("accession","frequency")
+data <- merge(data, frequency.table, by="accession")
+
+# order by frequency, intensity and accession
+data <- data[order(data$accession),]
+#data <- data[order(data$intensity, decreasing=TRUE),]
+data <- data[order(data$frequency, decreasing=TRUE),]
+
+accessions <- unique(data$accession)
+
+# plot fc vs log intensity for best quantified proteins
+for (p in 1:9)
+{
+  pdf.file <- paste("plot_BestProteins_", as.character(p), ".pdf", sep="")
+  plotFcLogIntensitySingleProtein(peptide.data, accessions[p], 1, 2, pdf.file)
+}
 
 
 
 
-
-
-
-
-
-
-
-
-
-# data <- makeModifiedSequenceChargeUnique(peptide.data)
-# 
-# data$fc <- calculateFoldChange(data$'peptide_abundance_study_variable[1]', data$'peptide_abundance_study_variable[2]')
-# data$intensity <- getAverageIntensity(data)
-# 
-# # count number of peptides per protein
-# frequency.table <- data.frame(table(data$accession))
-# colnames(frequency.table) <- c("accession","frequency")
-# data <- merge(data, frequency.table, by="accession")
-# 
-# # order by frequency, intensity and accession
-# data <- data[order(data$accession),]
-# data <- data[order(data$intensity, decreasing=TRUE),]
-# data <- data[order(data$frequency, decreasing=TRUE),]
-# 
 # # clean up columns
 # data <- data[,c("accession","frequency","sequence","opt_global_modified_sequence","charge","fc","intensity")]
 # 
@@ -1067,50 +1112,19 @@ n.peptides.identified.stripped.unique <- length(unique(peptide.data.identified$s
 
 
 
+# # plot quantifications for each individual protein
+# for (p in 1:length(proteins.of.interest))
+# {
+#   pdf.file.temp <- paste(substr(pdf.file, 1, (nchar(pdf.file)-4)), "_", as.character(p), ".pdf", sep="")
+#   
+#   idx <- which(data$accession == proteins.of.interest[p])
+#   quants <- getPeptideQuants(data[idx,])
+#   
+#   pdf(file=pdf.file.temp)
+#   plot(1:dim(quants)[2], rep(max(quants), dim(quants)[2]), main=proteins.of.interest[p])
+#   dev.off()
+# }
 
-# returns a unique colour for each string
-uniqueColors <- function(string.vector)
-{
-  unique <- unique(string.vector)
-  palette <- rainbow(length(unique))
-  names(palette) <- unique
-  
-  return(palette[string.vector])
-}
 
-# plot the peptide abundances of a single protein, i.e. sample (or group) vs. log peptide abundance
-# If each sample got a group label (labels.of.study.variables), they are combined to groups.
-plotPeptidesSingleProtein <- function(data, protein, pdf.file)
-{
-  idx <- which(data$accession == protein)
-  data <- data[idx,]
-  
-  quants <- cbind(data$sequence, getPeptideQuants(data))
-  colnames(quants) <- c("sequence", as.character(1:numberOfStudyVariables(data)))
-  quants <- melt(quants, id=c("sequence"))
-  quants$variable <- as.numeric(quants$variable)
-  colnames(quants) <- c("sequence", "sample", "abundance")
-  
-  pdf(file=pdf.file)
-  plot(quants$sample, quants$abundance, col=uniqueColors(quants$sequence), pch=16, xaxt="n", log="y", xlab="sample", ylab="abundance", main=protein)
-  axis(1, at=1:numberOfStudyVariables(data))
-  
-  # legend only need if we colour the dots
-  par(xpd = TRUE)
-  #legend(0, 1, as.factor(unique(labels.of.study.variables)), fill=colours.strong, bg="white")
-  legend(0, 1, c("One","Two"), fill=c("red","blue"), bg="white")
-  
-  dev.off()
-  
-  return(quants)
-}
 
-# loop over proteins of interest and generate plots
-for (i in 1:length(proteins.of.interest))
-{
-  protein <- proteins.of.interest[i]
-  pdf.file <- paste("plot_ProteinsOfInterest_", as.character(i), ".pdf", sep="")
-  plotPeptidesSingleProtein(peptide.data, protein, pdf.file)
-}
 
-x <- plotPeptidesSingleProtein(peptide.data, proteins.of.interest[2], "plot_Tescht.pdf")
