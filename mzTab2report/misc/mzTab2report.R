@@ -25,12 +25,7 @@ rm(list = ls())
 ####
 
 #input.file <- 'analysis.mzTab'
-#input.file <- 'example_1.mzTab'
-#input.file <- 'example_2.mzTab'
-#input.file <- 'example_3.mzTab'
-#input.file <- 'example_4.mzTab'
-#input.file <- 'example_5.mzTab'
-input.file <- 'example_6__SILACmultipleFractions.mzTab'
+input.file <- 'example_6.mzTab'
 
 # maximum number of digits
 options(digits=10)
@@ -56,7 +51,7 @@ peptides.of.interest <- c("SSAAPPPPPR", "GISNEGQNASIK", "HVLTSIGEK", "DIPVPKPK",
 #peptides.of.interest <- c("LSLMYAR", "EQCCYNCGKPGHLAR", "LSAIYGGTYMLNKPVDDIIMENGKVVGVK", "MVQEAEKYKAEDEKQR", "TVPFCSTFAAFFTR", "GNFGGSFAGSFGGAGGHAPGVAR", "LGWDPKPGEGHLDALLR")
 
 # proteins of interest
-proteins.of.interest <- c("P46783", "P12270", "Q99497")
+proteins.of.interest <- c("P46783", "P12270")
 
 
 
@@ -254,7 +249,7 @@ plotFcLogIntensitySingleProtein <- function(data, protein, sample.1, sample.2, p
   plot(data$fc, data$intensity, pch=20, col=colours[data$unique+1], xlab=paste("fold change (sample ", sample.1, " vs ", sample.2, ")", sep=""), ylab="intensity", log="y", main=protein)
   abline(v=0, col = "gray", lty=1)
   abline(v=median(data$fc, na.rm=TRUE), col = "gray", lty=2)
-  legend("topright", legend=c("unique", "not unique"), fill=c("red", "grey"), box.lty=0)
+  legend("topright", legend=c("unique", "non-unique"), fill=c("red", "grey"), box.lty=0)
   dev.off()
 }
 
@@ -1104,12 +1099,12 @@ if (!isEmpty(peptide.data$accession) && !isEmpty(peptide.data$unique) && !isEmpt
 
   accessions <- unique(data$accession)
 
-  # plot fc vs log intensity for the nine best quantified proteins
+  # plot fc vs log intensity for the 9 best quantified proteins
   for (p in 1:9)
   {
     if ((length(which(peptide.data$accession == accessions[p])) > 0) && (numberOfStudyVariables(peptide.data) > 1))
     {
-      pdf.file <- paste("plot_BestProteins_", as.character(p), ".pdf", sep="")
+      pdf.file <- paste("plot_ProteinsManyPeptides_", as.character(p), ".pdf", sep="")
       plotFcLogIntensitySingleProtein(peptide.data, accessions[p], 1, 2, pdf.file)
     }
   }
