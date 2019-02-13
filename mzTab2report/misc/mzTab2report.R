@@ -247,6 +247,9 @@ plotFcLogIntensitySingleProtein <- function(data, protein, sample.1, sample.2, p
   plot(data$fc, data$intensity, pch=20, col=colours[data$unique+1], xlab=paste("fold change (sample ", sample.1, " vs ", sample.2, ")", sep=""), ylab="intensity", log="y", main=protein)
   abline(v=0, col = "gray", lty=1)
   abline(v=median(data$fc, na.rm=TRUE), col = "gray", lty=2)
+  
+  legend("topleft", legend=c("unique", "not unique"), fill=c("red", "grey"), box.lty=0)
+  
   dev.off()
 }
 
