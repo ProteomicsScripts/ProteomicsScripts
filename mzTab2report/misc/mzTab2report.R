@@ -25,8 +25,8 @@ rm(list = ls())
 ####
 
 #input.file <- 'analysis.mzTab'
-#input.file <- 'example_5.mzTab'
-input.file <- 'example_6__SILACmultipleFractions.mzTab'
+input.file <- 'example_5.mzTab'
+#input.file <- 'example_6__SILACmultipleFractions.mzTab'
 
 # maximum number of digits
 options(digits=10)
@@ -52,7 +52,7 @@ peptides.of.interest <- c("SSAAPPPPPR", "GISNEGQNASIK", "HVLTSIGEK", "DIPVPKPK",
 #peptides.of.interest <- c("LSLMYAR", "EQCCYNCGKPGHLAR", "LSAIYGGTYMLNKPVDDIIMENGKVVGVK", "MVQEAEKYKAEDEKQR", "TVPFCSTFAAFFTR", "GNFGGSFAGSFGGAGGHAPGVAR", "LGWDPKPGEGHLDALLR")
 
 # proteins of interest
-proteins.of.interest <- c("P46783", "P12270")
+proteins.of.interest <- c("P46783", "P12270", "Q99497")
 
 
 
@@ -181,6 +181,9 @@ calculateFoldChange <- function(abundances1, abundances2) {
   offset <- 1e-10       # avoids devisions by zero
   max.fc <- FcCutoff    # map knock-out fold changes to finite values 
   
+  abundances1[is.na(abundances1)] <- 0
+  abundances2[is.na(abundances2)] <- 0
+  
   # calculate fold changes
   abundances1 <- abundances1 + offset
   abundances2 <- abundances2 + offset
@@ -235,7 +238,7 @@ plotFcLogIntensitySingleProtein <- function(data, protein, sample.1, sample.2, p
   # calculate fc and average intensity
   column.1 <- paste("peptide_abundance_study_variable[", as.character(sample.1), "]", sep="")
   column.2 <- paste("peptide_abundance_study_variable[", as.character(sample.2), "]", sep="")
-  data$fc <- calculateFoldChange(data$'peptide_abundance_study_variable[1]', data$'peptide_abundance_study_variable[2]')
+  data$fc <- calculateFoldChange(data[[column.1]], data[[column.2]])
   data$intensity <- getAverageIntensity(data)
   idx <- complete.cases(data[,c("fc","intensity")])
   data <- data[idx,]
@@ -247,9 +250,7 @@ plotFcLogIntensitySingleProtein <- function(data, protein, sample.1, sample.2, p
   plot(data$fc, data$intensity, pch=20, col=colours[data$unique+1], xlab=paste("fold change (sample ", sample.1, " vs ", sample.2, ")", sep=""), ylab="intensity", log="y", main=protein)
   abline(v=0, col = "gray", lty=1)
   abline(v=median(data$fc, na.rm=TRUE), col = "gray", lty=2)
-  
-  legend("topleft", legend=c("unique", "not unique"), fill=c("red", "grey"), box.lty=0)
-  
+  legend("topright", legend=c("unique", "not unique"), fill=c("red", "grey"), box.lty=0)
   dev.off()
 }
 
@@ -296,7 +297,9 @@ getPeptideQuants <- function(data)
 # returns an average peptide intensity over all study variables
 getAverageIntensity <- function(data)
 {
-  intensity <- apply(getPeptideQuants(data), 1, mean)
+  quants <- getPeptideQuants(data)
+  quants[is.na(quants)] <- 0
+  intensity <- apply(quants, 1, mean)
   return(intensity)
 }
 
@@ -479,7 +482,8 @@ plotPCAeigenvector <- function(pca, data, n, pdf.file) {
   row.idx <- rownames(data[idx,])
   
   pdf(file=pdf.file)
-  plot(eigenvector, xaxt = "n", pch=19, col="darkgrey", ylab="eigenvector component", xlab="peptide (row index in PEP section)")
+  #plot(eigenvector, xaxt = "n", pch=19, col="darkgrey", ylab="eigenvector component", xlab="peptide (row index in PEP section)")
+  plot(eigenvector, xaxt = "n", ylab="eigenvector component", xlab="peptide (row index in PEP section)", type="b")
   axis(1, at=1:n.coordinates, labels=row.idx)
   dev.off()
 }
@@ -1063,74 +1067,71 @@ if (numberOfStudyVariables(peptide.data) >= 3) {
 # end of Principal Component Analysis
 
 
-
-# # plot fc vs log intensity for all proteins of interest
-# for (p in 1:length(proteins.of.interest))
-# {
-#   pdf.file <- paste("plot_ProteinsOfInterest_", as.character(p), ".pdf", sep="")
-#   plotFcLogIntensitySingleProtein(peptide.data, proteins.of.interest[p], 1, 2, pdf.file)
-# }
-
-
-data <- makeModifiedSequenceChargeUnique(peptide.data)
-
-#data$fc <- calculateFoldChange(data$'peptide_abundance_study_variable[1]', data$'peptide_abundance_study_variable[2]')
-#data$intensity <- getAverageIntensity(data)
-
-# count number of peptides per protein
-frequency.table <- data.frame(table(data$accession))
-colnames(frequency.table) <- c("accession","frequency")
-data <- merge(data, frequency.table, by="accession")
-
-# order by frequency, intensity and accession
-data <- data[order(data$accession),]
-#data <- data[order(data$intensity, decreasing=TRUE),]
-data <- data[order(data$frequency, decreasing=TRUE),]
-
-accessions <- unique(data$accession)
-
-# plot fc vs log intensity for best quantified proteins
-for (p in 1:9)
+# plot fc vs log intensity for all proteins of interest
+for (p in 1:length(proteins.of.interest))
 {
-  pdf.file <- paste("plot_BestProteins_", as.character(p), ".pdf", sep="")
-  plotFcLogIntensitySingleProtein(peptide.data, accessions[p], 1, 2, pdf.file)
+  pdf.file <- paste("plot_ProteinsOfInterest_", as.character(p), ".pdf", sep="")
+  plotFcLogIntensitySingleProtein(peptide.data, proteins.of.interest[p], 1, 2, pdf.file)
 }
 
 
-
-
-# # clean up columns
-# data <- data[,c("accession","frequency","sequence","opt_global_modified_sequence","charge","fc","intensity")]
+# # plot fc vs log intensity for the proteins with the most quantified peptides
+# # remove duplicate, low-intensity peptide quantifications
+# data <- makeModifiedSequenceChargeUnique(peptide.data)
 # 
-# protein.accession <- 'P13639'
+# # count number of peptides per protein
+# frequency.table <- data.frame(table(data$accession))
+# colnames(frequency.table) <- c("accession","frequency")
+# data <- merge(data, frequency.table, by="accession")
 # 
-# idx <- which(data$accession == protein.accession)
-# plotFcLogIntensity(data$fc[idx], data$intensity[idx], paste("fold change (peptides of protein ", protein.accession, ")", sep=""), paste("plot_FoldChangeLogIntensity_", protein.accession, ".pdf", sep=""))
+# # order by frequency, intensity and accession
+# data <- data[order(data$accession),]
+# #data <- data[order(data$intensity, decreasing=TRUE),]
+# data <- data[order(data$frequency, decreasing=TRUE),]
 # 
-# idx <- which(data$accession == 'P11142')
-# plotFcLogIntensity(data$fc[idx], data$intensity[idx], "fold change", "plot_FoldChangeLogIntensity_P11142.pdf")
+# accessions <- unique(data$accession)
 # 
-# idx <- which(data$accession == 'P10809')
-# plotFcLogIntensity(data$fc[idx], data$intensity[idx], "fold change", "plot_FoldChangeLogIntensity_P10809.pdf")
-# 
-# idx <- which(data$accession == 'Q00610')
-# plotFcLogIntensity(data$fc[idx], data$intensity[idx], "fold change", "plot_FoldChangeLogIntensity_Q00610.pdf")
-
-
-
-# # plot quantifications for each individual protein
-# for (p in 1:length(proteins.of.interest))
+# # plot fc vs log intensity for best quantified proteins
+# for (p in 1:9)
 # {
-#   pdf.file.temp <- paste(substr(pdf.file, 1, (nchar(pdf.file)-4)), "_", as.character(p), ".pdf", sep="")
-#   
-#   idx <- which(data$accession == proteins.of.interest[p])
-#   quants <- getPeptideQuants(data[idx,])
-#   
-#   pdf(file=pdf.file.temp)
-#   plot(1:dim(quants)[2], rep(max(quants), dim(quants)[2]), main=proteins.of.interest[p])
-#   dev.off()
+#   pdf.file <- paste("plot_BestProteins_", as.character(p), ".pdf", sep="")
+#   plotFcLogIntensitySingleProtein(peptide.data, accessions[p], 1, 2, pdf.file)
 # }
 
 
+
+
+# plotFcLogIntensitySingleProtein <- function(data, protein, sample.1, sample.2, pdf.file)
+# {
+  data <- peptide.data
+  protein <- proteins.of.interest[1]
+  sample.1 <- 1
+  sample.2 <- 2
+  pdf.file <- "plot_Tescht.pdf"
+  
+  idx <- which(data$accession == protein)
+  data <- data[idx,]
+  
+  # make (modified sequence, charge) pair unique i.e. use best quants only
+  data <- makeModifiedSequenceChargeUnique(data)
+  
+  # calculate fc and average intensity
+  column.1 <- paste("peptide_abundance_study_variable[", as.character(sample.1), "]", sep="")
+  column.2 <- paste("peptide_abundance_study_variable[", as.character(sample.2), "]", sep="")
+  data$fc <- calculateFoldChange(data[[column.1]], data[[column.2]])
+  data$intensity <- getAverageIntensity(data)
+  idx <- complete.cases(data[,c("fc","intensity")])
+  data <- data[idx,]
+  
+  # define colours
+  colours <- c("grey", "red")
+  
+  pdf(file=pdf.file)
+  plot(data$fc, data$intensity, pch=20, col=colours[data$unique+1], xlab=paste("fold change (sample ", sample.1, " vs ", sample.2, ")", sep=""), ylab="intensity", log="y", main=protein)
+  abline(v=0, col = "gray", lty=1)
+  abline(v=median(data$fc, na.rm=TRUE), col = "gray", lty=2)
+  legend("topright", legend=c("unique", "not unique"), fill=c("red", "grey"), box.lty=0)
+  dev.off()
+#}
 
 
