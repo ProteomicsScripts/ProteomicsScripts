@@ -26,11 +26,11 @@ rm(list = ls())
 
 #input.file <- 'analysis.mzTab'
 #input.file <- 'example_1.mzTab'
-input.file <- 'example_2.mzTab'
+#input.file <- 'example_2.mzTab'
 #input.file <- 'example_3.mzTab'
 #input.file <- 'example_4.mzTab'
 #input.file <- 'example_5.mzTab'
-#input.file <- 'example_6__SILACmultipleFractions.mzTab'
+input.file <- 'example_6__SILACmultipleFractions.mzTab'
 
 # maximum number of digits
 options(digits=10)
