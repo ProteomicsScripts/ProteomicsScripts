@@ -1,0 +1,9 @@
++++ FILES +++
+
+example_1	-->	single channel, no IDs
+example_2	-->	fixed ratio, dimethyl labelled, two channels, with IDs
+example_3	-->	SILAC, three channels, no IDs
+example_4	-->	label free, 54 channels, with IDs (each peptide present in all 54 channels)
+example_5	-->	label free, 54 channels, with IDs
+example_6	-->	SILAC, multiple fractions
+
