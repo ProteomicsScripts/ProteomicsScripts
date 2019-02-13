@@ -979,14 +979,14 @@ The {\tt PEP} section of the {\tt mzTab} file contains $\Sexpr{format(n.peptides
 
 \begin{table}[hb]
 \begin{center}
-\begin{tabular}{| l | c |}
+\begin{tabular}{| l | r r |}
 \hline
-& number of peptides \\
+& \multicolumn{2}{c|}{number of peptides} \\
 \hline
-quantified & \Sexpr{format(n.peptides, big.mark=",")}\\
-identified (total) & \Sexpr{format(n.peptides.identified, big.mark=",")}\\
-identified (unique modified) & \Sexpr{format(n.peptides.identified.modified.unique, big.mark=",")}\\
-identified (unique stripped) & \Sexpr{format(n.peptides.identified.stripped.unique, big.mark=",")}\\
+quantified & \Sexpr{format(n.peptides, big.mark=",")} & 100\%\\
+identified (total) & \Sexpr{format(n.peptides.identified, big.mark=",")} & $\Sexpr{round(100*n.peptides.identified/n.peptides,digits=2)}$\%\\
+identified (unique modified) & \Sexpr{format(n.peptides.identified.modified.unique, big.mark=",")} & $\Sexpr{round(100*n.peptides.identified.modified.unique/n.peptides,digits=2)}$\%\\
+identified (unique stripped) & \Sexpr{format(n.peptides.identified.stripped.unique, big.mark=",")} & $\Sexpr{round(100*n.peptides.identified.stripped.unique/n.peptides,digits=2)}$\%\\
 \hline
 \end{tabular}
 \caption{Total number of quantified and identified peptides.}
