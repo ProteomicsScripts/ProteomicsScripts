@@ -25,8 +25,8 @@ rm(list = ls())
 ####
 
 #input.file <- 'analysis.mzTab'
-input.file <- 'example_5.mzTab'
-#input.file <- 'example_6__SILACmultipleFractions.mzTab'
+#input.file <- 'example_5.mzTab'
+input.file <- 'example_6__SILACmultipleFractions.mzTab'
 
 # maximum number of digits
 options(digits=10)
@@ -240,8 +240,11 @@ plotFcLogIntensitySingleProtein <- function(data, protein, sample.1, sample.2, p
   idx <- complete.cases(data[,c("fc","intensity")])
   data <- data[idx,]
   
+  # define colours
+  colours <- c("grey", "red")
+
   pdf(file=pdf.file)
-  plot(data$fc, data$intensity, pch=20, col=uniqueColors(data$sequence), xlab=paste("fold change (sample ", sample.1, " vs ", sample.2, ")", sep=""), ylab="intensity", log="y")
+  plot(data$fc, data$intensity, pch=20, col=colours[data$unique+1], xlab=paste("fold change (sample ", sample.1, " vs ", sample.2, ")", sep=""), ylab="intensity", log="y", main=protein)
   abline(v=0, col = "gray", lty=1)
   abline(v=median(data$fc, na.rm=TRUE), col = "gray", lty=2)
   dev.off()
