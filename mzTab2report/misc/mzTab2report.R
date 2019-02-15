@@ -973,6 +973,8 @@ if (studyVariableExists(peptide.data,1) && studyVariableExists(peptide.data,2)) 
   a <- peptide.data$"peptide_abundance_study_variable[1]"
   b <- peptide.data$"peptide_abundance_study_variable[2]"
   fc <- calculateFoldChange(a, b)
+  a[is.na(a)] <- 0
+  b[is.na(b)] <- 0
   intensity <- (a + b)/2
   median.fc.12 <- median(fc, na.rm=TRUE)
   sd.fc.12 <- sd(fc, na.rm=TRUE)
@@ -983,6 +985,8 @@ if (studyVariableExists(peptide.data,1) && studyVariableExists(peptide.data,3)) 
   a <- peptide.data$"peptide_abundance_study_variable[1]"
   b <- peptide.data$"peptide_abundance_study_variable[3]"
   fc <- calculateFoldChange(a, b)
+  a[is.na(a)] <- 0
+  b[is.na(b)] <- 0
   intensity <- (a + b)/2
   median.fc.13 <- median(fc, na.rm=TRUE)
   sd.fc.13 <- sd(fc, na.rm=TRUE)
@@ -993,6 +997,8 @@ if (studyVariableExists(peptide.data,2) && studyVariableExists(peptide.data,3)) 
   a <- peptide.data$"peptide_abundance_study_variable[2]"
   b <- peptide.data$"peptide_abundance_study_variable[3]"
   fc <- calculateFoldChange(a, b)
+  a[is.na(a)] <- 0
+  b[is.na(b)] <- 0
   intensity <- (a + b)/2
   median.fc.23 <- median(fc, na.rm=TRUE)
   sd.fc.23 <- sd(fc, na.rm=TRUE)
