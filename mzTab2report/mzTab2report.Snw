@@ -273,6 +273,69 @@ plotFcLogIntensitySingleProtein <- function(data, protein, sample.1, sample.2, p
   dev.off()
 }
 
+# plot sample (or group) index vs fold change for all peptides of a specific protein
+# The fold change is calculated relative to the sample with the most peptide quantifications.
+plotFcSingleProtein <- function(data, protein, pdf.file)
+{
+  # count the number of not NA
+  numberNonNA <- function(vector)
+  {
+    return(length(which(!is.na(vector))))
+  }
+  
+  # filter for the protein of interest
+  idx <- which(data$accession == protein)
+  data <- data[idx,]
+  quants <- getPeptideQuants(data)
+  
+  # find sample with most quants
+  number.of.quants <- apply(quants, 2, numberNonNA)
+  idx.max <- which(number.of.quants == max(number.of.quants))[1]
+  ylabel <- paste("fold change (sample i vs sample ", as.character(idx.max), ")", sep="")
+  
+  # calculate fold changes
+  fc <- apply(quants, 2, calculateFoldChange, abundances2=quants[,idx.max])
+  
+  fc <- cbind(data$sequence, data.frame(fc))
+  colnames(fc) <- c("sequence", as.character(1:numberOfStudyVariables(data)))
+  fc <- melt(fc, id=c("sequence"))
+  fc$variable <- as.numeric(fc$variable)
+  colnames(fc) <- c("sequence", "sample", "fc")
+  limits <- c(min(fc$sample) - 0.5, max(fc$sample) + 0.5)
+  
+  if (length(labels.of.study.variables) == numberOfStudyVariables(data))
+  {
+    # Group labels match the number of study variables. Let us combine samples to groups.
+    
+    unique.labels <- unique(labels.of.study.variables)
+    group.idx <- 1:length(unique.labels)
+    names(group.idx) <- unique.labels
+    
+    fc$group <- labels.of.study.variables[fc$sample]
+    fc$group.idx <- as.numeric(group.idx[fc$group])
+    limits <- c(min(fc$group.idx) - 0.5, max(fc$group.idx) + 0.5)
+    
+    # shift group index slightly for better visibility (same sequence = same shift)
+    unique.sequence <- unique(fc$sequence)
+    sequence.idx <- 1:length(unique.sequence)
+    names(sequence.idx) <- unique.sequence
+    shift <- as.numeric(sequence.idx[fc$sequence])/length(unique.sequence)*0.4 - 0.2
+    fc$group.idx <- fc$group.idx + shift
+    
+    pdf(file=pdf.file)
+    plot(fc$group.idx, fc$fc, pch=16, xaxt="n", xlab="group", ylab=ylabel, main=protein, xlim=limits)
+    axis(1, at=1:length(unique.labels), labels=unique.labels)
+    dev.off()
+  } else {
+    # Group labels do not match the number of study variables. Let us simply plot samples and ignore the groups.
+    
+    pdf(file=pdf.file)
+    plot(fc$sample, fc$fc, pch=16, xaxt="n", xlab="sample", ylab=ylabel, main=protein, xlim=limits)
+    axis(1, at=1:numberOfStudyVariables(data))
+    dev.off()
+  }
+}
+
 # plot distribution
 plotDistribution <- function(vector, label, pdf.file)
 {
