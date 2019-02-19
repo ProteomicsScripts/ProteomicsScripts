@@ -19,7 +19,7 @@ mzTab2report example.mzTab
 
 mzTab2report    -> main script (Linux, macOS)
 mzTab2report.bat    -> main script (Windows)
-mzTab2report_DragDrop.bat    -> drag-and-drop script, i.e. by dragging an mzTab file onto this batch script the mzTab2report.bat command line tool is executed (Windows)
+mzTab2report_DragDrop.bat    -> drag-and-drop script (Windows), i.e. by dragging an mzTab file onto this batch script the mzTab2report.bat command line tool is executed (Windows)
 mzTab2report.Snw    -> Sweave script containing both R and LaTeX code
 Sweave.sty    -> Sweave style sheet
 misc/example_*.mzTab    -> example input file
