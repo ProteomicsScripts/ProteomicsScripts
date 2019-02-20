@@ -31,12 +31,12 @@ ECHO Generating report from mzTab file %FILE_BASE%.
 REM Unique directory to avoid name clashes in `analysis.mzTab` etc. when 
 REM running multiple processes at once.
 SET WORK_DIRECTORY=%SCRIPT_PATH%\%FILE_BASE%
-mkdir %WORK_DIRECTORY%
+MKDIR %WORK_DIRECTORY%
 CD /d %WORK_DIRECTORY%
 
 REM copy mzTab
-cp %FILE_ABSOLUTE% analysis.mzTab
-cp %SCRIPT_PATH%\Sweave.sty Sweave.sty
+COPY %FILE_ABSOLUTE% analysis.mzTab
+COPY %SCRIPT_PATH%\Sweave.sty Sweave.sty
 
 REM  replace dummy FILE_NAME_DUMMY by file name %FILE_BASE%
 REM  XXX: mzTab2report.Snw now needs to be addressed via full path by joining SCRIPT_PATH with that filename (only in first occurrence!)
