@@ -3,28 +3,34 @@ clear;
 # OpenMS executables
 OpenMSHome='/home/lars/Code/git/OpenMS-build/bin'
 
-# template parameter file
-params='params'
-params_temp='params_temp'
+# parameter file
+ParameterFile='params'
+ParameterFile_temp='params_temp'
 
 # input file
-file='/media/lars/HDD/data/20181031_FixedRatios_BM3363-70/BM3366'
+file='/home/lars/Code/git/ProteomicsScripts/OpenQuant/BM4351.mzML'
 
-for i in {0..100}
+# loop parameters
+LoopStart=5
+LoopEnd=15
+LoopStep=0.5
+
+# loop over single parameter
+param=$LoopStart
+while (( $(echo "$param <= $LoopEnd" |bc -l) ))
 do
-  echo "loop = $i"
-  shift=$(echo "scale=4; $i / 17" | bc)
-  echo "shift = $shift"
+    echo "parameter = $param (start = $LoopStart, end = $LoopEnd, step = $LoopStep)"
+    
+    # replace dummy by file name
+    sed -e 's/TOBEREPLACED/'$param'/g' $ParameterFile.ini > $ParameterFile_temp.ini
+    
+    # param = param + LoopStep
+    param=$(echo "scale=10; $param + $LoopStep" | bc)
+    
+    # run peptide detection
+    #$OpenMSHome/FeatureFinderMultiplex -ini $ParameterFile_temp.ini -in $file.mzML -out $file.featureXML -out_multiplets $file.consensusXML
 
-  # replace dummy by file name
-  sed -e 's/TOBEREPLACED/'$shift'/g' $params.ini > $params_temp.ini
-
-  # run peptide detection
-  #$OpenMSHome/FeatureFinderMultiplex -ini $params_temp.ini -in $file.mzML -out $file.featureXML -out_multiplets $file.consensusXML
-
-  # count quants
-  #$OpenMSHome/FileInfo -in out_multiplets $file.consensusXML -out $file_$i.txt
-
+    # count quants
+    #$OpenMSHome/MzTabExporter -in $file.consensusXML -out $file_$param.mzTab
+    
 done
-
-
