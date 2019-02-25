@@ -1,1 +1,5 @@
 +++ OpenQuant +++
+
+(1) OpenQuant.sh    -->    small shell script looping over a parameter, running TOPP tool and generating mzTab
+
+(2) OpenQuant.R    -->    small R script, reading set of mzTab files and generating plots
