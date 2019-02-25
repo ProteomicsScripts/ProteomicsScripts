@@ -12,9 +12,9 @@ ParameterFile_temp='params_temp'
 file='BM4351_2000_2200'
 
 # loop parameters
-LoopStart=5
+LoopStart=2
 LoopEnd=15
-LoopStep=0.5
+LoopStep=0.1
 
 # loop over single parameter
 param=$LoopStart
@@ -24,13 +24,16 @@ do
     
     # replace dummy by file name
     sed -e 's/TOBEREPLACED/'$param'/g' $ParameterFile.ini > $ParameterFile_temp.ini
-        
+    
     # run peptide detection
     $OpenMSHome/FeatureFinderMultiplex -ini $ParameterFile_temp.ini -in $file.mzML -out $file.featureXML -out_multiplets $file.consensusXML
 
-    # count quants
-    $OpenMSHome/MzTabExporter -in $file.consensusXML -out $file\_$param.mzTab
-    
+    # export to mzTab
+    $OpenMSHome/MzTabExporter -in $file.consensusXML -out $file_$param.mzTab
+
+    # generate report
+    mzTab2report $file_$param.mzTab
+
     # param = param + LoopStep
     param=$(echo "scale=10; $param + $LoopStep" | bc)
 done
