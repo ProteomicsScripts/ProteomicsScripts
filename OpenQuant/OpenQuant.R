@@ -966,10 +966,21 @@ while (param <= LoopEnd)
   params <- c(params, param)
   number.of.quants <- c(number.of.quants, dim(peptide.data)[1])
   
+  quants <- getPeptideQuants(peptide.data)
+  fc <- calculateFoldChange(quants[,1],quants[,2])
+  standard.deviation <- c(standard.deviation, sd(fc, na.rm = TRUE))
+  
   # move to next parameter
   param = param + LoopStep
 }
 
+pdf(file="plot_NumberOfQuants")
+plot(params, number.of.quants, xlab="mz tolerance [ppm]", ylab="number of quants", type="b")
+dev.off()
+
+pdf(file="plot_StandardDeviationOfFoldChange")
+plot(params, standard.deviation, xlab="mz tolerance [ppm]", ylab="standard deviation of fold change", type="b")
+dev.off()
 
 
 # read mzTab data
