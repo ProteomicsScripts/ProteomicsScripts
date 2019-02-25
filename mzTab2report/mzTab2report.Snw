@@ -917,6 +917,17 @@ plotQuantFrequency <- function(quants, pdf.file)
   dev.off()
 }
 
+# plot charge distribution
+# We assume a 'charge' column exists and do not check.
+plotChargeDistribution <- function(data, pdf.file)
+{
+  charges <- data.frame(table(data$charge))
+  
+  pdf(file=pdf.file)
+  barplot(charges[,2], names.arg = as.character(charges[,1]), xlab = "charge", ylab = "peptide count")
+  dev.off()
+}
+
 # plot frequency of frequencies of any vector. Take for example a vector of protein accessions.
 # frequency: How often does a particular protein X occur?
 # frequency of frequencies: How often does a protein occur twice or three times and so on?
@@ -991,6 +1002,12 @@ n.peptides.identified.stripped.unique <- length(unique(peptide.data.identified$s
 # plot frequency of peptide quants
 if (numberOfStudyVariables(peptide.data) >= 2) {
   plotQuantFrequency(getPeptideQuants(peptide.data), "plot_QuantFrequency.pdf")
+}
+
+# plot charge distribution
+if (!isEmpty(peptide.data$charge))
+{
+  plotChargeDistribution(peptide.data, "plot_ChargeDistribution.pdf")
 }
 
 # plot frequency of multiply quantified sequences
@@ -1239,11 +1256,21 @@ print(xtable(stats), include.rownames=FALSE, table.placement="H")
 
 \hspace{5pt}
 
+\IfFileExists{plot_ChargeDistribution.pdf}
+{
+\begin{figure}[hb]
+\centering
+\includegraphics[width=6.0cm]{plot_ChargeDistribution.pdf}
+\caption{Charge distribution of peptide quantifications.}
+\end{figure}
+}
+{}
+
 \IfFileExists{plot_QuantFrequency.pdf}
 {
 \begin{figure}[hb]
 \centering
-\includegraphics[width=12.0cm]{plot_QuantFrequency.pdf}
+\includegraphics[width=6.0cm]{plot_QuantFrequency.pdf}
 \caption{Frequency plot of peptide quantifications.}
 \end{figure}
 }
@@ -1255,7 +1282,7 @@ print(xtable(stats), include.rownames=FALSE, table.placement="H")
 {
 \begin{figure}[hb]
 \centering
-\includegraphics[width=12.0cm]{plot_MultiplicityFrequency.pdf}
+\includegraphics[width=6.0cm]{plot_MultiplicityFrequency.pdf}
 \caption{(modified sequence, charge) pair multiplicity vs frequency plot. Each peptide feature (characterised by a (possibly) modified peptide sequence and a charge state) should ideally occur only once in the analysis. In other words, peptides of multiplicity 1 should have a very high frequency. The plot below should show a significant spike on the left and can be used as QC of the analysis.}
 \end{figure}
 }
@@ -1267,7 +1294,7 @@ print(xtable(stats), include.rownames=FALSE, table.placement="H")
 {
 \begin{figure}[hb]
 \centering
-\includegraphics[width=12.0cm]{plot_PeptidesPerProteinFrequency.pdf}
+\includegraphics[width=6.0cm]{plot_PeptidesPerProteinFrequency.pdf}
 \caption{Number of quantified peptides per protein.}
 \end{figure}
 }

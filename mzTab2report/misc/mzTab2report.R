@@ -897,6 +897,17 @@ plotQuantFrequency <- function(quants, pdf.file)
   dev.off()
 }
 
+# plot charge distribution
+# We assume a 'charge' column exists and do not check.
+plotChargeDistribution <- function(data, pdf.file)
+{
+  charges <- data.frame(table(data$charge))
+  
+  pdf(file=pdf.file)
+  barplot(charges[,2], names.arg = as.character(charges[,1]), xlab = "charge", ylab = "peptide count")
+  dev.off()
+}
+
 # plot frequency of frequencies of any vector. Take for example a vector of protein accessions.
 # frequency: How often does a particular protein X occur?
 # frequency of frequencies: How often does a protein occur twice or three times and so on?
@@ -971,6 +982,12 @@ n.peptides.identified.stripped.unique <- length(unique(peptide.data.identified$s
 # plot frequency of peptide quants
 if (numberOfStudyVariables(peptide.data) >= 2) {
   plotQuantFrequency(getPeptideQuants(peptide.data), "plot_QuantFrequency.pdf")
+}
+
+# plot charge distribution
+if (!isEmpty(peptide.data$charge))
+{
+  plotChargeDistribution(peptide.data, "plot_ChargeDistribution.pdf")
 }
 
 # plot frequency of multiply quantified sequences
