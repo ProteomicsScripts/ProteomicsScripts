@@ -1,14 +1,15 @@
 clear;
 
 # OpenMS executables
-OpenMSHome='/home/lars/Code/git/OpenMS-build/bin'
+OpenMSHome='/home/lars/Code/OpenMS-develop/OpenMS-build/bin'
 
 # parameter file
 ParameterFile='params'
 ParameterFile_temp='params_temp'
 
 # input file
-file='/home/lars/Code/git/ProteomicsScripts/OpenQuant/BM4351.mzML'
+#file='/home/lars/Code/git/ProteomicsScripts/OpenQuant/BM4351_2000_2200'
+file='BM4351_2000_2200'
 
 # loop parameters
 LoopStart=2
