@@ -7,12 +7,19 @@ mzTab2report example.mzTab
 
 +++ INSTALLATION +++
 
-(1) Install R
+(1) install git [1]
+(2) clone the repository (git clone https://github.com/ProteomicsScripts/ProteomicsScripts.git)
+(3) Install R
     Please check the header of the script which R packages need to be installed.
     https://github.com/ProteomicsScripts/ProteomicsScripts/blob/master/mzTab2report/misc/mzTab2report.R#L7
-(2) Install LaTeX, tested with MacTeX (macOS), TexLive (Ubuntu 18.04 & 16.04 LTS, sudo apt-get install texlive), MiKTeX (Windows)
-(3) Add the script folder to your system $PATH variable. Make sure both R and pdflatex are in the $PATH as well.
-(4) Test the installation with misc/example_*.mzTab
+    Please check that R is in your $PATH [2] i.e. you can run R from the command line.
+(4) Install LaTeX, tested with MacTeX (macOS), TexLive (Ubuntu 18.04 & 16.04 LTS, sudo apt-get install texlive), MiKTeX (Windows)
+    Please check that pdflatex is in your $PATH [2] i.e. you can run pdflatex from the command line.
+(5) Add the script folder to your system $PATH variable [2].
+(6) Test the installation with misc/example_*.mzTab
+
+[1] https://www.atlassian.com/git/tutorials/install-git
+[2] https://en.wikipedia.org/wiki/PATH_(variable)
 
 
 +++ FILES +++
