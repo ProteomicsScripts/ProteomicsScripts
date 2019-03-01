@@ -13,7 +13,8 @@ mzTab2report example.mzTab
     Please check the header of the script which R packages need to be installed.
     https://github.com/ProteomicsScripts/ProteomicsScripts/blob/master/mzTab2report/misc/mzTab2report.R#L7
     Please check that R is in your $PATH [2] i.e. you can run R from the command line.
-(4) Install LaTeX, tested with MacTeX (macOS), TexLive (Ubuntu 18.04 & 16.04 LTS, sudo apt-get install texlive), MiKTeX (Windows). Please check that pdflatex is in your $PATH [2] i.e. you can run pdflatex from the command line.
+(4) Install LaTeX, tested with MacTeX (macOS), TexLive (Ubuntu 18.04 & 16.04 LTS, sudo apt-get install texlive),
+    MiKTeX (Windows). Please check that pdflatex is in your $PATH [2] i.e. you can run pdflatex from the command line.
 (5) Add the script folder to your system $PATH variable [2].
 (6) Test the installation with misc/example_*.mzTab
 
