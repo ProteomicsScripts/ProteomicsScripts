@@ -25,7 +25,7 @@ rm(list = ls())
 ####
 
 #input.file <- 'analysis.mzTab'
-input.file <- 'example_6.mzTab'
+input.file <- 'example_1.mzTab'
 
 # maximum number of digits
 options(digits=10)
@@ -220,7 +220,7 @@ plotElutionTimeDistribution <- function(data, pdf.file)
   rt.max <- unlist(lapply(rt.window, splitAtPipe, position=2))
   rt.width <- rt.max-rt.min
   
-  plotDistribution(log10(rt.width), "log10 of peptide elution time [sec]", "plot_DistributionElutionTime.pdf")
+  plotDistribution(log10(rt.width), expression('log'[10]*' of peptide elution time [sec]'), "plot_DistributionElutionTime.pdf")
 }
 
 # plot fold change vs log intensity
