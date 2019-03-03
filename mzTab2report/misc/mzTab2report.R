@@ -25,7 +25,7 @@ rm(list = ls())
 ####
 
 #input.file <- 'analysis.mzTab'
-input.file <- 'example_6.mzTab'
+input.file <- 'example_1.mzTab'
 
 # maximum number of digits
 options(digits=10)
@@ -203,6 +203,24 @@ uniqueColors <- function(string.vector)
   names(palette) <- unique
   
   return(palette[string.vector])
+}
+
+# plot the distribution of peptide elution times
+# Each peptide reports a minimum/maximum retention time in the retention_time_window column.
+plotElutionTimeDistribution <- function(data, pdf.file)
+{
+  # split the input string at '|' and return the numeric element at a certain position.
+  splitAtPipe <- function(string, position=1)
+  {
+    return(as.numeric(unlist(strsplit(string,split='\\|')))[position])
+  }
+  
+  rt.window <- data$retention_time_window
+  rt.min <- unlist(lapply(rt.window, splitAtPipe, position=1))
+  rt.max <- unlist(lapply(rt.window, splitAtPipe, position=2))
+  rt.width <- rt.max-rt.min
+  
+  plotDistribution(log10(rt.width), expression('log'[10]*' of peptide elution time [sec]'), "plot_DistributionElutionTime.pdf")
 }
 
 # plot fold change vs log intensity
@@ -979,6 +997,12 @@ n.peptides.identified <- dim(peptide.data.identified)[1]
 n.peptides.identified.modified.unique <- length(unique(peptide.data.identified$opt_global_modified_sequence))
 n.peptides.identified.stripped.unique <- length(unique(peptide.data.identified$sequence))
 
+# plot elution time distribution
+if (!isEmpty(peptide.data$retention_time_window))
+{
+  plotElutionTimeDistribution(peptide.data, "plot_DistributionElutionTime.pdf")
+}
+
 # plot frequency of peptide quants
 if (numberOfStudyVariables(peptide.data) >= 2) {
   plotQuantFrequency(getPeptideQuants(peptide.data), "plot_QuantFrequency.pdf")
@@ -1195,3 +1219,5 @@ if (!isEmpty(peptide.data$accession) && !isEmpty(peptide.data$unique) && !isEmpt
     }
   }
 }
+
+
