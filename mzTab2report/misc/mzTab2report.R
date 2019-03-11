@@ -249,6 +249,9 @@ plotDeltaFcLogIntensity <- function(data, sample.1, sample.2, pdf.file)
   column.1 <- paste("peptide_abundance_study_variable[", as.character(sample.1), "]", sep="")
   column.2 <- paste("peptide_abundance_study_variable[", as.character(sample.2), "]", sep="")
 
+  # filter for relevant data (for run time improvement)
+  data <- data[c("opt_global_modified_sequence", "charge", column.1, column.2)]
+  
   # make (sequence, charge) unique
   # Only then can we match 2+ and 3+ quantifications unambiguously 
   data <- makeModifiedSequenceChargeUnique(data)
