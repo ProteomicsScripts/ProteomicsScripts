@@ -25,7 +25,7 @@ rm(list = ls())
 ####
 
 #input.file <- 'analysis.mzTab'
-input.file <- 'example_5.mzTab'
+input.file <- 'example_6.mzTab'
 
 # maximum number of digits
 options(digits=10)
@@ -1281,60 +1281,3 @@ if (!isEmpty(peptide.data$accession) && !isEmpty(peptide.data$unique) && !isEmpt
     }
   }
 }
-
-
-
-
-# 
-# data <- peptide.data
-# sample.1 <- 1
-# sample.2 <- 2
-# 
-# column.1 <- paste("peptide_abundance_study_variable[", as.character(sample.1), "]", sep="")
-# column.2 <- paste("peptide_abundance_study_variable[", as.character(sample.2), "]", sep="")
-# 
-# # make (sequence, charge) unique
-# # Only then can we match 2+ and 3+ quantifications unambiguously 
-# data <- makeModifiedSequenceChargeUnique(data)
-# 
-# # calculate all (finite) fold changes for 2+ quantifications
-# data.2 <- data[which(data$charge == 2),]
-# data.2 <- data.2[which(data.2$column.1 > 0),]
-# data.2 <- data.2[which(data.2$column.2 > 0),]
-# data.2$fc_2 <- log2(data.2$column.1/data.2$column.2)
-# data.2$intensity_2 <- getAverageIntensity(data.2)
-# data.2 <- data.2[c("opt_global_modified_sequence","fc_2","intensity_2")]
-# 
-# # calculate all (finite) fold changes for 3+ quantifications
-# data.3 <- data[which(data$charge == 3),]
-# data.3 <- data.3[which(data.3$column.1 > 0),]
-# data.3 <- data.3[which(data.3$column.2 > 0),]
-# data.3$fc_3 <- log2(data.3$column.1/data.3$column.2)
-# data.3$intensity_3 <- getAverageIntensity(data.3)
-# data.3 <- data.3[c("opt_global_modified_sequence","fc_3","intensity_3")]
-# 
-# # find peptides quantified as both 2+ and 3+
-# data <- merge(data.2, data.3, by="opt_global_modified_sequence")
-# 
-# # determine simple statistics
-# n <- dim(data)[1]
-# sd.delta.fc <- sd(data$fc_2 - data$fc_3)
-# 
-# print(n)
-# 
-# if (n>3)
-# {
-#   print('I am in.')
-#   
-#   pdf(file=pdf.file)
-#   x <- data$fc_2 - data$fc_3
-#   y <- (data$intensity_2 + data$intensity_3)/2
-#   df <- data.frame(x,y)
-#   x <- densCols(x,y, colramp=colorRampPalette(c("black", "white")))
-#   df$dens <- col2rgb(x)[1,] + 1L
-#   cols <-  colorRampPalette(c("#2166AC", "#3F8EC0", "#80B9D8", "#BCDAEA", "#E6EFF3", "#F9EAE1", "#FAC8AF", "#ED9576", "#D25749", "#B2182B"))(256)
-#   df$col <- cols[df$dens]
-#   plot(y~x, data=df[order(df$dens),], pch=20, col=col, log="y", ylab="intensity", xlab="fc 2+ - fc 3+", main=paste("n = ",as.character(n),"    sd(fc 2+ - fc 3+) = ",as.character(round(sd.delta.fc, digits=4)),sep=""))
-#   dev.off()
-# }
-# 
