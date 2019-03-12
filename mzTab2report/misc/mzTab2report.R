@@ -25,7 +25,8 @@ rm(list = ls())
 ####
 
 #input.file <- 'analysis.mzTab'
-input.file <- 'example_6.mzTab'
+#input.file <- 'example_6.mzTab'
+input.file <- 'BM4351_20190312.mzTab'
 
 # maximum number of digits
 options(digits=10)
@@ -868,7 +869,7 @@ plotProteinsOfInterest <- function(data, pdf.file) {
 
 # create a summary table of all modifications and their specificities
 # required input is a dataframe with a "sequence" and "modifications" column in mzTab standard
-createModsSummary <- function(data)
+getModsSummary <- function(data)
 {
   # extract relevant data
   data <- data[,c("sequence","modifications")]
@@ -1033,14 +1034,14 @@ if (!isEmpty(peptide.data$accession))
 {
   peptide.data <- peptide.data[which(substr(peptide.data$accession,1,4)!="dec_"),]
   peptide.data <- peptide.data[which(substr(peptide.data$accession,1,4)!="CON_"),]
-  
+
   # Note that decoys and contaminants might not be of the form *|*|* and accessions might not have been split in readMzTabPEP().
   # Hence we split the accessions here again after removing decoys and accessions.
   peptide.data <- splitAccession(peptide.data)
 }
 
 # create mod summary statistics
-stats <- createModsSummary(peptide.data)
+stats.mods <- getModsSummary(peptide.data)
 
 # total number of quantified and identified peptides
 n.peptides <- dim(peptide.data)[1]
@@ -1136,7 +1137,7 @@ if (studyVariableExists(peptide.data,1) && studyVariableExists(peptide.data,2)) 
   sd.fc.12 <- sd(fc, na.rm=TRUE)
   plotFcLogIntensity(fc, intensity, "fold change", "plot_FoldChangeLogIntensity_12.pdf")
   plotDistribution(fc, "fold change", "plot_DistributionFoldChange_12.pdf")
-  
+
 }
 if (studyVariableExists(peptide.data,1) && studyVariableExists(peptide.data,2) && !(isEmpty(peptide.data$opt_global_modified_sequence)))
 {
