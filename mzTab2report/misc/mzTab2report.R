@@ -867,6 +867,34 @@ plotProteinsOfInterest <- function(data, pdf.file) {
   # }
 }
 
+# create a summary table of all quantifications
+# How many quantifications are finite, zero or NaN?
+getQuantSummary <- function(data)
+{
+  numberOfNaN <- function(vector)
+  {
+    return(length(which(is.nan(vector))))
+  }
+  
+  numberOfZero <- function(vector)
+  {
+    return(length(which(vector == 0)))
+  }
+  
+  quants <- getPeptideQuants(data)
+  
+  n.nan <- apply(quants,2,numberOfNaN)
+  n.zero <- apply(quants,2,numberOfZero)
+  n.finite <- dim(quants)[1] - n.nan - n.zero
+  
+  stats <- cbind(1:dim(quants)[2], n.finite, n.zero, n.nan)
+  
+  colnames(stats) <- c("sample", "finite", "zero", "nan")
+  rownames(stats) <- NULL
+  
+  return(stats)
+}
+
 # create a summary table of all modifications and their specificities
 # required input is a dataframe with a "sequence" and "modifications" column in mzTab standard
 getModsSummary <- function(data)
@@ -1039,6 +1067,10 @@ if (!isEmpty(peptide.data$accession))
   # Hence we split the accessions here again after removing decoys and accessions.
   peptide.data <- splitAccession(peptide.data)
 }
+
+# create quant summary statistics
+# How many peptides have finite, zero and NaN abundance in each sample?
+stats.quants <- getQuantSummary(peptide.data)
 
 # create mod summary statistics
 stats.mods <- getModsSummary(peptide.data)
@@ -1285,3 +1317,4 @@ if (!isEmpty(peptide.data$accession) && !isEmpty(peptide.data$unique) && !isEmpt
     }
   }
 }
+
