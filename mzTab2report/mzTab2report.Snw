@@ -443,7 +443,9 @@ plotKendrick <- function(mass, pdf.file) {
 getPeptideQuants <- function(data)
 {
   idx <- grepl("peptide_abundance_study_variable", colnames(data))
-  return(data[,idx])
+  quants <- data.frame(data[,idx])
+  
+  return(quants)
 }
 
 # returns an average peptide intensity over all study variables

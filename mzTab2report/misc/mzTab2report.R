@@ -25,8 +25,7 @@ rm(list = ls())
 ####
 
 #input.file <- 'analysis.mzTab'
-#input.file <- 'example_6.mzTab'
-input.file <- 'BM4351_20190312.mzTab'
+input.file <- 'example_6.mzTab'
 
 # maximum number of digits
 options(digits=10)
@@ -424,7 +423,9 @@ plotKendrick <- function(mass, pdf.file) {
 getPeptideQuants <- function(data)
 {
   idx <- grepl("peptide_abundance_study_variable", colnames(data))
-  return(data[,idx])
+  quants <- data.frame(data[,idx])
+  
+  return(quants)
 }
 
 # returns an average peptide intensity over all study variables
