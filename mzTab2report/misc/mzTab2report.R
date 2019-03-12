@@ -423,7 +423,9 @@ plotKendrick <- function(mass, pdf.file) {
 getPeptideQuants <- function(data)
 {
   idx <- grepl("peptide_abundance_study_variable", colnames(data))
-  return(data[,idx])
+  quants <- data.frame(data[,idx])
+  
+  return(quants)
 }
 
 # returns an average peptide intensity over all study variables
@@ -866,9 +868,37 @@ plotProteinsOfInterest <- function(data, pdf.file) {
   # }
 }
 
+# create a summary table of all quantifications
+# How many quantifications are finite, zero or NaN?
+getQuantSummary <- function(data)
+{
+  numberOfNaN <- function(vector)
+  {
+    return(length(which(is.nan(vector))))
+  }
+  
+  numberOfZero <- function(vector)
+  {
+    return(length(which(vector == 0)))
+  }
+  
+  quants <- getPeptideQuants(data)
+  
+  n.nan <- apply(quants,2,numberOfNaN)
+  n.zero <- apply(quants,2,numberOfZero)
+  n.finite <- dim(quants)[1] - n.nan - n.zero
+  
+  stats <- cbind(1:dim(quants)[2], n.finite, n.zero, n.nan)
+  
+  colnames(stats) <- c("sample", "finite", "zero", "nan")
+  rownames(stats) <- NULL
+  
+  return(stats)
+}
+
 # create a summary table of all modifications and their specificities
 # required input is a dataframe with a "sequence" and "modifications" column in mzTab standard
-createModsSummary <- function(data)
+getModsSummary <- function(data)
 {
   # extract relevant data
   data <- data[,c("sequence","modifications")]
@@ -1033,14 +1063,18 @@ if (!isEmpty(peptide.data$accession))
 {
   peptide.data <- peptide.data[which(substr(peptide.data$accession,1,4)!="dec_"),]
   peptide.data <- peptide.data[which(substr(peptide.data$accession,1,4)!="CON_"),]
-  
+
   # Note that decoys and contaminants might not be of the form *|*|* and accessions might not have been split in readMzTabPEP().
   # Hence we split the accessions here again after removing decoys and accessions.
   peptide.data <- splitAccession(peptide.data)
 }
 
+# create quant summary statistics
+# How many peptides have finite, zero and NaN abundance in each sample?
+stats.quants <- getQuantSummary(peptide.data)
+
 # create mod summary statistics
-stats <- createModsSummary(peptide.data)
+stats.mods <- getModsSummary(peptide.data)
 
 # total number of quantified and identified peptides
 n.peptides <- dim(peptide.data)[1]
@@ -1136,7 +1170,7 @@ if (studyVariableExists(peptide.data,1) && studyVariableExists(peptide.data,2)) 
   sd.fc.12 <- sd(fc, na.rm=TRUE)
   plotFcLogIntensity(fc, intensity, "fold change", "plot_FoldChangeLogIntensity_12.pdf")
   plotDistribution(fc, "fold change", "plot_DistributionFoldChange_12.pdf")
-  
+
 }
 if (studyVariableExists(peptide.data,1) && studyVariableExists(peptide.data,2) && !(isEmpty(peptide.data$opt_global_modified_sequence)))
 {
@@ -1284,3 +1318,4 @@ if (!isEmpty(peptide.data$accession) && !isEmpty(peptide.data$unique) && !isEmpt
     }
   }
 }
+
