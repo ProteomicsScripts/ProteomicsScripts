@@ -6,4 +6,5 @@ example_3	-->	SILAC, three channels, no IDs
 example_4	-->	label free, 54 channels, with IDs (each peptide present in all 54 channels)
 example_5	-->	label free, 54 channels, with IDs
 example_6	-->	SILAC, multiple fractions
+example_7	-->	SILAC, two channels, fixed ratio fc=0, with IDs and not quantifiable (NaN)
 
