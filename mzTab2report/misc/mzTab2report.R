@@ -428,6 +428,14 @@ getPeptideQuants <- function(data)
   idx <- grepl("peptide_abundance_study_variable", colnames(data))
   quants <- data.frame(data[,idx])
   
+  # define is.nan() for data frames
+  is.nan.df <- function(x) do.call(cbind, lapply(x, is.nan))
+  
+  # replace NA by zero (but leave 0 and NaN unchanged)
+  a <- is.na(quants)
+  b <- is.nan.df(quants)
+  quants[a & !b] <- 0
+  
   return(quants)
 }
 
