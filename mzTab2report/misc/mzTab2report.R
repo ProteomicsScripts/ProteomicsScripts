@@ -428,6 +428,14 @@ getPeptideQuants <- function(data)
   idx <- grepl("peptide_abundance_study_variable", colnames(data))
   quants <- data.frame(data[,idx])
   
+  # define is.nan() for data frames
+  is.nan.df <- function(x) do.call(cbind, lapply(x, is.nan))
+  
+  # replace NA by zero (but leave 0 and NaN unchanged)
+  a <- is.na(quants)
+  b <- is.nan.df(quants)
+  quants[a & !b] <- 0
+  
   return(quants)
 }
 
@@ -872,7 +880,7 @@ plotProteinsOfInterest <- function(data, pdf.file) {
 }
 
 # create a summary table of all quantifications
-# How many quantifications are finite, zero or NaN?
+# How many quantifications are finite, zero or NaN in each sample?
 getQuantSummary <- function(data)
 {
   numberOfNaN <- function(vector)
@@ -1075,13 +1083,15 @@ if (!isEmpty(peptide.data$accession))
 
 # create quant summary statistics
 # How many peptides have finite, zero and NaN abundance in each sample?
-stats.quants <- getQuantSummary(peptide.data)
+#stats.quants <- getQuantSummary(peptide.data)
 
 # create mod summary statistics
 stats.mods <- getModsSummary(peptide.data)
 
 # total number of quantified and identified peptides
 n.peptides <- dim(peptide.data)[1]
+n.peptides.any.nan <- length(which(apply(getPeptideQuants(peptide.data), 1, function(row) any(is.nan(unlist(row))))))
+n.peptides.any.zero <- length(which(apply(getPeptideQuants(peptide.data), 1, function(row) any(unlist(row) == 0))))
 peptide.data.identified <- peptide.data[which(!is.na(peptide.data$sequence)),]
 n.peptides.identified <- dim(peptide.data.identified)[1]
 n.peptides.identified.modified.unique <- length(unique(peptide.data.identified$opt_global_modified_sequence))
@@ -1322,4 +1332,3 @@ if (!isEmpty(peptide.data$accession) && !isEmpty(peptide.data$unique) && !isEmpt
     }
   }
 }
-

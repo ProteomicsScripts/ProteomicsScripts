@@ -448,6 +448,14 @@ getPeptideQuants <- function(data)
   idx <- grepl("peptide_abundance_study_variable", colnames(data))
   quants <- data.frame(data[,idx])
   
+  # define is.nan() for data frames
+  is.nan.df <- function(x) do.call(cbind, lapply(x, is.nan))
+  
+  # replace NA by zero (but leave 0 and NaN unchanged)
+  a <- is.na(quants)
+  b <- is.nan.df(quants)
+  quants[a & !b] <- 0
+  
   return(quants)
 }
 
@@ -892,7 +900,7 @@ plotProteinsOfInterest <- function(data, pdf.file) {
 }
 
 # create a summary table of all quantifications
-# How many quantifications are finite, zero or NaN?
+# How many quantifications are finite, zero or NaN in each sample?
 getQuantSummary <- function(data)
 {
   numberOfNaN <- function(vector)
@@ -1095,13 +1103,15 @@ if (!isEmpty(peptide.data$accession))
 
 # create quant summary statistics
 # How many peptides have finite, zero and NaN abundance in each sample?
-stats.quants <- getQuantSummary(peptide.data)
+#stats.quants <- getQuantSummary(peptide.data)
 
 # create mod summary statistics
 stats.mods <- getModsSummary(peptide.data)
 
 # total number of quantified and identified peptides
 n.peptides <- dim(peptide.data)[1]
+n.peptides.any.nan <- length(which(apply(getPeptideQuants(peptide.data), 1, function(row) any(is.nan(unlist(row))))))
+n.peptides.any.zero <- length(which(apply(getPeptideQuants(peptide.data), 1, function(row) any(unlist(row) == 0))))
 peptide.data.identified <- peptide.data[which(!is.na(peptide.data$sequence)),]
 n.peptides.identified <- dim(peptide.data.identified)[1]
 n.peptides.identified.modified.unique <- length(unique(peptide.data.identified$opt_global_modified_sequence))
@@ -1361,12 +1371,15 @@ The {\tt PEP} section of the {\tt mzTab} file contains $\Sexpr{format(n.peptides
 & \multicolumn{2}{c|}{number of peptides} \\
 \hline
 quantified & \Sexpr{format(n.peptides, big.mark=",")} & 100\%\\
+quantified (any zero)& \Sexpr{format(n.peptides.any.zero, big.mark=",")} & $\Sexpr{round(100*n.peptides.any.zero/n.peptides,digits=2)}$\%\\
+quantified (any NaN)& \Sexpr{format(n.peptides.any.nan, big.mark=",")} & $\Sexpr{round(100*n.peptides.any.nan/n.peptides,digits=2)}$\%\\
+\hline
 identified (total) & \Sexpr{format(n.peptides.identified, big.mark=",")} & $\Sexpr{round(100*n.peptides.identified/n.peptides,digits=2)}$\%\\
 identified (unique modified) & \Sexpr{format(n.peptides.identified.modified.unique, big.mark=",")} & $\Sexpr{round(100*n.peptides.identified.modified.unique/n.peptides,digits=2)}$\%\\
 identified (unique stripped) & \Sexpr{format(n.peptides.identified.stripped.unique, big.mark=",")} & $\Sexpr{round(100*n.peptides.identified.stripped.unique/n.peptides,digits=2)}$\%\\
 \hline
 \end{tabular}
-\caption{Total number of quantified and identified peptides.}
+\caption{Total number of quantified and identified peptides. (any zero) corresponds to peptides which are absent in one or more samples. (any NaN) corresponds to peptides which could not be quantified due to overlapping peptide features.}
 \end{center}
 \end{table}
 
@@ -1378,15 +1391,6 @@ identified (unique stripped) & \Sexpr{format(n.peptides.identified.stripped.uniq
 print(xtable(stats.mods), include.rownames=FALSE, table.placement="H")
 @
 \caption{Statistics of modifications.}
-\end{center}
-\end{table}
-
-\begin{table}[hb]
-\begin{center}
-<<echo=FALSE,results=tex>>=
-print(xtable(stats.quants), include.rownames=FALSE, table.placement="H")
-@
-\caption{Statistics of quantifications.}
 \end{center}
 \end{table}
 
