@@ -237,17 +237,32 @@ return (column %in% colnames(table))
 }
 
 # plot score distribution
-plotScoreDistribution <- function(scores, pdf.file, breaks)
+plotScoreDistribution <- function(scores, pdf.file, breaks.histogram=80, score.name=NULL)
 {
-  breaks = 80
-  
   if (is.factor(scores))
   {
     scores <- as.numeric(as.character(scores))
   }
   
+  # construct x-axis label
+  if (is.null(score.name))
+  {
+    x.label <- expression('log'[10]*' score')
+    scores <- log10(scores)
+  }
+  else if (score.name=="OMSSA")
+  {
+    x.label <- bquote('-log'[10]*' score   ' ~ '(' * .(score.name) * ')')
+    scores <- -log10(scores)
+  }
+  else
+  {
+    x.label <- bquote('log'[10]*' score   ' ~ '(' * .(score.name) * ')')
+    scores <- log10(scores)
+  }
+  
   pdf(file=pdf.file, height=4)
-  hist(log10(scores), xlab=expression('log'[10]*' score'), ylab="frequency", freq=TRUE, main="", col="grey", breaks=breaks)
+  hist(scores, xlab=x.label, ylab="frequency", freq=TRUE, main="", col="grey", breaks=breaks.histogram)
   dev.off()
 }
 
@@ -279,24 +294,25 @@ n.neither.nonredundant <- length(unique(psm.data[which(psm.data$opt_global_targe
 if (checkSearchEngineScoreExists(psm.data, 1))
 {
   scores <- psm.data$`search_engine_score[1]`
+  score.name <- getSearchEngine(mtd.data, 1)
 
   if (length(scores) > 0)
   {
-    plotScoreDistribution(scores, "plot__search_engine_score.pdf", breaks)
+    plotScoreDistribution(scores, "plot__search_engine_score.pdf", score.name=score.name)
   }
 
   scores <- psm.data[which(psm.data$opt_global_target_decoy=="target"),]$`search_engine_score[1]`
 
   if (length(scores) > 0)
   {
-    plotScoreDistribution(scores, "plot__search_engine_score__target.pdf", breaks)
+    plotScoreDistribution(scores, "plot__search_engine_score__target.pdf", score.name=score.name)
   }
 
   scores <- psm.data[which(psm.data$opt_global_target_decoy=="decoy"),]$`search_engine_score[1]`
 
   if (length(scores) > 0)
   {
-    plotScoreDistribution(scores, "plot__search_engine_score__decoy.pdf", breaks)
+    plotScoreDistribution(scores, "plot__search_engine_score__decoy.pdf", score.name=score.name)
   }
 }
 
@@ -306,21 +322,21 @@ if (checkEValueExists(psm.data))
 
   if (length(scores) > 0)
   {
-    plotScoreDistribution(scores, "plot__e_value_score.pdf", breaks)
+    plotScoreDistribution(scores, "plot__e_value_score.pdf")
   }
 
   scores <- psm.data[which(psm.data$opt_global_target_decoy=="target"),]$`opt_global_SpecEValue_score`
 
   if (length(scores) > 0)
   {
-    plotScoreDistribution(scores, "plot__e_value_score__target.pdf", breaks)
+    plotScoreDistribution(scores, "plot__e_value_score__target.pdf")
   }
 
   scores <- psm.data[which(psm.data$opt_global_target_decoy=="decoy"),]$`opt_global_SpecEValue_score`
 
   if (length(scores) > 0)
   {
-    plotScoreDistribution(scores, "plot__e_value_score__decoy.pdf", breaks)
+    plotScoreDistribution(scores, "plot__e_value_score__decoy.pdf")
   }
 }
 
