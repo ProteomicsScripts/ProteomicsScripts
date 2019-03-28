@@ -16,8 +16,7 @@ rm(list = ls())
 options(digits=10)
 
 #input.file <- 'analysis.mzTab'
-#input.file <- 'example.mzTab'
-input.file <- 'oms_albu.mzTab'
+input.file <- 'example.mzTab'
 
 # find start of the section
 startSection <- function(file, section.identifier) {
@@ -250,7 +249,7 @@ plotScoreDistribution <- function(scores, pdf.file, breaks.histogram=80, score.n
     x.label <- expression('log'[10]*' score')
     scores <- log10(scores)
   }
-  else if (score.name=="OMSSA")
+  else if ((score.name=="OMSSA") || (score.name=="MS-GF+"))
   {
     x.label <- bquote('-log'[10]*' score   ' ~ '(' * .(score.name) * ')')
     scores <- -log10(scores)
@@ -339,8 +338,3 @@ if (checkEValueExists(psm.data))
     plotScoreDistribution(scores, "plot__e_value_score__decoy.pdf")
   }
 }
-
-
-
-
-
