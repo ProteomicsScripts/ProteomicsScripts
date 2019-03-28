@@ -129,6 +129,22 @@ readMzTabMTD <- function(file) {
   return (mtd.data)
 }
 
+# returns the search engine of the search engine score n
+# and NA if it does not exists
+getSearchEngine <- function(meta.data, n) {
+  
+  row <- paste("psm_search_engine_score[", as.character(n), "]", sep="")
+  
+  # extract the third entry
+  x <- meta.data[which(meta.data[,1]==row)[1],2]
+  x <- gsub("\\[", "", x)
+  x <- gsub("\\]", "", x)
+  x <- unlist(strsplit(x, ","))[3]
+  x <- gsub(" ", "", x)
+  
+  return(x)
+}
+
 # create a summary table of all modifications and their specificities
 # required input is a dataframe with a "sequence" and "modifications" column in mzTab standard
 createModsSummary <- function(data)
@@ -307,3 +323,8 @@ if (checkEValueExists(psm.data))
     plotScoreDistribution(scores, "plot__e_value_score__decoy.pdf", breaks)
   }
 }
+
+
+
+
+
