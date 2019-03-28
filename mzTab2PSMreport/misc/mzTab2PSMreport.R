@@ -16,7 +16,8 @@ rm(list = ls())
 options(digits=10)
 
 #input.file <- 'analysis.mzTab'
-input.file <- 'example.mzTab'
+#input.file <- 'example.mzTab'
+input.file <- 'oms_albu.mzTab'
 
 # find start of the section
 startSection <- function(file, section.identifier) {
@@ -110,6 +111,22 @@ readMzTabPSM <- function(file) {
   psm.data$temp <- NULL
   
   return (psm.data)
+}
+
+# read the MTD section of an mzTab file
+readMzTabMTD <- function(file) {
+  
+  # find start of the MTD section
+  first.row <- startSection(file, "MTD")
+  
+  # read entire mzTab
+  data <- read.table(file, sep="\t", skip=first.row-1, fill=TRUE, header=TRUE, quote="", na.strings=c("null","NA"), stringsAsFactors=FALSE, check.names=FALSE)
+  
+  # extract MTD data
+  mtd.data <- data[which(data[,1]=="MTD"),]
+  mtd.data$MTD <- NULL
+  
+  return (mtd.data)
 }
 
 # create a summary table of all modifications and their specificities
@@ -224,6 +241,8 @@ plotScoreDistribution <- function(scores, pdf.file, breaks)
 
 psm.data <- readMzTabPSM(input.file)
 
+mtd.data <- readMzTabMTD(input.file)
+
 # create mod summary statistics
 stats <- createModsSummary(psm.data)
 
@@ -244,21 +263,21 @@ n.neither.nonredundant <- length(unique(psm.data[which(psm.data$opt_global_targe
 if (checkSearchEngineScoreExists(psm.data, 1))
 {
   scores <- psm.data$`search_engine_score[1]`
-  
+
   if (length(scores) > 0)
   {
     plotScoreDistribution(scores, "plot__search_engine_score.pdf", breaks)
   }
-  
+
   scores <- psm.data[which(psm.data$opt_global_target_decoy=="target"),]$`search_engine_score[1]`
-  
+
   if (length(scores) > 0)
   {
     plotScoreDistribution(scores, "plot__search_engine_score__target.pdf", breaks)
   }
-  
+
   scores <- psm.data[which(psm.data$opt_global_target_decoy=="decoy"),]$`search_engine_score[1]`
-  
+
   if (length(scores) > 0)
   {
     plotScoreDistribution(scores, "plot__search_engine_score__decoy.pdf", breaks)
@@ -268,21 +287,21 @@ if (checkSearchEngineScoreExists(psm.data, 1))
 if (checkEValueExists(psm.data))
 {
   scores <- psm.data$`opt_global_SpecEValue_score`
-  
+
   if (length(scores) > 0)
   {
     plotScoreDistribution(scores, "plot__e_value_score.pdf", breaks)
   }
-  
+
   scores <- psm.data[which(psm.data$opt_global_target_decoy=="target"),]$`opt_global_SpecEValue_score`
-  
+
   if (length(scores) > 0)
   {
     plotScoreDistribution(scores, "plot__e_value_score__target.pdf", breaks)
   }
-  
+
   scores <- psm.data[which(psm.data$opt_global_target_decoy=="decoy"),]$`opt_global_SpecEValue_score`
-  
+
   if (length(scores) > 0)
   {
     plotScoreDistribution(scores, "plot__e_value_score__decoy.pdf", breaks)
