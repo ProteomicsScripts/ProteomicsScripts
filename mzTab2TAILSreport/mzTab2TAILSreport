@@ -48,6 +48,7 @@ sed -e 's/FILE_NAME_DUMMY/'$FILE_NAME'/g' "$SCRIPT_PATH/mzTab2TAILSreport.Snw" >
 # Run the R code
 R -e "Sweave('mzTab2TAILSreport_temp.Snw')"
 
+# Run the R code
 pdflatex mzTab2TAILSreport_temp.tex
 
 mv mzTab2TAILSreport_temp.pdf $FILE_PATH/$FILE_NAME.pdf

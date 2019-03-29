@@ -39,7 +39,6 @@ COPY %FILE_ABSOLUTE% analysis.mzTab
 COPY %SCRIPT_PATH%\Sweave.sty Sweave.sty
 
 REM  replace dummy FILE_NAME_DUMMY by file name %FILE_BASE%
-REM  XXX: mzTab2report.Snw now needs to be addressed via full path by joining SCRIPT_PATH with that filename (only in first occurrence!)
 (for /f "delims=" %%i in (%SCRIPT_PATH%\mzTab2report.Snw) do (
     set "line=%%i"
     setlocal enabledelayedexpansion
