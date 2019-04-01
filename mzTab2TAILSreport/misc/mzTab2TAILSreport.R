@@ -10,11 +10,14 @@ rm(list = ls())
 library(UniProt.ws)
 library(rasterVis)
 
-input.file <- "data.mzTab"
-output.file <- "data.tsv"
+#input.file <- "data.mzTab"
+#output.file <- "data.tsv"
+input.file <- "example.mzTab"
+output.file <- "example.tsv"
 
 # options
 options(digits=10)
+options(url.method="libcurl")    # Circumvent https in UniProt.ws package, see https://github.com/Bioconductor/UniProt.ws/issues/9
 
 # fc cutoff, i.e. infinite fc values are mapped to +/-FcCutoff
 FcCutoff <- 8
