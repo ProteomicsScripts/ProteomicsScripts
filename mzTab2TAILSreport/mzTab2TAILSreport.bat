@@ -49,6 +49,7 @@ REM  replace dummy FILE_NAME_DUMMY by file name %FILE_BASE%
 
 REM  Run the R code
 R -e "Sweave('mzTab2TAILSreport_temp.Snw')"
+REM "C:\Program Files\R\R-3.5.3\bin\R.exe" -e "Sweave('mzTab2TAILSreport_temp.Snw')"
 
 REM If sweave fails, exit with error code.
 if %errorlevel% neq 0 (
