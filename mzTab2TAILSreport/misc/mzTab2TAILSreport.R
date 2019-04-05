@@ -1,14 +1,22 @@
-## R script for triple TAILS experiments, input mzTab
-
-# install packages
+## This R script generates a set of basic plots for three channel (triple) TAILS experiments.  
+## It is divided into three parts:
+## (1) definition of global options and parameters
+## (2) definition of functions
+## (3) main part i.e. generation of plots and tables
+##
+## To install dependencies, please run in R:
 #source("https://bioconductor.org/biocLite.R")
 #biocLite("UniProt.ws")
 #install.packages('rasterVis')
 
-rm(list = ls())
-
 library(UniProt.ws)
 library(rasterVis)
+
+rm(list = ls())
+
+####
+## (1) definition of global options and parameters
+####
 
 #input.file <- "analysis.mzTab"
 #output.file <- "analysis.tsv"
@@ -17,7 +25,7 @@ output.file <- "example.tsv"
 
 # options
 options(digits=10)
-options(url.method="libcurl")    # Circumvents https in UniProt.ws package, see https://github.com/Bioconductor/UniProt.ws/issues/9
+#options(url.method="libcurl")    # Circumvents https in UniProt.ws package, see https://github.com/Bioconductor/UniProt.ws/issues/9
 
 # fc cutoff, i.e. infinite fc values are mapped to +/-FcCutoff
 FcCutoff <- 8
@@ -43,6 +51,15 @@ all.amino.acids <- c("A","C","D","E","F","G","H","I","K","L","M","N","P","Q","R"
 
 species <- 9606    # homo sapiens by default (We will check later on with checkSpecies().)
 columns <- c("SEQUENCE","GO", "SUBCELLULAR-LOCATIONS", "PROTEIN-NAMES", "GENES", "KEGG")
+
+
+
+
+
+
+####
+## (2) definition of functions
+####
 
 # count the occurences of character c in string s
 countOccurrences <- function(char,s) {
@@ -84,6 +101,20 @@ splitAccession <- function(peptide.data) {
   }
   
   return (peptide.data)
+}
+
+# check if a specific "peptide_abundance_study_variable[n]" column exists
+studyVariableExists <- function(data, n)
+{
+  column <- paste("peptide_abundance_study_variable[",as.character(n),"]",sep="")
+  return (column %in% colnames(data))
+}
+
+# returns the number of quantification channels i.e. the number of "peptide_abundance_study_variable[*]" columns
+numberOfStudyVariables <- function(data)
+{
+  columns <- colnames(data)
+  return(length(which(grepl("peptide_abundance_study_variable", columns))))
 }
 
 # make the input unique and combine them in a space separated string
@@ -264,11 +295,11 @@ checkSpecies <- function(species, proteins) {
 
 
 
+####
+## (3) main part
+####
 
-
-
-
-
+# read mzTab data
 peptide.data <- readMzTabPEP(input.file)
 
 # remove null accessions (TODO: check why there are nulls, FYVPGVAPINFHQND -> should be Q92544 in BM2321 and BM2322)
