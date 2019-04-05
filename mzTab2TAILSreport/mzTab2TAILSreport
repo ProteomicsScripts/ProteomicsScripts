@@ -37,7 +37,7 @@ mkdir "$WORK_DIRECTORY"
 cd "$WORK_DIRECTORY"
 
 # copy mzTab
-cp $FILE_ABSOLUTE data.mzTab
+cp $FILE_ABSOLUTE analysis.mzTab
 
 # copy Sweave.sty
 cp $SCRIPT_PATH/Sweave.sty $WORK_DIRECTORY
@@ -52,10 +52,10 @@ R -e "Sweave('mzTab2TAILSreport_temp.Snw')"
 pdflatex mzTab2TAILSreport_temp.tex
 
 mv mzTab2TAILSreport_temp.pdf $FILE_PATH/$FILE_NAME.pdf
-mv data.tsv $FILE_PATH/$FILE_NAME.tsv
+mv analysis.tsv $FILE_PATH/$FILE_NAME.tsv
 
 # clean-up
-rm data*
+rm analysis*
 rm FcLogIntensity*
 rm frequency*
 rm mzTab2TAILSreport_temp*

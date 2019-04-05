@@ -35,7 +35,7 @@ MKDIR %WORK_DIRECTORY%
 CD /d %WORK_DIRECTORY%
 
 REM copy mzTab
-COPY %FILE_ABSOLUTE% data.mzTab
+COPY %FILE_ABSOLUTE% analysis.mzTab
 COPY %SCRIPT_PATH%\Sweave.sty Sweave.sty
 
 REM  replace dummy FILE_NAME_DUMMY by file name %FILE_BASE%
@@ -65,7 +65,7 @@ pdflatex mzTab2TAILSreport_temp.tex
 
 REM  Copy final report and table to the input folder
 MOVE mzTab2TAILSreport_temp.pdf %FILE_PATH%\%FILE_BASE%.pdf
-MOVE data.tsv %FILE_PATH%\%FILE_BASE%.tsv
+MOVE analysis.tsv %FILE_PATH%\%FILE_BASE%.tsv
 
 REM  clean-up
 CD /d %SCRIPT_PATH%

@@ -5,13 +5,21 @@
 #biocLite("UniProt.ws")
 #install.packages('rasterVis')
 
-rm(list = ls())
-
 library(UniProt.ws)
 library(rasterVis)
 
-input.file <- "data.mzTab"
-output.file <- "data.tsv"
+rm(list = ls())
+
+####
+## (1) definition of global options and parameters
+####
+
+#input.file <- "data.mzTab"
+#output.file <- "data.tsv"
+#input.file <- "example_2.mzTab"
+#output.file <- "example_2.tsv"
+input.file <- "BM3748_to_BM3759_mrgd.mzTab"
+output.file <- "BM3748_to_BM3759_mrgd.tsv"
 
 # options
 options(digits=10)
@@ -32,6 +40,10 @@ all.amino.acids <- c("A","C","D","E","F","G","H","I","K","L","M","N","P","Q","R"
 
 species <- 9606    # homo sapiens
 columns <- c("SEQUENCE","GO", "SUBCELLULAR-LOCATIONS", "PROTEIN-NAMES", "GENES", "KEGG")
+
+####
+## (2) definition of functions
+####
 
 # count the occurences of character c in string s
 countOccurrences <- function(char,s) {
@@ -247,7 +259,9 @@ checkSpecies <- function(species, proteins) {
 
 
 
-
+####
+## (3) main part
+####
 
 peptide.data <- readMzTabPEP(input.file)
 
