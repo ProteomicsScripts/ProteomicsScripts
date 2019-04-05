@@ -20,8 +20,8 @@ rm(list = ls())
 
 #input.file <- "analysis.mzTab"
 #output.file <- "analysis.tsv"
-input.file <- "example.mzTab"
-output.file <- "example.tsv"
+input.file <- "example_2.mzTab"
+output.file <- "example_2.tsv"
 
 # options
 options(digits=10)
