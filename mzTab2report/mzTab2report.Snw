@@ -1100,6 +1100,26 @@ plotPeptidesPerProtein <- function(data, pdf.file)
   }
 }
 
+# plot the retention time shift distribution
+plotRetentionTimeShiftDistribution <- function(data, pdf.file)
+{
+  if (numberOfStudyVariables(peptide.data) == 2)
+  {
+    # Are the (optional) retention time columns present and non-empty?
+    if (("opt_global_retention_time_study_variable[1]" %in% colnames(peptide.data)) && ("opt_global_retention_time_study_variable[2]" %in% colnames(peptide.data)))
+    {
+      if (!isEmpty(peptide.data$"opt_global_retention_time_study_variable[1]") && !isEmpty(peptide.data$"opt_global_retention_time_study_variable[1]"))
+      {
+        retention_time_shift <- peptide.data$"opt_global_retention_time_study_variable[1]" - peptide.data$"opt_global_retention_time_study_variable[2]"
+        
+        pdf(file=pdf.file, height=4)
+        hist(retention_time_shift, xlab="retention time shift (light - heavy) [sec]", ylab="density", freq=TRUE, main="", col="grey", yaxt='n', breaks=80, xlim=c(-10,10))
+        dev.off()
+      }
+    }
+  }
+}
+
 
 
 
@@ -1375,6 +1395,9 @@ if (!isEmpty(peptide.data$accession) && !isEmpty(peptide.data$unique) && !isEmpt
   }
 }
 
+# plot retention time shift distribution
+plotRetentionTimeShiftDistribution(peptide.data, "plot_RetentionTimeShift.pdf")
+
 @
 
 \newcommand{\FigureWidthA}{10.0cm}
@@ -1527,6 +1550,19 @@ print(xtable(stats.mods), include.rownames=FALSE, table.placement="H")
 \caption{peptide abundance distributions.}
 \end{figure}
 
+
+%
+% retention time shift distribuation plot
+%
+
+\IfFileExists{plot_RetentionTimeShift.pdf}
+{
+\begin{figure}[hb]
+\centering
+\includegraphics[width=10.0cm]{plot_RetentionTimeShift.pdf}
+\caption{Retention time shift between {\it light} and {\it heavy} peptides. We expect this shift to be positive, i.e. the heavy labelled peptide eludes slightly earlier. That is the case for $\Sexpr{round(100*length(which(peptide.data$"opt_global_retention_time_study_variable[1]" - peptide.data$"opt_global_retention_time_study_variable[2]" >= 0))/length(peptide.data$"opt_global_retention_time_study_variable[1]" - peptide.data$"opt_global_retention_time_study_variable[2]"),digits=2)} \%$ of all peptide pairs.}
+\end{figure}
+}
 
 %
 % Kendrick nominal-fractional mass plot

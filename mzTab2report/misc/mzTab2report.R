@@ -1080,6 +1080,26 @@ plotPeptidesPerProtein <- function(data, pdf.file)
   }
 }
 
+# plot the retention time shift distribution
+plotRetentionTimeShiftDistribution <- function(data, pdf.file)
+{
+  if (numberOfStudyVariables(peptide.data) == 2)
+  {
+    # Are the (optional) retention time columns present and non-empty?
+    if (("opt_global_retention_time_study_variable[1]" %in% colnames(peptide.data)) && ("opt_global_retention_time_study_variable[2]" %in% colnames(peptide.data)))
+    {
+      if (!isEmpty(peptide.data$"opt_global_retention_time_study_variable[1]") && !isEmpty(peptide.data$"opt_global_retention_time_study_variable[1]"))
+      {
+        retention_time_shift <- peptide.data$"opt_global_retention_time_study_variable[1]" - peptide.data$"opt_global_retention_time_study_variable[2]"
+        
+        pdf(file=pdf.file, height=4)
+        hist(retention_time_shift, xlab="retention time shift (light - heavy) [sec]", ylab="density", freq=TRUE, main="", col="grey", yaxt='n', breaks=80, xlim=c(-10,10))
+        dev.off()
+      }
+    }
+  }
+}
+
 
 
 
@@ -1354,3 +1374,6 @@ if (!isEmpty(peptide.data$accession) && !isEmpty(peptide.data$unique) && !isEmpt
     }
   }
 }
+
+# plot retention time shift distribution
+plotRetentionTimeShiftDistribution(peptide.data, "plot_RetentionTimeShift.pdf")
