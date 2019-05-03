@@ -154,6 +154,9 @@ readMzTabPEP <- function(file) {
       peptide.data[,i] <- as.logical(peptide.data[,i])
     }
   }
+  # set the class types for 'unique' and 'charge' explicitly
+  peptide.data$unique <- as.numeric(peptide.data$unique)
+  peptide.data$charge <- as.numeric(peptide.data$charge)
   peptide.data$PEH <- NULL
   
   # In case the accession column is of the format *|*|*, we split this column into an accession and a gene column.
