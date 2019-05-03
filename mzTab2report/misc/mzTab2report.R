@@ -130,11 +130,30 @@ readMzTabPEP <- function(file) {
   # find start of the PEP section
   first.row <- startSection(file, "PEH")
   
+  # read a single row and determine class types
+  single.row <- read.table(file, sep="\t", skip=first.row-1, nrow=1, fill=TRUE, header=TRUE, quote="", na.strings=c("null","NA"), stringsAsFactors=FALSE, check.names=FALSE)
+  class.types <- sapply(single.row, class)
+  
   # read entire mzTab
   data <- read.table(file, sep="\t", skip=first.row-1, fill=TRUE, header=TRUE, quote="", na.strings=c("null","NA"), stringsAsFactors=FALSE, check.names=FALSE)
   
   # extract PEP data
   peptide.data <- data[which(data[,1]=="PEP"),]
+  for (i in 1:length(class.types))
+  {
+    if (class.types[i]=="character")
+    {
+      peptide.data[,i] <- as.character(peptide.data[,i])
+    }
+    if (class.types[i]=="numeric")
+    {
+      peptide.data[,i] <- as.numeric(peptide.data[,i])
+    }
+    if (class.types[i]=="logical")
+    {
+      peptide.data[,i] <- as.logical(peptide.data[,i])
+    }
+  }
   peptide.data$PEH <- NULL
   
   # In case the accession column is of the format *|*|*, we split this column into an accession and a gene column.
